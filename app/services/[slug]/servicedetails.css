@@ -1,0 +1,68 @@
+.search-bar .nav-tabs .nav-item.show .nav-link, .search-bar .nav-tabs .nav-link.active {
+    color: var(--primary-color);
+}
+.search-bar .nav-tabs .nav-link{
+    color: #000;
+}
+.search-bar .nav-tabs .nav-link:hover {
+    color: var(--primary-color);
+}
+.search-container {
+    position: relative;
+    width: auto;
+}
+
+.search-package, .search-portfolio{
+    width: 100%;
+    padding: 6px 10px 6px 37px;
+    font-size: 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background: #fff;
+    box-sizing: border-box;
+    margin-top:0;
+}
+
+.search-package:focus, .search-portfolio:focus{
+    outline: none;
+    border-color: #007bff;
+}
+
+.search-icon {
+    position: absolute;
+    left: 10px; /* Aligns icon to the left inside the input */
+    top: 50%;
+    transform: translateY(-50%);
+    font-size: 18px;
+    color: #060606;
+}
+
+.package-suggestions-box, .portfolio-suggestions-box{
+    position: absolute;
+    top: 100%;
+    left: 0;
+    width: 100%;
+    border: 1px solid #ccc;
+    border-top: none;
+    background-color: white;
+    max-height: 200px;
+    overflow-y: auto;
+    display: none;
+    z-index: 9;
+}
+
+.package-suggestion-item, .portfolio-suggestion-item{
+    padding: 10px;
+    cursor: pointer;
+    font-size: 14px;
+}
+
+.package-suggestion-item:hover, .portfolio-suggestion-item:hover{
+    background-color: #f1f1f1;
+}
+
+.loading {
+    text-align: center;
+    padding: 10px;
+    font-size: 14px;
+}

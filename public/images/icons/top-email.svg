@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" version="1.1" width="512" height="512" x="0" y="0" viewBox="0 0 48 48" style="enable-background:new 0 0 512 512" xml:space="preserve" class="">
+  <g>
+    <path d="M47.5 18.6c0-.2 0-.3-.1-.4-.1-.3-.2-.5-.4-.7l-7.8-5.8V6.9h-6.4L24 .4l-8.8 6.5H8.8v4.8L1 17.4c-.2.2-.4.4-.4.7-.1.1-.1.3-.1.4v29.1h47zm-45 1.7L8.8 25l7.4 5.5L2.5 44.2zm15.4 11.4 6.1 4.6 6.1-4.6L44 45.6H3.9zm13.9-1.2 7.4-5.5 6.3-4.7v23.9zm13-12.2-5.6 4.2v-8.3zM24 2.9l5.4 4H18.6zm13.2 6V24L24 33.8 10.8 24V8.9zM8.8 22.5l-5.6-4.2 5.6-4.2z" fill="#000000" opacity="1" data-original="#000000" class=""/>
+    <path d="M14.8 12.5h18.4v2H14.8zM14.8 18h18.4v2H14.8zM14.8 23.5h18.4v2H14.8z" fill="#000000" opacity="1" data-original="#000000" class=""/>
+  </g>
+</svg>
