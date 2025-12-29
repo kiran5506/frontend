@@ -5,14 +5,28 @@ export default {
         create: '/generate-token',
     },
     SLIDERS: {
-        create: '/sliders',
-        edit: '/sliders/{id}',
+        create: '/slider/create',
+        edit: '/slider/edit/{id}',
         list: '/slider/list',
-        findById: '/sliders/{id}',
-        delete: '/sliders/{id}'
+        findById: '/slider/findById/{id}',
+        delete: '/slider/delete/{id}'
     },
     VENDOR: {
         register: '/vendorauth/register',
         login: '/vendorauth/login'
+    },
+    ADMIN: {
+        login: '/admin/login',
+        updateSettings: '/admin/siteSettings/{id}',
+        getSettings: '/admin/getSiteSettings/{id}'
+    },
+    SERVICES: {
+        create: '/service/create',
+        edit: '/service/edit/{id}',
+        list: '/service/list',
+        findById: '/service/findById/{id}',
+        delete: '/service/delete/{id}'
     }
+
+
 }

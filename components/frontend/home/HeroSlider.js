@@ -49,7 +49,7 @@ function PrevArrow(props) {
 const HeroSlider = () => {
   const dispatch = useDispatch();
   useEffect(() => {
-    dispatch(sliderList());
+    (dispatch)(sliderList());
   }, [dispatch]); 
 
   const { Sliders, loading, error } = useSelector((state) => state.slider);
@@ -62,7 +62,7 @@ const HeroSlider = () => {
           {Sliders.map((simage, index) => (
             <div key={index}>
               <Image
-                src={simage.bannerDesktopPath}
+                src={`/api/image-proxy?url=${encodeURIComponent(simage.bannerDesktopPath)}`}
                 className="d-block w-100"
                 alt={simage.alt || "Slider"}
                 width={1464}

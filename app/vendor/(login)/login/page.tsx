@@ -7,7 +7,7 @@ import { yupResolver } from '@hookform/resolvers/yup';
 import * as Yup from "yup";
 
 import { useDispatch, useSelector } from 'react-redux';
-import { toast } from 'react-toastify/unstyled';
+import { toast } from 'react-toastify';
 import { useRouter } from 'next/dist/client/components/navigation';
 import { vendorLogin } from '@/services/vendor-api';
 import { generateToken } from '@/services/generate-api';
@@ -139,7 +139,7 @@ const Login = () => {
                         </form>
                         <p className="py-3 text-center text-md-start">
                         Don’t have an account?{" "}
-                        <a href={'/vendor/register'}>Register Here</a>
+                        <Link href={'/vendor/register'}>Register Here</Link>
                         </p>
                     </div>
                     </div>

@@ -944,7 +944,7 @@ h6 {
   border-radius: 4px;
 }
 
-.sidebar-nav .nav-link i {
+.sidebar-nav .nav-link svg{
   font-size: 16px;
   margin-right: 10px;
   color: var(--theme-color-blue);
@@ -955,7 +955,7 @@ h6 {
   background: #fff;
 }
 
-.sidebar-nav .nav-link.collapsed i {
+.sidebar-nav .nav-link.collapsed svg {
   color: #899bbd;
 }
 
@@ -964,7 +964,16 @@ h6 {
   background: #f6f9ff;
 }
 
-.sidebar-nav .nav-link:hover i {
+.sidebar-nav .nav-link:hover svg {
+  color: var(--theme-color-orange);
+}
+
+.sidebar-nav .nav-link.active {
+  color: var(--theme-color-orange);
+  background: #f6f9ff;
+}
+
+.sidebar-nav .nav-link.active svg {
   color: var(--theme-color-orange);
 }
 
@@ -994,7 +1003,7 @@ h6 {
   transition: 0.3s;
 }
 
-.sidebar-nav .nav-content a i {
+.sidebar-nav .nav-content a svg {
   font-size: 6px;
   margin-right: 8px;
   line-height: 0;
@@ -1006,7 +1015,7 @@ h6 {
   color: var(--theme-color-orange);
 }
 
-.sidebar-nav .nav-content a.active i {
+.sidebar-nav .nav-content a.active svg {
   background-color: var(--theme-color-orange);
 }
 
@@ -1691,3 +1700,7 @@ table.responsive-table-new td {
 .non-edit-form .passport-photo{width: 80px;}
 .non-edit-form .pan-card{height: 172px;}
 .non-edit-form .ration-card{width: 40%;height: 172px;}
+
+.right-mrg{
+  margin-right: 10px;
+}

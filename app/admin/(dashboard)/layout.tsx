@@ -13,7 +13,7 @@ export default function AdminBaseLayout({
     <>
         <AdHeader />
         <AdSidebar />
-        {children}
+        <main id="main" className="main">{children}</main>
         <AdFooter />
     </>
   );

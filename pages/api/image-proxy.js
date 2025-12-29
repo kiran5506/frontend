@@ -6,7 +6,7 @@ export default async function handler(req, res) {
 
   try {
     // Validate allowed host(s) to avoid open proxy abuse
-    const allowedHosts = ["localhost:5002"];
+    const allowedHosts = ["localhost:5004", "localhost:5002"];
     const parsed = new URL(url);
     if (!allowedHosts.includes(parsed.host)) {
       return res.status(403).end("Host not allowed");

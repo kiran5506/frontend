@@ -12,14 +12,14 @@ const DashboardCards = [
   {
     id: 2,
     title: "Leads Management",
-    icon: "assets/img/dashboard-icon6.png",
+    icon: "/assets/vendor/img/dashboard-icon6.png",
     link: "leads-management.php",
     color: "bg6"
   },
   {
     id: 3,
     title: "Business Profile",
-    icon: "assets/img/dashboard-icon1.png",
+    icon: "/assets/vendor/img/dashboard-icon1.png",
     link: "business-profile-details.php",
     color: "bg1"
   },
@@ -33,21 +33,21 @@ const DashboardCards = [
   {
     id: 5,
     title: "Transactions",
-    icon: "assets/img/dashboard-icon2.png",
+    icon: "/assets/vendor/img/dashboard-icon2.png",
     link: "transactions.php",
     color: "bg2"
   },
   {
     id: 6,
     title: "Reviews",
-    icon: "assets/img/dashboard-icon4.png",
+    icon: "/assets/vendor/img/dashboard-icon4.png",
     link: "reviews-management.php",
     color: "bg4"
   },
   {
     id: 7,
     title: "Freelancers",
-    icon: "assets/img/dashboard-icon5.png",
+    icon: "/assets/vendor/img/dashboard-icon5.png",
     link: "freelancers.php",
     color: "bg3"
   }
@@ -55,9 +55,7 @@ const DashboardCards = [
 
 const Dashboard = () => {
   return (
-   <section className="section dashboard dashboard-section p-0">
-  <div className="content">
-    <div className="pad">
+    <>
       <h2 className="page-title">Dashboard</h2>
       <div className="row">
         {DashboardCards.map((card) => (
@@ -74,9 +72,7 @@ const Dashboard = () => {
               </div>
             ))}
       </div>
-    </div>
-  </div>
-</section>
+    </>
 
   )
 }

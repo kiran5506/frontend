@@ -1,0 +1,64 @@
+/* header surface */
+.adHeader {
+  background: #ffffff;
+  box-shadow: 0 1px 6px rgba(0,0,0,0.06);
+  padding: 0.5rem 1rem;
+  z-index: 1030;
+}
+
+/* logo image sizing */
+.logoImg {
+  max-height: 40px;
+  display: block;
+}
+
+/* toggle button reset + visible area */
+.toggleBtn {
+  background: transparent;
+  border: none;
+  padding: 0;
+  margin-left: 0.5rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.toggleBtn:focus {
+  outline: none;
+  box-shadow: none;
+}
+
+/* Global rules to control the sidebar when the header toggle is used.
+   Uses :global so these selectors apply to the #sidebar element in the page. */
+:global(#sidebar) {
+  transition: transform 0.25s ease, width 0.25s ease, opacity 0.25s ease;
+  will-change: transform, opacity;
+}
+
+/* collapsed variant applied to the sidebar element */
+:global(#sidebar.collapsed) {
+  transform: translateX(-100%);
+  width: 0 !important;
+  min-width: 0 !important;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* fallback when body has the class (used when sidebar isn't present on initial render) */
+:global(body.sidebar-collapsed #sidebar) {
+  transform: translateX(-100%);
+  width: 0 !important;
+  min-width: 0 !important;
+  opacity: 0;
+  pointer-events: none;
+}
+
+/* small screens: ensure header spacing remains good */
+@media (max-width: 767px) {
+  .adHeader {
+    padding: 0.4rem 0.75rem;
+  }
+  .logoImg {
+    max-height: 34px;
+  }
+}

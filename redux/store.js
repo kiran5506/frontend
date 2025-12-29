@@ -1,14 +1,14 @@
 'use client';
 import { combineReducers, configureStore } from '@reduxjs/toolkit';
-import authReducer from './features/auth-slice';
 import generateReducer from './features/generate-slice';
 import vendorAuthReducer from './features/vendor-auth-slice';
+import adminAuthReducer from './features/admin-auth-slice';
 import todoReducer from './features/todo-slice';
-import userReducer from './features/user-slice';
 import { persistReducer, persistStore } from 'redux-persist';
 import storage from 'redux-persist/lib/storage';
 import slider from './features/slider-slice';
 import vendorRouter from './features/vendor-slice';
+import service from './features/service-slice';
 
 const vendorPersistConfig = {
   key: 'vendor',
@@ -22,13 +22,21 @@ const generatePersistConfig = (key) => ({
   whitelist: ['authState', 'genToken', 'isAuthenticated'],
 });
 
+const adminPersistConfig = {
+  key: 'admin',
+  storage: storage,
+  whitelist: ['adminState', 'token', 'isAuthenticated', 'adminid', 'role'],
+};
+
 // Combine reducers
 const appReducer = combineReducers({
   vendorAuth: persistReducer(vendorPersistConfig, vendorAuthReducer),
   generatetoken: persistReducer(generatePersistConfig('genauth'), generateReducer),
+  adminAuth: persistReducer(adminPersistConfig, adminAuthReducer),
   todo: todoReducer,
   //user: userReducer,
   slider: slider,
+  service: service,
   vendorauth: vendorRouter,
 });
 
@@ -39,6 +47,15 @@ const rootReducer = (state, action) => {
     localStorage.removeItem('token');
     setTimeout(() => {
       window.location.href = "/vendor";
+    }, 500);
+    return appReducer(undefined, action);
+  }
+
+  if (action.type === 'adminauth/adminLogout') {
+    storage.removeItem("persist:admin");
+    localStorage.removeItem('adminToken');
+    setTimeout(() => {
+      window.location.href = "/admin";
     }, 500);
     return appReducer(undefined, action);
   }
