@@ -22,6 +22,12 @@ const AdSidebar = () => {
     { name: 'Site Manager', icon: <BsLaptop />, link: '#', subMenu: [
         { name: 'Sliders', icon: <BsCircle />, link: '/admin/sliders' },
         { name: 'Services', icon: <BsCircle />, link: '/admin/services' },
+        { name: 'Cities', icon: <BsCircle />, link: '/admin/cities' },
+        { name: 'Events', icon: <BsCircle />, link: '/admin/events' },
+        { name: 'Languages', icon: <BsCircle />, link: '/admin/languages' },
+        { name: 'Lead Packages', icon: <BsCircle />, link: '/admin/leadpackages' },
+        { name: 'Skills', icon: <BsCircle />, link: '/admin/skills' },
+        { name: 'Tutorials', icon: <BsCircle />, link: '/admin/tutorials' },
       ]
     },
     { name: 'Site Settings', icon: <BsTools />, link: '/admin/site-settings' },

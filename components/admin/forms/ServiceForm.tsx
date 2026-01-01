@@ -8,6 +8,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
 import { createService, serviceById, serviceEdit } from '@/services/service-api';
 import { resetCurrentService } from '@/redux/features/service-slice';
+import { categoryList } from '@/services/category-api';
 
 interface ServiceFormProps {
   id?: string; // optional because create & edit
@@ -17,23 +18,9 @@ const ServiceForm = ({ id }: ServiceFormProps) => {
     const dispatch = useDispatch();
     const router = useRouter();
     const { currentService } = useSelector((state: any) => state.service);
+    const { Categories, loading: categoriesLoading } = useSelector((state: any) => state.category);
 
     const [serviceImg, setServiceImg] = useState("");
-
-    const serviceCategories = [
-        'Photography',
-        'Videography',
-        'Sannai Melam',
-        'Pandit',
-        'Catering',
-        'Makeup',
-        'Decoration',
-        'Mehndi',
-        'Banquet Halls',
-        'Bridal Wear',
-        'DJ',
-        'Jewellery'
-    ];
 
     const validationSchema = Yup.object().shape({
         serviceName: Yup.string().required("Service Name is required"),
@@ -62,6 +49,14 @@ const ServiceForm = ({ id }: ServiceFormProps) => {
             });
         }
     }, [id, dispatch])
+
+    // Fetch categories on component mount
+    useEffect(() => {
+        (dispatch as any)(categoryList()).catch((error: any) => {
+            console.error('Error fetching categories:', error);
+            toast.error('Error loading categories');
+        });
+    }, [dispatch])
 
     // Populate form when currentService changes
     useEffect(() => {
@@ -138,13 +133,20 @@ const ServiceForm = ({ id }: ServiceFormProps) => {
                     className="form-select"
                     id="serviceCategory"
                     {...register('serviceCategory')}
+                    disabled={categoriesLoading}
                 >
-                    <option value="">Choose Category</option>
-                    {serviceCategories.map((cat) => (
-                        <option key={cat} value={cat}>
-                            {cat}
-                        </option>
-                    ))}
+                    <option value="">
+                        {categoriesLoading ? 'Loading categories...' : 'Choose Category'}
+                    </option>
+                    {Categories && Categories.length > 0 ? (
+                        Categories.map((cat: any) => (
+                            <option key={cat._id} value={cat.categoryName}>
+                                {cat.categoryName}
+                            </option>
+                        ))
+                    ) : (
+                        <option disabled>No categories available</option>
+                    )}
                 </select>
                 {errors.serviceCategory && <p className="text-danger">{errors.serviceCategory.message}</p>}
             </div>

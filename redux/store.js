@@ -9,6 +9,13 @@ import storage from 'redux-persist/lib/storage';
 import slider from './features/slider-slice';
 import vendorRouter from './features/vendor-slice';
 import service from './features/service-slice';
+import skill from './features/skill-slice';
+import tutorial from './features/tutorial-slice';
+import leadpackage from './features/leadpackage-slice';
+import language from './features/language-slice';
+import city from './features/city-slice';
+import category from './features/category-slice';
+import event from './features/event-slice';
 
 const vendorPersistConfig = {
   key: 'vendor',
@@ -37,6 +44,13 @@ const appReducer = combineReducers({
   //user: userReducer,
   slider: slider,
   service: service,
+  skill: skill,
+  tutorial: tutorial,
+  leadpackage: leadpackage,
+  language: language,
+  city: city,
+  category: category,
+  event: event,
   vendorauth: vendorRouter,
 });
 
