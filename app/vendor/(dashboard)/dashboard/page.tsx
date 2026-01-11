@@ -54,8 +54,8 @@ const DashboardCards = [
 ];
 
 const Dashboard = () => {
-  return (
-    <>
+  return ( 
+    <div className="pad">
       <h2 className="page-title">Dashboard</h2>
       <div className="row">
         {DashboardCards.map((card) => (
@@ -72,8 +72,7 @@ const Dashboard = () => {
               </div>
             ))}
       </div>
-    </>
-
+    </div>
   )
 }
 

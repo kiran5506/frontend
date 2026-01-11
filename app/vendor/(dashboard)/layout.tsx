@@ -64,9 +64,7 @@ export default function VendorBaseLayout({
         {/* Content */}
         <section className="section dashboard dashboard-section p-0">
         <div className="content">
-          <div className="pad">
-            {children}
-          </div>
+          {children}
         </div>
       </section>
 
