@@ -67,13 +67,110 @@ export default {
         findById: '/event/findById/{id}',
         delete: '/event/delete/{id}'
     },
+    TESTIMONIALS: {
+        create: '/testimonial/create',
+        edit: '/testimonial/edit/{id}',
+        list: '/testimonial/list',
+        findById: '/testimonial/findById/{id}',
+        delete: '/testimonial/delete/{id}'
+    },
     VENDOR: {
         register: '/vendorauth/register',
-        login: '/vendorauth/login'
+        login: '/vendorauth/login',
+        verifyOtp: '/vendorauth/verify-otp',
+        updateProfileCompletion: '/vendorauth/update-profile-completion',
+        generateOtp: '/vendorauth/generate-otp',
+        list: '/vendor/list',
+        findById: '/vendor/view/{id}',
+        edit: '/vendor/edit/{id}',
+        updatePassword: '/vendor/update-password/{id}',
+        delete: '/vendor/delete/{id}'
     },
     ADMIN: {
         login: '/admin/login',
         updateSettings: '/admin/siteSettings/{id}',
         getSettings: '/admin/getSiteSettings/{id}'
+    },
+    AUTH: {
+        authLogin: '/auth/login',
+        register: '/auth/register',
+        verifyOtp: '/auth/verifyOtp',
+    },
+    USERS: {
+        findById: '/user/findById/{id}',
+        list: '/user/list',
+        edit: '/user/edit/{id}',
+        delete: '/user/delete/{id}'
+    },
+    EMPLOYEES: {
+        create: '/employee/create',
+        edit: '/employee/edit/{id}',
+        list: '/employee/list',
+        findById: '/employee/find/{id}',
+        delete: '/employee/delete/{id}'
+    },
+    INQUIRIES: {
+        create: '/inquiry/create',
+        list: '/inquiry/list',
+        findById: '/inquiry/findById/{id}',
+        byStatus: '/inquiry/byStatus/{status}',
+        update: '/inquiry/update/{id}',
+        updateStatus: '/inquiry/updateStatus/{id}',
+        delete: '/inquiry/delete/{id}'
+    },
+    CUSTOMER: {
+        create: '/customer/create',
+        list: '/customer/list',
+        findById: '/customer/view/{id}',
+        edit: '/customer/edit/{id}',
+        delete: '/customer/delete/{id}',
+        toggleStatus: '/customer/toggle-status/{id}',
+        listByType: '/customer/list-by-type/{type}'
+    },
+    CUSTOMER_AUTH: {
+        register: '/customerauth/register',
+        login: '/customerauth/login',
+        verifyOtp: '/customerauth/verify-otp',
+        resendOtp: '/customerauth/resend-otp',
+        forgotPassword: '/customerauth/forgot-password',
+        resetPassword: '/customerauth/reset-password',
+        changePassword: '/customerauth/change-password'
+    },
+    CONTACT_SUPPORT: {
+        create: '/contact-support/create',
+        list: '/contact-support/list',
+        findById: '/contact-support/findById/{id}',
+        updateStatus: '/contact-support/update-status/{id}',
+        delete: '/contact-support/delete/{id}'
+    },
+    BUSINESS_PROFILE: {
+        create: '/business-profile/create',
+        edit: '/business-profile/edit/{id}',
+        list: '/business-profile/list',
+        findById: '/business-profile/findById/{id}',
+        findByVendorId: '/business-profile/findByVendorId/{vendor_id}',
+        delete: '/business-profile/delete/{id}'
+    },
+    FEEDBACK: {
+        create: '/feedback/create',
+        list: '/feedback/list',
+        findById: '/feedback/findById/{id}',
+        edit: '/feedback/edit/{id}',
+        delete: '/feedback/delete/{id}',
+        findByVendorId: '/feedback/vendor/{vendorId}',
+        findByUserId: '/feedback/user/{userId}'
+    },
+    REVIEW: {
+        create: '/review/create',
+        list: '/review/list',
+        findById: '/review/findById/{id}',
+        edit: '/review/edit/{id}',
+        delete: '/review/delete/{id}',
+        findByVendorId: '/review/vendor/{vendor_id}',
+        findByCustomerId: '/review/customer/{customer_id}'
+    },
+    FREELANCERS: {
+        create: '/freelancers',
+        list: '/freelancers/list'
     }
 }

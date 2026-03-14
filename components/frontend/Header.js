@@ -1,12 +1,50 @@
-import React from 'react'
+"use client";
+import React, { use, useEffect } from 'react'
 import Topbar from './Topbar'
 import logo from '../../public/images/common/logo.png'
 import user from '../../public/images/common/user.png'  
 import Image from 'next/image'
 import Link from 'next/link'
 import { FaMapMarkerAlt, FaSearch } from 'react-icons/fa'
+import { useSelector, useDispatch } from 'react-redux';
+import { customerLogout } from '@/redux/features/customer-auth-slice';
+import { toast } from 'react-toastify';
+import { useRouter } from 'next/navigation';
+import { FaXmark } from 'react-icons/fa6';
+import { getSiteSettings } from '@/services/admin-api';
+import { generateToken } from '@/services/generate-api';
 
 const Header = () => {
+    let id = "694e6ca8aa5aae1acb87f836";
+    const dispatch = useDispatch();
+    const router = useRouter();
+    const [siteSettings, setSiteSettings] = React.useState({});
+    const isAuthenticated = useSelector((state) => !!state?.customerAuth?.isAuthenticated);
+
+    const [isUserMenuOpen, setUserMenuOpen] = React.useState(false);
+    const handleUserMenuToggle = () => {
+        setUserMenuOpen(!isUserMenuOpen);
+    }
+
+    const handleLogout = () => {
+        dispatch(customerLogout());
+        toast.success('Logged out successfully!');
+        setUserMenuOpen(false);
+        router.push('/login');
+    }
+
+    useEffect(() => {
+        (async () => {
+            await (dispatch)(generateToken()).unwrap();
+            await dispatch(getSiteSettings(id)).then((response) => {
+                    if (response.payload && response.payload.status) {
+                        const settings = response.payload.data;
+                        setSiteSettings(settings);
+                    }
+                });
+        })();
+    },[dispatch]);
+
   return (
     <header>
         <Topbar />
@@ -18,55 +56,59 @@ const Header = () => {
                     <i className="fas fa-bars" />
                 </div>
                 <Link className="navbar-brand" href={'/'}>
-                    <Image src={logo} alt="logo" className="logo" style={{ height: 'auto'}}/>
+                    <Image src={`/api/image-proxy?url=${encodeURIComponent(siteSettings?.logo)}` || logo} alt="logo" className="logo" width={110} height={52}/>
                 </Link>
-                <div className="mobile-location-search">
-                    <div className="search-container">
-                    <input
-                        type="text"
-                        id="search-bar"
-                        className="search-bar"
-                        placeholder="Select Location"
-                    />
-                    <div className="search-icon">
-                        <i className="fas fa-map-marker-alt" />
-                    </div>
-                    <div id="suggestions" className="suggestions-box" />
-                    </div>
-                </div>
-                <div className="row desktop-search">
-                    <div className="col-md-6">
-                    <div className="search-container">
+                {!isAuthenticated && (
+                    <>
+                    <div className="mobile-location-search">
+                        <div className="search-container">
                         <input
-                        type="text"
-                        id="search-bar"
-                        className="search-bar"
-                        placeholder="Select Location"
+                            type="text"
+                            id="search-bar"
+                            className="search-bar"
+                            placeholder="Select Location"
                         />
                         <div className="search-icon">
-                        <FaMapMarkerAlt />
+                            <FaMapMarkerAlt />
                         </div>
                         <div id="suggestions" className="suggestions-box" />
-                    </div>
-                    </div>
-                    <div className="col-md-6">
-                    <div className="search-container">
-                        <input
-                        type="text"
-                        id="service-search"
-                        className="service-search-bar"
-                        placeholder="Select Service / Vendor"
-                        />
-                        <div className="service-search-icon">
-                        <FaSearch />
                         </div>
-                        <div id="service-suggestions" className="service-suggestions-box" />
                     </div>
+                    <div className="row desktop-search">
+                        <div className="col-md-6">
+                        <div className="search-container">
+                            <input
+                            type="text"
+                            id="search-bar"
+                            className="search-bar"
+                            placeholder="Select Location"
+                            />
+                            <div className="search-icon">
+                            <FaMapMarkerAlt />
+                            </div>
+                            <div id="suggestions" className="suggestions-box" />
+                        </div>
+                        </div>
+                        <div className="col-md-6">
+                        <div className="search-container">
+                            <input
+                            type="text"
+                            id="service-search"
+                            className="service-search-bar"
+                            placeholder="Select Service / Vendor"
+                            />
+                            <div className="service-search-icon">
+                            <FaSearch />
+                            </div>
+                            <div id="service-suggestions" className="service-suggestions-box" />
+                        </div>
+                        </div>
                     </div>
-                </div>
+                </>
+                )}
                 <div className="side-bar">
                     <div className="menu-close-btn">
-                    <i className="fa-solid fa-xmark" />
+                        <FaXmark />
                     </div>
                     <div className="mb-4 mypadd">
                     <Link href="dashboard.php">
@@ -75,19 +117,19 @@ const Header = () => {
                     </div>
                     <div className="menu">
                     <div className="item">
-                        <Link href="index.php">Home</Link>
+                        <Link href={'/'}>Home</Link>
                     </div>
                     <div className="item">
-                        <Link href="about.php">About Us</Link>
+                        <Link href="/about-us">About Us</Link>
                     </div>
                     <div className="item">
-                        <Link href="contact.php">Contact Us</Link>
+                        <Link href="/contact">Contact Us</Link>
                     </div>
                     <div className="item">
-                        <Link href="login.php">Login</Link>
+                        <Link href="/login">Login</Link>
                     </div>
                     <div className="item">
-                        <Link href="register.php">Register</Link>
+                        <Link href="/register">Register</Link>
                     </div>
                     <Link
                         href="vendor"
@@ -121,20 +163,37 @@ const Header = () => {
                 </div>
                 <div className="text-end ">
                     <span className="dropdown me-2 me-md-4">
-                    <Link href="#" className="profile-menu">
+                    <button className="profile-menu" onClick={handleUserMenuToggle}>
                         <Image src={user} alt="" width={35} />
-                    </Link>
-                    <div className="profile-dropdown-menu">
+                    </button>
+                    <div className="profile-dropdown-menu" style={{ display: isUserMenuOpen ? 'block' : 'none' }}>
                         <ul>
-                        <li className="text-start">
-                            <Link href="login.php">Login</Link>
-                        </li>
-                        <li className="text-start">
-                            <Link href="register.php">Register</Link>
-                        </li>
+                            {isAuthenticated ? (
+                                <>
+                                    <li className="text-start">
+                                        <Link href="/c/dashboard">Dashboard</Link>
+                                    </li>
+                                    <li className="text-start">
+                                        <Link href="/c/profile">Profile</Link>
+                                    </li>
+                                    <li className="text-start">
+                                        <button className="logout-btn" style={{ backgroundColor: 'white', color: 'black', border: 'none' }} onClick={handleLogout}>Logout</button>
+                                    </li>
+                                </>
+                            ) : (
+                                <>
+                                    <li className="text-start">
+                                        <Link href="/login">Login</Link>
+                                    </li>
+                                    <li className="text-start">
+                                        <Link href="/register">Register</Link>
+                                    </li>
+                                </>
+                            )}
                         </ul>
                     </div>
                     </span>
+                    {!isAuthenticated && (
                     <Link
                     href="vendor"
                     target="_blank"
@@ -163,6 +222,7 @@ const Header = () => {
                     </svg>
                     Are you a vendor?
                     </Link>
+                    )}
                 </div>
                 </div>
             </nav>

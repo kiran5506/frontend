@@ -31,7 +31,8 @@ const SiteSettingsPage = () => {
         twitter_url: Yup.string().url("Invalid URL").optional(),
         instagram_url: Yup.string().url("Invalid URL").optional(),
         youtube_url: Yup.string().url("Invalid URL").optional(),
-        linkdin_url: Yup.string().url("Invalid URL").optional(),
+        linkedin_url: Yup.string().url("Invalid URL").optional(),
+        top_header_title: Yup.string().optional(),
         google_analytics: Yup.string().optional(),
     });
 
@@ -62,7 +63,8 @@ const SiteSettingsPage = () => {
                 setValue("twitter_url", settings.twitter_url);
                 setValue("instagram_url", settings.instagram_url);
                 setValue("youtube_url", settings.youtube_url);
-                setValue("linkdin_url", settings.linkdin_url);
+                setValue("linkedin_url", settings.linkedin_url);
+                setValue("top_header_title", settings.top_header_title);
                 setValue("why_bsfye", settings.why_bsfye);
                 setValue("google_analytics", settings.google_analytics);
                 setLogoPreview(settings.logo);
@@ -244,7 +246,7 @@ const SiteSettingsPage = () => {
                     />
                     {errors.twitter_url && <p className="text-danger">{errors.twitter_url.message}</p>}
                     </div>
-                    <div className="col-4">
+                    <div className="col-6">
                     <label htmlFor="instagram_url" className="form-label">
                         Instagram URL
                     </label>
@@ -257,7 +259,7 @@ const SiteSettingsPage = () => {
                     />
                     {errors.instagram_url && <p className="text-danger">{errors.instagram_url.message}</p>}
                     </div>
-                    <div className="col-4">
+                    <div className="col-6">
                     <label htmlFor="youtube_url" className="form-label">
                         YouTube URL
                     </label>
@@ -270,18 +272,31 @@ const SiteSettingsPage = () => {
                     />
                     {errors.youtube_url && <p className="text-danger">{errors.youtube_url.message}</p>}
                     </div>
-                    <div className="col-4">
-                    <label htmlFor="linkdin_url" className="form-label">
-                        Linkdin URL
+                    <div className="col-6">
+                    <label htmlFor="linkedin_url" className="form-label">
+                        LinkedIn URL
                     </label>
                     <input
                         type="text"
                         className="form-control"
-                        id="linkdin_url"
-                        placeholder="Linkdin URL"
-                        {...register("linkdin_url")}
+                        id="linkedin_url"
+                        placeholder="LinkedIn URL"
+                        {...register("linkedin_url")}
                     />
-                    {errors.linkdin_url && <p className="text-danger">{errors.linkdin_url.message}</p>}
+                    {errors.linkedin_url && <p className="text-danger">{errors.linkedin_url.message}</p>}
+                    </div>
+                    <div className="col-6">
+                    <label htmlFor="top_header_title" className="form-label">
+                        Top header Title
+                    </label>
+                    <input
+                        type="text"
+                        className="form-control"
+                        id="top_header_title"
+                        placeholder="Top header Title"
+                        {...register("top_header_title")}
+                    />
+                    {errors.top_header_title && <p className="text-danger">{errors.top_header_title.message}</p>}
                     </div>
                     <div className="col-12">
                     <label htmlFor="why_bsfye" className="form-label">

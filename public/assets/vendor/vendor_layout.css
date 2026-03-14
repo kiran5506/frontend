@@ -654,17 +654,10 @@ h6 {
 
 @media (min-width: 1200px) {
 
-  #main,
-  #footer {
+  #main {
     margin-left: 300px;
   }
 }
-
-/*@media (max-width: 1199px) {
-  .toggle-sidebar .sidebar {
-    left: 0;
-  }
-}*/
 
 @media (min-width: 1200px) {
 
@@ -733,12 +726,12 @@ padding: 0px;
   color: var(--theme-color-orange);
 }
 
-.sidebar-nav .nav-link .bi-chevron-down {
+.sidebar-nav .nav-link svg-chevron-down {
   margin-right: 0;
   transition: transform 0.2s ease-in-out;
 }
 
-.sidebar-nav .nav-link:not(.collapsed) .bi-chevron-down {
+.sidebar-nav .nav-link:not(.collapsed) svg-chevron-down {
   transform: rotate(180deg);
 }
 
@@ -1392,7 +1385,7 @@ table.responsive-table-new td {
 .business-bx h5{padding:10px 0px;}
  
 .image-video-links td{padding-right:10px;padding-bottom:5px;}
-.image-video-links .bi{font-size: 1.5rem;color: red;}
+.image-video-links svg{font-size: 1.5rem;color: red;}
 #wallet-bx{background: #1c5a7e;color: #fff;padding: 20px;}
 #wallet-bx .wallet-price{text-align:center;}
 #wallet-bx .wallet-button{text-align:right;}
@@ -1402,7 +1395,7 @@ table.responsive-table-new td {
 .modal-content h5{font-weight:bold;}
 .price-table td{padding-right:15px;}
 .price-table td:last-child{padding-right:0px;}
-.price-table .bi{font-size: 1.5rem;color: #ff8400;float: right;padding-top: 35px;}
+.price-table svg{font-size: 1.5rem;color: #ff8400;float: right;padding-top: 35px;}
 .filter .form-select{width:50%;}
 .orders-bx ul{list-style:none;padding:0px;}
 .orders-bx ul li{display: inline-block;}
@@ -1427,9 +1420,9 @@ table.responsive-table-new td {
 .review-top ul{list-style:none;padding-left: 0px;}
 .review-top ul li{display:inline-block;}
 .review-top p{margin-bottom:0px;}
-.review-top li .bi{color:#feb623;font-size: 20px;}
+.review-top li svg{color:#feb623;font-size: 20px;}
 #reviews-section > .row{padding:20px 0px 20px 0px;}
-.review-bx .bi{cursor:pointer;}
+.review-bx svg{cursor:pointer;}
 .freelance img, .gallery img{width:100%;}
 .freelance{border-bottom: 1px dashed #ccc;}
 .gallery img{padding-bottom:10px;}
@@ -1437,7 +1430,7 @@ table.responsive-table-new td {
 /*.freelancer-portfolio .lft{padding-right:40px;}
 .freelancer-portfolio .rght{padding-left:40px;}*/
 .notification-box{padding:20px;border-radius:20px;margin-bottom:20px;box-shadow: 0 0 5px #bdbdbd}
-.notification-box .bi, .help-box .bi{font-size:50px;}
+.notification-box svg, .help-box svg{font-size:50px;}
 .help-box{padding-top:20px;padding-bottom:200px;}
 .orange-color{color:orange;}
 .green-color{color:green;}
@@ -1523,7 +1516,7 @@ table.responsive-table-new td {
     top: -10px;
     position: relative;
 }
-.info-card .bi{font-size:50px;color:#fff;}
+.info-card svg{font-size:50px;color:#fff;}
 .close-sidebar-btn {position: absolute;top: 10px;right: 15px;background: none;border: none;font-size: 24px;
 color: #fff;cursor: pointer;z-index: 999;}
 

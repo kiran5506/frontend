@@ -1,0 +1,9 @@
+.vendor-otp-layout-bg{
+    width: 100%;
+    height: 100vh;
+    background-image: url(/assets/vendor/images/common/otp_bg.jpg);
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position-y: center;
+    margin: 0;
+}

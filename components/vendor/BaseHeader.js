@@ -19,7 +19,7 @@ const BaseHeader = () => {
         <div className="main-header">
             <nav className={`navbar fixed-top navbar-expand-lg ${scrolled ? "scrolled" : ""}`}>
             <div className="container">
-                <a className="navbar-brand" href="index.php">
+                <Link className="navbar-brand" href={'/'}>
                 <img
                     src="/assets/vendor/images/common/logo-light.png"
                     alt="logo"
@@ -30,7 +30,7 @@ const BaseHeader = () => {
                     alt="logo"
                     className="logo"
                 />
-                </a>
+                </Link>
                 <div className="menu-btn">
                 <i className="fas fa-bars" />
                 </div>
@@ -104,7 +104,7 @@ const BaseHeader = () => {
                 <Link href={'/vendor/register'} className="btn btn-primary">
                     <img
                     src="/assets/vendor/images/icons/register-icon-light.png"
-                    style={{ width: 20, height: 20 }}
+                    style={{ width: 20, height: 20, marginRight:'5px' }}
                     />
                     Register
                 </Link>

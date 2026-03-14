@@ -1,17 +1,19 @@
 import Link from 'next/link'
 import React from 'react'
+import { useSelector } from 'react-redux';
 
 const Topbar = () => {
+    const siteSettings = useSelector((state) => state.siteSettings.siteSettings);
   return (
     <div className="topbar">
         <div className="container">
             <div className="row d-flex align-items-center justify-content-between">
             <div className="col-12 col-md-5 col-lg-6 text-center text-md-start">
-                <p>India's Best Service Booking Platform</p>
+                <p>{siteSettings?.top_header_title}</p>
             </div>
             <div className="col-12 col-md-7 col-lg-6 text-center text-md-end">
                 <p>
-                <Link href="mailto:support@bsfye.com">
+                <Link href={`mailto:${siteSettings?.email}`}>
                     <svg
                     xmlns="http://www.w3.org/2000/svg"
                     xmlnsXlink="http://www.w3.org/1999/xlink"
@@ -41,10 +43,10 @@ const Topbar = () => {
                         className=""
                         />
                     </g>
-                    </svg>
-                    support@bsfye.com
+                    </svg> &nbsp;
+                    {siteSettings?.email}
                 </Link>
-                <Link href="tel:+91-9999999999" className="ms-3">
+                <Link href={`tel:+91${siteSettings?.whatsapp_number}`} className="ms-3">
                     <svg
                     xmlns="http://www.w3.org/2000/svg"
                     xmlnsXlink="http://www.w3.org/1999/xlink"
@@ -67,8 +69,8 @@ const Topbar = () => {
                         className=""
                         />
                     </g>
-                    </svg>
-                    +91-9999 999 999
+                    </svg> &nbsp;
+                    +91 {siteSettings?.mobile_number}
                 </Link>
                 </p>
             </div>

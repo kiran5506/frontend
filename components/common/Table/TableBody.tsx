@@ -77,10 +77,6 @@ const TableBody = ({ bodyData, onView, onEdit, onDelete, isview, isedit, isdelet
                                                 unoptimized
                                             />
                                         </a>
-                                    ) : typeof cell === 'boolean' ? (
-                                        <span className={cell ? 'text-success' : 'text-danger'}>
-                                            {cell ? 'Paid' : 'Not Paid'}
-                                        </span>
                                     ) : (
                                         cindex === 0 ? index + 1 : cell
                                     )}
@@ -88,7 +84,7 @@ const TableBody = ({ bodyData, onView, onEdit, onDelete, isview, isedit, isdelet
                             )
                         ))}
                         <td>
-                            {isview && onView && <button className='btn btn-primary btn-sm' onClick={() => onView(row._id)} style={{ marginRight: "3px" }}> <BsEye /></button>}
+                            {isview && onView && <button className='btn btn-success btn-sm' onClick={() => onView(row._id)} style={{ marginRight: "3px" }}> <BsEye /></button>}
                             {isedit && onEdit && <button className='btn btn-info btn-sm' onClick={() => onEdit(row._id)} style={{ marginRight: "3px" }}> <BsPencilSquare /> </button>}
                             {isdelete && <button className='btn btn-danger btn-sm' onClick={() => confirmDelete(row._id)}><BsFillTrash3Fill /> </button>}
                         </td>

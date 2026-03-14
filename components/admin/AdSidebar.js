@@ -3,7 +3,7 @@ import { adminLogout } from '@/redux/features/admin-auth-slice'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import React, { useState } from 'react'
-import { BsChevronDown, BsChevronUp, BsCircle, BsGrid, BsLaptop, BsTools } from 'react-icons/bs'
+import { BsBoxArrowRight, BsBoxes, BsChevronDown, BsChevronUp, BsCircle, BsFillPersonVcardFill, BsGrid, BsLaptop, BsPersonCheck, BsTools } from 'react-icons/bs'
 import { useDispatch } from 'react-redux'
 
 const AdSidebar = () => {
@@ -19,6 +19,24 @@ const AdSidebar = () => {
   };
   const sidebarData = [
     { name: 'Dashboard', icon: <BsGrid />, link: '/admin/dashboard' },
+    { name: 'Leads Management', icon: <BsPersonCheck />, link: '#', subMenu: [
+        { name: 'Leads Collaborations', icon: <BsCircle />, link: '/admin/collaborations' },
+        { name: 'Leads Reports', icon: <BsCircle />, link: '/admin/reports' },
+    ]},
+    { name: 'Approval Manager', icon: <BsPersonCheck />, link: '#', subMenu: [
+        { name: 'Vendor Request', icon: <BsCircle />, link: '/admin/collaborations' },
+        { name: 'Vendor Approved', icon: <BsCircle />, link: '/admin/reports' },
+        { name: 'Hold Approved', icon: <BsCircle />, link: '/admin/reports' },
+    ]},
+    { name: 'Feedbacks', icon: <BsBoxes />, link: '#', subMenu: [
+        { name: 'Customers', icon: <BsCircle />, link: '/admin/feedbacks?type=customer' },
+        { name: 'Vendors', icon: <BsCircle />, link: '/admin/feedbacks?type=vendor' },
+    ]},
+    { name: 'HR Manager', icon: <BsFillPersonVcardFill />, link: '#', subMenu: [
+        { name: 'Vendor', icon: <BsCircle />, link: '/admin/vendors' },
+        { name: 'Customers', icon: <BsCircle />, link: '/admin/customers' },
+        { name: 'Employees', icon: <BsCircle />, link: '/admin/employees' },
+    ]},
     { name: 'Site Manager', icon: <BsLaptop />, link: '#', subMenu: [
         { name: 'Sliders', icon: <BsCircle />, link: '/admin/sliders' },
         { name: 'Services', icon: <BsCircle />, link: '/admin/services' },
@@ -28,9 +46,11 @@ const AdSidebar = () => {
         { name: 'Lead Packages', icon: <BsCircle />, link: '/admin/leadpackages' },
         { name: 'Skills', icon: <BsCircle />, link: '/admin/skills' },
         { name: 'Tutorials', icon: <BsCircle />, link: '/admin/tutorials' },
+        { name: 'Testimonials', icon: <BsCircle />, link: '/admin/testimonials' },
       ]
     },
     { name: 'Site Settings', icon: <BsTools />, link: '/admin/site-settings' },
+    { name: 'My Profile', icon: <BsTools />, link: '/admin/profile' },
     // Add more sidebar items here as needed
   ];
 
@@ -77,7 +97,7 @@ const AdSidebar = () => {
         ))}
         <li className="nav-item">
           <button type='button' className="nav-link " onClick={() => dispatch(adminLogout())}>
-            <i className="bi bi-grid" />
+            <BsBoxArrowRight />
             <span>Logout</span>
           </button>
         </li>

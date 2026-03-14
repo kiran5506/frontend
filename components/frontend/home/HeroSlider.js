@@ -8,6 +8,7 @@ import Image from 'next/image';
 import { useDispatch, useSelector } from 'react-redux';
 import { useEffect } from 'react';
 import { sliderList } from '@/services/slider-api';
+import Skeleton, { SkeletonTheme } from 'react-loading-skeleton';
 
 var settings = {
     dots: false,
@@ -57,7 +58,9 @@ const HeroSlider = () => {
   
   return (
     <>
-      {loading ? <p>Loading sliders...</p> : (
+      {loading ? (
+            <Skeleton width={1464} height={450} />
+      ) : (
         <Slider {...settings}>
           {Sliders.map((simage, index) => (
             <div key={index}>

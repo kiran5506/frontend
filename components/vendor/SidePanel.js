@@ -11,7 +11,7 @@ const sidebarMenu = [
   { name: 'Business Profile', link: '/vendor/business-profile-details' },
   { name: 'Business Portfolio', link: '/vendor/business-portfolio' },
   { name: 'Business Packages', link: '/vendor/business-packages' },
-  { name: 'Reviews Management', link: '/vendor/reviews-management' },
+  { name: 'Reviews Management', link: '/vendor/reviews' },
   { name: 'Freelancers', link: '/vendor/freelancers' },
   { name: 'Account Settings', link: '/vendor/account-settings' },
   { name: 'Tutorials', link: '/vendor/tutorials' },

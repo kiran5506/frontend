@@ -10,6 +10,7 @@ import { toast } from 'react-toastify';
 import { useRouter } from 'next/navigation';
 import { generateToken } from '@/services/generate-api';
 import { flushToken } from '@/redux/features/generate-slice';
+import { setRegisteredVendor } from '@/redux/features/vendor-auth-slice';
 
 const Register = () => {
     const dispatch = useDispatch();
@@ -51,9 +52,13 @@ const Register = () => {
                 const result = await (dispatch as any)(vendorRegister(data)).unwrap();
                 if (result?.status) {
                     dispatch(flushToken());
-                    toast.success('Registration successful!');
+                    // Save vendor data to Redux
+                    (dispatch as any)(setRegisteredVendor(result.data));
+                    // Save vendor data to localStorage
+                    localStorage.setItem('vendorData', JSON.stringify(result.data));
+                    toast.success('Registration successful! Please verify OTP');
                     setTimeout(() => {
-                        router.push('/vendor/login');
+                        router.push('/vendor/otp-verification');
                     }, 500);
                 } else {
                     toast.error('Registration failed: ' + (result?.message || 'Unknown error'));
@@ -71,8 +76,6 @@ const Register = () => {
             return;
         }    
     }
-
-
 
   return (
     <section className="register-section py-5 d-flex align-items-center">
@@ -93,7 +96,7 @@ const Register = () => {
             </div>
             <div className="col-md-4">
                 <div className="content">
-                <Link href="index.php">
+                <Link href="/">
                     <img
                     src="/assets/vendor/images/common/logo.png"
                     alt="logo"
@@ -179,7 +182,7 @@ const Register = () => {
                         {...register("acceptTerms")}
                     />
                     
-                    <label className="form-check-label" htmlFor="check1">
+                    <label className="form-check-label" htmlFor="acceptTerms">
                         I Accept <Link href={'/vendor/terms-and-conditions'}>Terms and Conditions</Link>
                     </label>
                     {errors.acceptTerms && (

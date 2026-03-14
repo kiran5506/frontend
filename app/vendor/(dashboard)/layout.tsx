@@ -1,7 +1,7 @@
 "use client";
 import React, { Suspense, useEffect } from "react";
 import { useSelector } from "react-redux";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import "../../../public/assets/vendor/vendor_layout.css"
 import "../../../public/assets/vendor/vendor_layout_new.css"
 
@@ -14,18 +14,35 @@ export default function VendorBaseLayout({
 }: {
   children: React.ReactNode;
 }) {
-  // read vendor auth safely (keep selector pure)
   const isAuthenticated = useSelector((state: any) => !!state?.vendorAuth?.isAuthenticated);
   const router = useRouter();
+  const pathname = usePathname();
+  
+  // Extract page title from pathname
+  const getPageTitle = () => {
+    if (!pathname) return "Dashboard";
+    
+    const segments = pathname.split("/").filter(Boolean);
+    const lastSegment = segments[segments.length - 1];
+    
+    if (!lastSegment) return "Dashboard";
+    
+    // Convert kebab-case or snake_case to Title Case
+    return lastSegment
+      .replace(/[-_]/g, " ")
+      .split(" ")
+      .map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase())
+      .join(" ");
+  };
+  
+  const pageTitle = getPageTitle();
 
-  // if not authenticated, clear vendor tokens (if any) and redirect to vendor login
   useEffect(() => {
     if (!isAuthenticated) {
-      router.replace("/vendor"); // adjust path if your vendor login is different
+      router.replace("/vendor");
     }
   }, [isAuthenticated, router]);
-
-  // do not render dashboard layout/children if not authenticated
+  
   if (!isAuthenticated) {
     return null;
   }
@@ -45,7 +62,7 @@ export default function VendorBaseLayout({
               <li className="breadcrumb-item">
                 <a href="dashboard.php">Home</a>
               </li>
-              <li className="breadcrumb-item active">Dashboard</li>
+              <li className="breadcrumb-item active">{pageTitle}</li>
             </ol>
           </nav>
           <nav className="header-nav ms-auto">

@@ -9,17 +9,16 @@ import * as Yup from "yup";
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
 import { useRouter } from 'next/dist/client/components/navigation';
-import { vendorLogin } from '@/services/vendor-api';
+import { vendorLogin, generateVendorOTP } from '@/services/vendor-api';
 import { generateToken } from '@/services/generate-api';
 import { flushToken } from '@/redux/features/generate-slice';
+import { setRegisteredVendor } from '@/redux/features/vendor-auth-slice';
 
 const Login = () => {
     const dispatch = useDispatch();
     const router = useRouter();
 
-    // keep selectors pure: don't log inside selector and guard against undefined
     const isAuthenticated = useSelector((state: any) => state?.vendorAuth?.isAuthenticated ?? false);
-    // if you want to inspect the vendorAuth slice for debugging, use a separate selector and log in useEffect
     const vendorAuthState = useSelector((state: any) => state?.vendorAuth);
     useEffect(() => {
         console.log('vendorAuth -->', vendorAuthState);
@@ -51,16 +50,38 @@ const Login = () => {
             if (!localStorage.getItem('genToken')) {
                 throw new Error('Token generation failed');
             }
-            // Handle login logic here
             console.log('Login data:', data);
             try {
                 const result = await (dispatch as any)(vendorLogin(data)).unwrap();
                 if (result?.status) {
-                    dispatch(flushToken());
-                    toast.success('Login successful!');
-                    setTimeout(() => {
-                        router.push('/vendor/dashboard');
-                    }, 500);
+                    const vendorData = result.data?.vendorData;
+                    console.log('Vendor Data after login:', vendorData);
+                    
+                    (dispatch as any)(setRegisteredVendor(vendorData));
+                    localStorage.setItem('vendorData', JSON.stringify(vendorData));
+                    
+                    if (!vendorData?.is_otp_verified) {
+                        try {
+                            await (dispatch as any)(generateVendorOTP(vendorData._id)).unwrap();
+                            toast.info('OTP sent to your registered mobile number');
+                        } catch (otpError) {
+                            console.error('Error generating OTP:', otpError);
+                            toast.warning('Could not send OTP automatically. Please use resend on verification page.');
+                        }
+                        setTimeout(() => {
+                            router.push('/vendor/otp-verification');
+                        }, 500);
+                    } else if (!vendorData?.is_profile_completed) {
+                        toast.info('Please complete your business profile');
+                        setTimeout(() => {
+                            router.push('/vendor/business-profile');
+                        }, 500);
+                    }else if(!vendorData?.is_profile_verified) {
+                        toast.info('Your profile is under verification. Please wait for approval.');
+                        setTimeout(() => {
+                            router.push('/vendor/business-profile');
+                        }, 500);
+                    }
                 } else {
                     toast.error('Login failed: ' + (result?.message || 'Unknown error'));
                 }
@@ -71,9 +92,8 @@ const Login = () => {
             }
         } catch (error) {
             console.error('Error generating token:', error);
+            toast.error('Failed to generate token. Please try again.');
         }
-
-        
     }
 
   return (

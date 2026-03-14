@@ -3,15 +3,21 @@ import React from 'react'
 import Image from 'next/image'
 
 import logo from '../../public/images/common/footer-logo.png';
-
-
+import { usePathname } from 'next/navigation';
+import { useSelector } from 'react-redux';
 
 const Footer = () => {
+    const pathname = usePathname();
+    console.log('Current Pathname:', pathname);
+    const hideLinksFooter = ['/',].includes(pathname);
+
+    const siteSettings = useSelector((state) => state.siteSettings.siteSettings);
+
     const socialLinks = [
-        { href: 'https://facebook.com/', imgSrc: '/images/icons/footer-facebook.png', alt: 'Facebook' },
-        { href: 'https://instagram.com/', imgSrc: '/images/icons/footer-insta.png', alt: 'Instagram' },
-        { href: 'https://www.youtube.com/', imgSrc: '/images/icons/footer-youtube.png', alt: 'YouTube' },
-        { href: 'https://wa.me/+919999999999', imgSrc: '/images/icons/footer-whatsapp.png', alt: 'WhatsApp' },
+        { href: `${siteSettings?.facebook_url}`, imgSrc: '/images/icons/footer-facebook.png', alt: 'Facebook' },
+        { href: `${siteSettings?.instagram_url}`, imgSrc: '/images/icons/footer-insta.png', alt: 'Instagram' },
+        { href: `${siteSettings?.youtube_url}`, imgSrc: '/images/icons/footer-youtube.png', alt: 'YouTube' },
+        { href: `https://wa.me/+91${siteSettings?.whatsapp_number}`, imgSrc: '/images/icons/footer-whatsapp.png', alt: 'WhatsApp' },
     ];
 
     const QuickLinks = [
@@ -23,13 +29,14 @@ const Footer = () => {
     ];
 
     const GetInTouch = [
-        { href: '#', text: 'Hyderabad, Telangana', imgSrc: '/images/icons/footer-location.png' },
-        { href: 'mailto:info@example.com', text: 'info@example.com', imgSrc: '/images/icons/footer-email.png' },
-        { href: 'tel:+919999999999', text: '+91 99999 99999', imgSrc: '/images/icons/footer-call.png' },
+        { href: '#', text: siteSettings?.address, imgSrc: '/images/icons/footer-location.png' },
+        { href: `mailto:${siteSettings?.email}`, text: siteSettings?.email, imgSrc: '/images/icons/footer-email.png' },
+        { href: `tel:${siteSettings?.whatsapp_number}`, text: `+91 ${siteSettings?.whatsapp_number}`, imgSrc: '/images/icons/footer-call.png' },
     ];
 
   return (
     <footer>
+        {hideLinksFooter && (
         <div className="links-footer">
             <div className="container">
             <div className="row">
@@ -108,12 +115,13 @@ const Footer = () => {
             </div>
             </div>
         </div>
+        )}
         <div className="main-footer">
             <div className="container">
             <div className="row">
                 <div className="col-md-12 col-lg-3 mb-5 mb-sm-5">
                 <Link href="index.php">
-                    <Image src={logo} alt="" width={150} />
+                    <Image src={`/api/image-proxy?url=${encodeURIComponent(siteSettings?.footer_logo)}`} alt="" width={150} height={71} />
                 </Link>
                 </div>
                 <div className="col-md-3 col-lg-3 mb-5 mb-sm-0">

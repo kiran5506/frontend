@@ -16,11 +16,20 @@ import language from './features/language-slice';
 import city from './features/city-slice';
 import category from './features/category-slice';
 import event from './features/event-slice';
+import testimonial from './features/testimonial-slice';
+import userReducer from './features/user-slice';
+import employeeReducer from './features/employee-slice';
+import customerAuthReducer from './features/customer-auth-slice';
+import customerReducer from './features/customer-slice';
+import siteSettingsReducer from './features/site-setting-slice';
+import businessProfileReducer from './features/business-profile-slice';
+import feedbackReducer from './features/feedback-slice';
+import reviewReducer from './features/review-slice';
 
 const vendorPersistConfig = {
   key: 'vendor',
   storage: storage,
-  whitelist: ['vendorState', 'token', 'isAuthenticated', 'vendorid', 'role'],
+  whitelist: ['vendorState', 'token', 'isAuthenticated', 'vendorid', 'role', 'details'],
 };
 
 const generatePersistConfig = (key) => ({
@@ -35,13 +44,20 @@ const adminPersistConfig = {
   whitelist: ['adminState', 'token', 'isAuthenticated', 'adminid', 'role'],
 };
 
+const customerPersistConfig = {
+  key: 'customer',
+  storage: storage,
+  whitelist: ['customerState', 'token', 'isAuthenticated', 'details'],
+};
+
 // Combine reducers
 const appReducer = combineReducers({
   vendorAuth: persistReducer(vendorPersistConfig, vendorAuthReducer),
   generatetoken: persistReducer(generatePersistConfig('genauth'), generateReducer),
   adminAuth: persistReducer(adminPersistConfig, adminAuthReducer),
+  customerAuth: persistReducer(customerPersistConfig, customerAuthReducer),
   todo: todoReducer,
-  //user: userReducer,
+  user: userReducer,
   slider: slider,
   service: service,
   skill: skill,
@@ -51,7 +67,14 @@ const appReducer = combineReducers({
   city: city,
   category: category,
   event: event,
-  vendorauth: vendorRouter,
+  testimonial: testimonial,
+  vendor: vendorRouter,
+  employee: employeeReducer,
+  customer: customerReducer,
+  siteSettings: siteSettingsReducer,
+  businessProfile: businessProfileReducer,
+  feedback: feedbackReducer,
+  review: reviewReducer,
 });
 
 // Root Reducer to reset the state on logout action
@@ -73,6 +96,17 @@ const rootReducer = (state, action) => {
     }, 500);
     return appReducer(undefined, action);
   }
+
+  if (action.type === 'customerauth/customerLogout') {
+    storage.removeItem("persist:customer");
+    localStorage.removeItem('cToken');
+    localStorage.removeItem('customerDetails');
+    setTimeout(() => {
+      window.location.href = "/";
+    }, 500);
+    return appReducer(undefined, action);
+  }
+
   return appReducer(state, action);
 };
 

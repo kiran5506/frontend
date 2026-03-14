@@ -9,6 +9,7 @@ import { useRouter } from 'next/navigation';
 import { createService, serviceById, serviceEdit } from '@/services/service-api';
 import { resetCurrentService } from '@/redux/features/service-slice';
 import { categoryList } from '@/services/category-api';
+import { skillList } from '@/services/skill-api';
 
 interface ServiceFormProps {
   id?: string; // optional because create & edit
@@ -19,12 +20,13 @@ const ServiceForm = ({ id }: ServiceFormProps) => {
     const router = useRouter();
     const { currentService } = useSelector((state: any) => state.service);
     const { Categories, loading: categoriesLoading } = useSelector((state: any) => state.category);
+    const { Skills, loading: skillsLoading } = useSelector((state: any) => state.skill);
 
     const [serviceImg, setServiceImg] = useState("");
+    const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
 
     const validationSchema = Yup.object().shape({
         serviceName: Yup.string().required("Service Name is required"),
-        serviceCategory: Yup.string().required("Category is required"),
         serviceType: Yup.string().required("Service Type is required"),
         portfolioType: Yup.string().required("Portfolio is required"),
         image: Yup.mixed().optional(),
@@ -56,6 +58,11 @@ const ServiceForm = ({ id }: ServiceFormProps) => {
             console.error('Error fetching categories:', error);
             toast.error('Error loading categories');
         });
+
+        (dispatch as any)(skillList()).catch((error: any) => {
+            console.error('Error fetching skills:', error);
+            toast.error('Error loading skills');
+        });
     }, [dispatch])
 
     // Populate form when currentService changes
@@ -63,12 +70,22 @@ const ServiceForm = ({ id }: ServiceFormProps) => {
         if(currentService && id) {
             const data = currentService.data || currentService;
             setValue('serviceName', data.serviceName || '');
-            setValue('serviceCategory', data.serviceCategory || '');
             setValue('serviceType', data.serviceType || '');
             setValue('portfolioType', data.portfolioType || '');
-            setValue('skills', data.skills || '');
             setValue('description', data.description || '');
             setServiceImg(data.image);
+            
+            // Parse skills from comma-separated string to array
+            if (data.skills) {
+                const skillsArray = typeof data.skills === 'string' 
+                    ? data.skills.split(',').map((skill: string) => skill.trim())
+                    : Array.isArray(data.skills) 
+                    ? data.skills 
+                    : [];
+                setSelectedSkills(skillsArray);
+            } else {
+                setSelectedSkills([]);
+            }
         }
     }, [currentService, setValue, id])
 
@@ -84,6 +101,12 @@ const ServiceForm = ({ id }: ServiceFormProps) => {
                     }
                 }
             });
+            
+            // Add selected skills as comma-separated string
+            if (selectedSkills.length > 0) {
+                formData.append('skills', selectedSkills.join(', '));
+            }
+            
             console.log(id);
             const action = id ? serviceEdit({ id, formData } as any) : createService(formData as any);
             const response = await (dispatch as any)(action as any).unwrap();
@@ -122,33 +145,6 @@ const ServiceForm = ({ id }: ServiceFormProps) => {
                     {...register('serviceName')}
                 />
                 {errors.serviceName && <p className="text-danger">{errors.serviceName.message}</p>}
-            </div>
-
-            {/* Service Category */}
-            <div className="col-12">
-                <label htmlFor="serviceCategory" className="form-label">
-                    Service Category
-                </label>
-                <select
-                    className="form-select"
-                    id="serviceCategory"
-                    {...register('serviceCategory')}
-                    disabled={categoriesLoading}
-                >
-                    <option value="">
-                        {categoriesLoading ? 'Loading categories...' : 'Choose Category'}
-                    </option>
-                    {Categories && Categories.length > 0 ? (
-                        Categories.map((cat: any) => (
-                            <option key={cat._id} value={cat.categoryName}>
-                                {cat.categoryName}
-                            </option>
-                        ))
-                    ) : (
-                        <option disabled>No categories available</option>
-                    )}
-                </select>
-                {errors.serviceCategory && <p className="text-danger">{errors.serviceCategory.message}</p>}
             </div>
 
             {/* Service Type */}
@@ -216,17 +212,35 @@ const ServiceForm = ({ id }: ServiceFormProps) => {
 
             {/* Skills */}
             <div className="col-12">
-                <label htmlFor="skills" className="form-label">
-                    Skills
-                </label>
-                <input
-                    type="text"
-                    className="form-control"
-                    id="skills"
-                    placeholder="Enter skills (comma-separated)"
-                    {...register('skills')}
-                />
-                {errors.skills && <p className="text-danger">{errors.skills.message}</p>}
+            <label className="form-label d-block">Skills</label>
+            {skillsLoading ? (
+                <p>Loading skills...</p>
+            ) : Skills && Skills.length > 0 ? (
+                <div>
+                    {Skills.map((skill: any) => (
+                        <div key={skill._id} className="form-check form-check-inline">
+                            <input
+                                className="form-check-input"
+                                type="checkbox"
+                                id={`skill_${skill._id}`}
+                                checked={selectedSkills.includes(skill.skillName)}
+                                onChange={(e) => {
+                                    if (e.target.checked) {
+                                        setSelectedSkills([...selectedSkills, skill.skillName]);
+                                    } else {
+                                        setSelectedSkills(selectedSkills.filter(s => s !== skill.skillName));
+                                    }
+                                }}
+                            />
+                            <label className="form-check-label" htmlFor={`skill_${skill._id}`}>
+                                {skill.skillName}
+                            </label>
+                        </div>
+                    ))}
+                </div>
+            ) : (
+                <p>No skills available</p>
+            )}
             </div>
 
             {/* Description */}

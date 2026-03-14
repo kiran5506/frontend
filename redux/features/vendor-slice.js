@@ -1,9 +1,9 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { vendorLogin } from "@/services/vendor-api";
+import { deleteVendor, fetchAllVendors, vendorLogin, viewVendorById } from "@/services/vendor-api";
 
 const initialState = {
-    vendor: null,
-    isloggedIn: false,
+    vendorsData: [],
+    currentVendor: null,
     loading: false,
     error: null
 };
@@ -12,28 +12,37 @@ const vendorSlice = createSlice({
     name: 'vendor',
     initialState: initialState,
     reducers: {
-        logout: (state) => {
-            state.vendor = null;
-            state.isloggedIn = false;
+        resetCurrentVendor: (state) => {
+            state.currentVendor = null;
         }
     },
     extraReducers: (builder) => {
         builder
-            .addCase(vendorLogin.pending, (state) => {
+            builder.addCase(fetchAllVendors.pending, (state) => {
                 state.loading = true;
-                state.error = null;
             })
-            .addCase(vendorLogin.fulfilled, (state, action) => {
-                state.loading = false;
-                state.vendor = action.payload.data;
-                state.isloggedIn = true;
+            .addCase(fetchAllVendors.fulfilled, (state, action) => {
+                if(action.payload.status){
+                    state.vendorsData = action.payload.data;
+                    state.loading = false;
+                }
             })
-            .addCase(vendorLogin.rejected, (state, action) => {
+            .addCase(fetchAllVendors.rejected, (state, action) => {
                 state.loading = false;
-                state.error = action.payload;
+                state.error = action.error.message;
+            })
+            .addCase(deleteVendor.fulfilled, (state, action) => {
+                state.currentVendor = null;
+                // Remove the deleted vendor from the vendorsData array
+                if(action.payload.id){
+                    state.vendorsData = state.vendorsData.filter(vendor => vendor._id !== action.payload.id);
+                }
+            })
+            .addCase(viewVendorById.fulfilled, (state, action) => {
+                state.currentVendor = action.payload.data;
             });
     }
 });
 
-export const { loginRequest, loginSuccess, loginFailure, logout } = vendorSlice.actions;
+export const { resetCurrentVendor } = vendorSlice.actions;
 export default vendorSlice.reducer;

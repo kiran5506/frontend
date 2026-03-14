@@ -1,5 +1,10 @@
 /** Next.js image config to allow loading images from various sources */
 module.exports = {
+  experimental: {
+    serverActions: {
+      bodySizeLimit: "20mb"
+    }
+  },
   images: {
     remotePatterns: [
       {

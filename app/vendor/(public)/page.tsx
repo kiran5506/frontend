@@ -1,76 +1,64 @@
-import WithLayout from '@/hoc/WithLayout'
-import React from 'react'
-import Vservice from '@/components/vendor/landingpage/Vservices'
 
-const MainServices = [
-  {
-    id: 1,
-    title: "Photography",
-    image: "/assets/vendor/images/services/sannai-melam.png",
-    link: "/service",
-    count: 10
-  },
-  {
-    id: 2,
-    title: "Web Development",
-    image: "/assets/vendor/images/services/sannai-melam.png",
-    link: "/service",
-    count: 10
-  },
-  {
-    id: 3,
-    title: "Graphic Design",
-    image: "/assets/vendor/images/services/sannai-melam.png",
-    link: "/service",
-    count: 10
-  },
-  {
-    id: 4,
-    title: "Photography",
-    image: "/assets/vendor/images/services/sannai-melam.png",
-    link: "/service",
-    count: 10
-  },
-  {
-    id: 5,
-    title: "Web Development",
-    image: "/assets/vendor/images/services/sannai-melam.png",
-    link: "/service",
-    count: 10
-  },
-  {
-    id: 6,
-    title: "Graphic Design",
-    image: "/assets/vendor/images/services/sannai-melam.png",
-    link: "/service",
-    count: 10
-  },
-  {
-    id: 7,
-    title: "Photography",
-    image: "/assets/vendor/images/services/sannai-melam.png",
-    link: "/service",
-    count: 10
-  },
-  {
-    id: 8,
-    title: "Web Development",
-    image: "/assets/vendor/images/services/sannai-melam.png",
-    link: "/service",
-    count: 10
-  },
-  {
-    id: 9,
-    title: "Graphic Design",
-    image: "/assets/vendor/images/services/sannai-melam.png",
-    link: "/service",
-    count: 10
-  }
-];
+"use client";
+import WithLayout from '@/hoc/WithLayout'
+import React, { useEffect } from 'react'
+import Vservice from '@/components/vendor/landingpage/Vservices'
+import Link from 'next/link';
+import { useDispatch, useSelector } from 'react-redux';
+import { serviceList } from '@/services/service-api';
+import dynamic from 'next/dynamic';
+import Image from 'next/image';
+import Skeleton, { SkeletonTheme } from 'react-loading-skeleton';
+import 'react-loading-skeleton/dist/skeleton.css';
+
+const settings = {
+        dots: false,
+        infinite: true,
+        speed: 500,
+        slidesToShow: 6,
+        slidesToScroll: 3,
+        autoplaySpeed: 4000, // 4 seconds
+        pauseOnHover: false,
+};
+
+const Slider = dynamic(() => import("react-slick"), {
+    ssr: false,
+});
+
+// Service type based on service-slice.js
+interface ServiceType {
+    _id: string;
+    serviceName: string;
+    serviceType: string;
+    imagePath: string;
+    link?: string;
+}
+
+interface ServiceState {
+    Services: ServiceType[];
+    currentService: any;
+    loading: boolean;
+    error: string | null;
+}
+
+interface RootState {
+    service: ServiceState;
+}
 
 const VendorLandingPage = () => {
+    const dispatch = useDispatch();
+    useEffect(() => {
+        (dispatch as any)(serviceList());
+    }, [dispatch]);
 
-  return (
+    const { Services, loading, error } = useSelector((state: RootState) => state.service);
+
+    // Helper function to create slug from service name
+    const createSlug = (name: string) => {
+        return name.toLowerCase().replace(/\s+/g, '-');
+    };
+
+    return (
     <>
         {/* Hero Banner */}
         <section className="slider-section">
@@ -86,16 +74,16 @@ const VendorLandingPage = () => {
                     Register India's Leading Service Booking Platform and Grow your
                     Business Today.
                     </h6>
-                    <a
-                    href="register.php"
+                    <Link
+                    href={'/vendor/register'}
                     className="btn btn-secondary btn-lg abt-btn mt-2 mt-md-4 py-2 px-3 rounded-5 text-white"
                     >
                     <img
                         src="assets/vendor/images/icons/register-icon.png"
-                        style={{ width: 20, height: 20 }}
+                        style={{ width: 20, height: 20, marginRight:'5px' }}
                     />
                     Let's Start
-                    </a>
+                    </Link>
                 </div>
                 <div className="col-12 col-lg-6 text-center text-md-end">
                     <img
@@ -264,24 +252,76 @@ const VendorLandingPage = () => {
             </div>
         </section>
 
-
+        {/* Main Services Section (copied from ServiceSection.js) */}
         <section className="services-section py-5 bg-gray-color">
             <div className="container">
-                <div className="services-list pt-0  pt-lg-0 pb-5">
-                    <div className="main-title text-center">
-                        <h2>Who can register as Vendor?</h2>
+                <div className="main-title text-center">
+                    <h2>Who can register as Vendor?</h2>
+                </div>
+                <div className="services-list pt-0 pt-lg-0 pb-5">
+                    <div className="main-title d-flex justify-content-between align-items-center px-3">
+                        <h2>Main Services</h2>
                     </div>
-
-                    {/* Main Services */}
-                    <Vservice title={'Main Services'} services={MainServices} />
-
-
-                    {/* Secondary Services */}
-                    <Vservice title={'Secondary Services'} services={MainServices} />
+                    <div className="services-list-sec pdtopp" style={{width: '100%'}}>
+                        {loading ? (
+                            <SkeletonTheme baseColor="#f3f3f3" highlightColor="#e0e0e0">
+                                <div style={{ display: 'flex', gap: '20px', overflowX: 'auto', padding: '10px' }}>
+                                    {Array.from({ length: 6 }).map((_, index) => (
+                                        <Skeleton key={index} width={196} height={243} />
+                                    ))}
+                                </div>
+                            </SkeletonTheme>
+                        ) : (
+                            React.createElement(Slider as any, settings,
+                                Services && Services.map((service: ServiceType) => service.serviceType === 'Primary' && (
+                                    <div className="item text-center" key={service._id}>
+                                        <Link href={`services/${createSlug(service.serviceName)}-${service._id}`}>
+                                            <div className="box2">
+                                                <Image src={`/api/image-proxy?url=${encodeURIComponent(service.imagePath)}`} alt={service.serviceName} width={196} height={243} />
+                                                <span className="service-name">{service.serviceName}</span>
+                                            </div>
+                                        </Link>
+                                    </div>
+                                ))
+                            )
+                        )}
+                    </div>
                 </div>
             </div>
         </section>
-
+        
+        <div className="services-section py-5 bg-gray-color">
+            <div className="container">
+                <div className="services-list pt-0 pt-lg-0 pb-5">
+                    <div className="main-title d-flex justify-content-between align-items-center px-3">
+                        <h2>Secondary Services</h2>
+                    </div>
+                    <div className="services-list-sec pdtopp">
+                        {loading ? (
+                        <SkeletonTheme baseColor="#f3f3f3" highlightColor="#e0e0e0">
+                            <div style={{ display: 'flex', gap: '20px', overflowX: 'auto', padding: '10px' }}>
+                            {Array.from({ length: 6 }).map((_, index) => (
+                                <Skeleton key={index} width={196} height={243} />
+                            ))}
+                            </div>
+                        </SkeletonTheme>
+                        ) : (
+                        React.createElement(Slider as any, settings,
+                            Services.map(service => service.serviceType === 'Secondary' && (
+                                <div className="item text-center" key={service._id}>
+                                    <Link href={service.link || '/'}>
+                                        <div className="box2">
+                                            <Image src={`/api/image-proxy?url=${encodeURIComponent(service.imagePath)}`} alt={service.serviceName} width={196} height={243} />
+                                        </div>
+                                    </Link>
+                                </div>
+                            ))
+                            )
+                        )}
+                    </div>
+                </div>
+            </div>
+        </div>
         
     </>
   )

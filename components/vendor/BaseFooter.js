@@ -14,7 +14,7 @@ const BaseFooter = () => {
                 <Link href={'/vendor/register'} className="btn btn-primary btn-lg me-3">
                   <img
                     src="/assets/vendor/images/icons/register-icon-light.png"
-                    style={{ width: 20, height: 20 }}
+                    style={{ width: 20, height: 20, marginRight:'5px' }}
                   />
                   Register
                 </Link>

@@ -1,121 +1,12 @@
 "use client";
+import { serviceList } from '@/services/service-api';
 import dynamic from 'next/dynamic';
 import Image from 'next/image'
-import React from 'react'
-
-const MainServices = [
-  {
-    id: 1,
-    title: "Photography",
-    image: "/images/common/s2.jpg",
-    link: "service.php"
-  },
-  {
-    id: 2,
-    title: "Web Development",
-    image: "/images/common/s2.jpg",
-    link: "service.php"
-  },
-  {
-    id: 3,
-    title: "Graphic Design",
-    image: "/images/common/s2.jpg",
-    link: "service.php"
-  },
-  {
-    id: 4,
-    title: "Photography",
-    image: "/images/common/s2.jpg",
-    link: "service.php"
-  },
-  {
-    id: 5,
-    title: "Web Development",
-    image: "/images/common/s2.jpg",
-    link: "service.php"
-  },
-  {
-    id: 6,
-    title: "Graphic Design",
-    image: "/images/common/s2.jpg",
-    link: "service.php"
-  },
-  {
-    id: 7,
-    title: "Photography",
-    image: "/images/common/s2.jpg",
-    link: "service.php"
-  },
-  {
-    id: 8,
-    title: "Web Development",
-    image: "/images/common/s2.jpg",
-    link: "service.php"
-  },
-  {
-    id: 9,
-    title: "Graphic Design",
-    image: "/images/common/s2.jpg",
-    link: "service.php"
-  }
-];
-
-const SecondaryServices = [
-  {
-    id: 1,
-    title: "Content Writing",
-    image: "/images/common/s2.jpg",
-    link: "service.php"
-  },
-  {
-    id: 2,
-    title: "Digital Marketing",
-    image: "/images/common/s2.jpg",
-    link: "service.php"
-  },
-  {
-    id: 3,
-    title: "SEO Services",
-    image: "/images/common/s2.jpg",
-    link: "service.php"
-  },
-  {
-    id: 4,
-    title: "Photography",
-    image: "/images/common/s2.jpg",
-    link: "service.php"
-  },
-  {
-    id: 5,
-    title: "Web Development",
-    image: "/images/common/s2.jpg",
-    link: "service.php"
-  },
-  {
-    id: 6,
-    title: "Graphic Design",
-    image: "/images/common/s2.jpg",
-    link: "service.php"
-  },
-  {
-    id: 7,
-    title: "Photography",
-    image: "/images/common/s2.jpg",
-    link: "service.php"
-  },
-  {
-    id: 8,
-    title: "Web Development",
-    image: "/images/common/s2.jpg",
-    link: "service.php"
-  },
-  {
-    id: 9,
-    title: "Graphic Design",
-    image: "/images/common/s2.jpg",
-    link: "service.php"
-  }
-];  
+import Link from 'next/link';
+import React, { useEffect } from 'react'
+import Skeleton, { SkeletonTheme } from 'react-loading-skeleton'
+import 'react-loading-skeleton/dist/skeleton.css'
+import { useDispatch, useSelector } from 'react-redux';
 
 const settings = {
     dots: false,
@@ -133,6 +24,20 @@ const Slider = dynamic(() => import("react-slick"), {
 });
 
 const ServiceSection = () => {
+  const dispatch = useDispatch();
+  useEffect(() => {
+    dispatch(serviceList());
+  }, [dispatch]);
+
+  const { Services, loading, error } = useSelector((state) => state.service);
+
+  console.log("Services data:", Services);
+
+  // Helper function to create slug from service name
+  const createSlug = (name) => {
+    return name.toLowerCase().replace(/\s+/g, '-');
+  };
+
   return (
     <section className="services-section bg-gray-color" id="services">
         <div className="container">
@@ -213,17 +118,28 @@ const ServiceSection = () => {
                     <h2>Main Services</h2>
                 </div>
                 <div className="services-list-sec pdtopp" style={{width: '100%'}}> 
+                  {loading ? (
+                    <SkeletonTheme baseColor="#f3f3f3" highlightColor="#e0e0e0">
+                      <div style={{ display: 'flex', gap: '20px', overflowX: 'auto', padding: '10px' }}>
+                        {Array.from({ length: 6 }).map((_, index) => (
+                            <Skeleton key={index} width={196} height={243} />
+                        ))}
+                      </div>
+                    </SkeletonTheme>
+                  ) : (
                     <Slider {...settings}>
-                        {MainServices.map(service => (
-                            <div className="item text-center" key={service.id}>
-                                <a href={service.link}>
+                        {Services.map(service => service.serviceType === 'Primary' && (
+                            <div className="item text-center" key={service._id}>
+                                <Link href={`services/${createSlug(service.serviceName)}-${service._id}`}>
                                     <div className="box2">
-                                        <Image src={service.image} alt={service.title} width={196} height={243} />
+                                        <Image src={`/api/image-proxy?url=${encodeURIComponent(service.imagePath)}`} alt={service.serviceName} width={196} height={243} />
+                                        <span className="service-name">{service.serviceName}</span>
                                     </div>
-                                </a>
+                                </Link>
                             </div>
                         ))}
                     </Slider>
+                  )}
                 </div>
             </div>
             
@@ -232,17 +148,27 @@ const ServiceSection = () => {
                     <h2>Secondary Services</h2>
                 </div>
                 <div className="services-list-sec pdtopp">
+                  {loading ? (
+                    <SkeletonTheme baseColor="#f3f3f3" highlightColor="#e0e0e0">
+                      <div style={{ display: 'flex', gap: '20px', overflowX: 'auto', padding: '10px' }}>
+                        {Array.from({ length: 6 }).map((_, index) => (
+                            <Skeleton key={index} width={196} height={243} />
+                        ))}
+                      </div>
+                    </SkeletonTheme>
+                  ) : (
                     <Slider {...settings}>
-                        {SecondaryServices.map(service => (
-                            <div className="item text-center" key={service.id}>
-                                <a href={service.link}>
+                        {Services.map(service => service.serviceType === 'Secondary' && (
+                            <div className="item text-center" key={service._id}>
+                                <Link href={service.link || '/'}>
                                     <div className="box2">
-                                        <Image src={service.image} alt={service.title} width={196} height={243}/>
+                                        <Image src={`/api/image-proxy?url=${encodeURIComponent(service.imagePath)}`} alt={service.serviceName} width={196} height={243} />
                                     </div>
-                                </a>
+                                </Link>
                             </div>
                         ))}
                     </Slider>
+                  )}
                 </div>
             </div>
         </div>

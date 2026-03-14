@@ -1741,8 +1741,10 @@ transition: .3s;
   /* IE6-9 */
   -webkit-filter: grayscale(100%);
   /* Chrome 19+ & Safari 6+ */
+  transition: all .6s ease;
   -webkit-transition: all .6s ease;
   /* Fade to color for Chrome and Safari */
+  backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
   /* Fix for transition flickering */
 }
@@ -3408,13 +3410,13 @@ h1 { font-size:30px; }
     border-radius: 5px; }
 
 .box2 img {
-  width:fit-content; 
+  width: 100%; 
   border-radius: 5px; 
 }
 
 .services-list-sec .slick-next {
    right: 27px !important;
-    bottom: 262px !important;
+    bottom: 290px !important;
 }
 .services-list-sec .slick-prev {
 display: none !important;
@@ -3685,8 +3687,26 @@ h1 {font-size: 30px;}
   right: 80px;
 }
 
+.profile-menu{
+  border: none;
+  border-radius: 25px;
+}
+
+.d-lg-inline-block svg{
+  margin-right: 4px;
+}
+
 /* Kiran styles */
 /* .services-list-sec{
   display: flex;
   flex-wrap: wrap;
 } */
+.service-name{
+    position: relative;
+    top: -38px;
+    left: -50px;
+    font-size: 18px;
+    font-weight: 600;
+    color: #fff;
+    -webkit-text-stroke: 1px #000;
+}

@@ -7,7 +7,7 @@ import { serviceDelete, serviceList } from '@/services/service-api'
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 
-const tableHeader: string[] = ['S.No', 'Service Name', 'Category', 'Type', 'Portfolio', 'Image', 'Actions'];
+const tableHeader: string[] = ['S.No', 'Service Name', 'Type', 'Portfolio', 'Image', 'Actions'];
 
 const AdServices = () => {
     const router = useRouter()
