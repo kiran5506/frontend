@@ -16,6 +16,7 @@ export default {
         edit: '/service/edit/{id}',
         list: '/service/list',
         findById: '/service/findById/{id}',
+        findByIdWithProfiles: '/service/findByIdWithProfiles/{id}',
         delete: '/service/delete/{id}'
     },
     SKILLS: {
@@ -38,6 +39,10 @@ export default {
         list: '/leadpackage/list',
         findById: '/leadpackage/findById/{id}',
         delete: '/leadpackage/delete/{id}'
+    },
+    PAYMENT: {
+        createOrder: '/payment/create-order',
+        verify: '/payment/verify'
     },
     LANGUAGES: {
         create: '/language/create',
@@ -65,7 +70,8 @@ export default {
         edit: '/event/edit/{id}',
         list: '/event/list',
         findById: '/event/findById/{id}',
-        delete: '/event/delete/{id}'
+        delete: '/event/delete/{id}',
+        findByServiceId: '/event/service/{service_id}'
     },
     TESTIMONIALS: {
         create: '/testimonial/create',
@@ -81,10 +87,12 @@ export default {
         updateProfileCompletion: '/vendorauth/update-profile-completion',
         generateOtp: '/vendorauth/generate-otp',
         list: '/vendor/list',
+        listWithStatus: '/vendor/list-with-status',
         findById: '/vendor/view/{id}',
         edit: '/vendor/edit/{id}',
         updatePassword: '/vendor/update-password/{id}',
-        delete: '/vendor/delete/{id}'
+        delete: '/vendor/delete/{id}',
+        approveReject: '/vendor/approve-reject/{id}'
     },
     ADMIN: {
         login: '/admin/login',
@@ -148,8 +156,23 @@ export default {
         edit: '/business-profile/edit/{id}',
         list: '/business-profile/list',
         findById: '/business-profile/findById/{id}',
+        detailsById: '/business-profile/details/{id}',
         findByVendorId: '/business-profile/findByVendorId/{vendor_id}',
-        delete: '/business-profile/delete/{id}'
+        delete: '/business-profile/delete/{id}',
+        deleteCoverImage: '/business-profile/delete-cover-image/{id}'
+    },
+    BUSINESS_PORTFOLIO: {
+        create: '/business-portfolio/create',
+        listByVendor: '/business-portfolio/vendor/{vendor_id}',
+        deleteMedia: '/business-portfolio/delete-media/{id}'
+    },
+    BUSINESS_PACKAGES: {
+        create: '/business-packages/create',
+        edit: '/business-packages/edit/{id}',
+        list: '/business-packages/list',
+        listByVendor: '/business-packages/vendor/{vendor_id}',
+        findById: '/business-packages/findById/{id}',
+        delete: '/business-packages/delete/{id}'
     },
     FEEDBACK: {
         create: '/feedback/create',
@@ -159,6 +182,20 @@ export default {
         delete: '/feedback/delete/{id}',
         findByVendorId: '/feedback/vendor/{vendorId}',
         findByUserId: '/feedback/user/{userId}'
+    },
+    SUGGESTIONS: {
+        create: '/suggestions/create',
+        list: '/suggestions/list',
+        findById: '/suggestions/findById/{id}',
+        edit: '/suggestions/edit/{id}',
+        delete: '/suggestions/delete/{id}'
+    },
+    VIDEOS: {
+        create: '/video/create',
+        edit: '/video/edit/{id}',
+        list: '/video/list',
+        findById: '/video/findById/{id}',
+        delete: '/video/delete/{id}'
     },
     REVIEW: {
         create: '/review/create',
@@ -171,6 +208,15 @@ export default {
     },
     FREELANCERS: {
         create: '/freelancers',
-        list: '/freelancers/list'
+        list: '/freelancers/list',
+        findById: '/freelancers/{id}'
+    },
+    STATS: {
+        counts: '/stats/counts'
+    },
+    WISHLIST: {
+        toggle: '/wishlist/toggle',
+        list: '/wishlist/list',
+        ids: '/wishlist/ids'
     }
 }

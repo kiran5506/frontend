@@ -1,7 +1,11 @@
 import React, { useState, useRef, useEffect } from 'react'
 import Link from 'next/link'
+import { logout } from '@/redux/features/vendor-auth-slice'
+import { useDispatch, useSelector } from 'react-redux';
 
 const Rightmenu = () => {
+  const dispatch = useDispatch();
+  const { registeredVendor } = useSelector((state) => state.vendorAuth || {});
   const [isDropdownOpen, setIsDropdownOpen] = useState(false)
   const dropdownRef = useRef(null)
 
@@ -26,6 +30,10 @@ const Rightmenu = () => {
     }
   }, [isDropdownOpen])
 
+    const handleLogout = () => {
+        dispatch(logout());
+    };
+
   return (
     <ul className="d-flex align-items-center">
         <li className="nav-item2" style={{ margin: "0px 13px 0px 13px" }}>
@@ -33,10 +41,10 @@ const Rightmenu = () => {
             <span className="d-block d-lg-block pstatus_active"> Active</span>
             </Link>
         </li>
-        <li className="nav-item">
+    <li className="nav-item">
             <Link href="leads-management.php" className="nav-link">
             <img src="/assets/vendor/img/clipboard.png" alt="" />
-            <span className="d-block d-lg-block"> 200</span>
+      <span className="d-block d-lg-block"> {registeredVendor?.credits ?? 0}</span>
             </Link>
         </li>
         <li className="nav-item">
@@ -63,14 +71,14 @@ const Rightmenu = () => {
             {isDropdownOpen && (
               <ul className="dropdown-menu dropdown-menu-end show" style={{ display: 'block', position: 'absolute', right: 0, top: '100%', minWidth: '200px', zIndex: 1000 }}>
                 <li>
-                    <Link className="dropdown-item" href="account-settings.php">
+                    <Link className="dropdown-item" href={'/vendor/account-settings'}>
                     My Profile
                     </Link>
                 </li>
                 <li>
-                    <Link className="dropdown-item" href="../login.php">
-                    Logout
-                    </Link>
+                    <button type='button' className="nav-link" onClick={handleLogout} style={{ padding: '10px 15px' }}>
+                        <span>Logout</span>
+                    </button>
                 </li>
               </ul>
             )}

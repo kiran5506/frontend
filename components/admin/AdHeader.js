@@ -59,14 +59,20 @@ const AdHeader = () => {
             <Link
               className="nav-link nav-profile d-flex align-items-center pe-0"
               href="#"
-              data-bs-toggle="dropdown"
+              role="button"
+              aria-haspopup="true"
+              aria-expanded="false"
+              onClick={(event) => {
+                event.preventDefault();
+                handlemenu();
+              }}
             >
               <img
                 src="/assets/admin/img/profile-img.jpg"
                 alt="Profile"
                 className="rounded-circle"
               />
-              <span className="d-none d-md-block dropdown-toggle ps-2" onClick={handlemenu()}>Admin</span>
+              <span className="d-none d-md-block dropdown-toggle ps-2">Admin</span>
             </Link>
             <ul className="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile">
               <li className="dropdown-header">
@@ -78,7 +84,7 @@ const AdHeader = () => {
               <li>
                 <Link
                   className="dropdown-item d-flex align-items-center"
-                  href="my_profile.php"
+                  href="/admin/my-profile"
                 >
                   <i className="bi bi-person" />
                   <span>My Profile</span>
@@ -90,7 +96,7 @@ const AdHeader = () => {
               <li>
                 <Link
                   className="dropdown-item d-flex align-items-center"
-                  href="index.php"
+                  href="/admin"
                 >
                   <i className="bi bi-box-arrow-right" />
                   <span>Logout</span>

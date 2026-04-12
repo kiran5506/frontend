@@ -175,8 +175,8 @@ const Footer = () => {
                 </div>
                 <div className="col-md-6 text-center text-md-end">
                 <p>
-                    <Link href="terms_conditions.php">Terms &amp; Conditions</Link> |{" "}
-                    <Link href="privacy_policy.php">Privacy Policy</Link>
+                    <Link href={'/terms-and-conditions'}>Terms &amp; Conditions</Link> |{" "}
+                    <Link href="/privacy-policy">Privacy Policy</Link>
                 </p>
                 </div>
             </div>

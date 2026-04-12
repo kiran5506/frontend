@@ -78,7 +78,11 @@ const TableBody = ({ bodyData, onView, onEdit, onDelete, isview, isedit, isdelet
                                             />
                                         </a>
                                     ) : (
-                                        cindex === 0 ? index + 1 : cell
+                                        cindex === 0
+                                            ? index + 1
+                                            : Array.isArray(cell)
+                                            ? cell.join(', ')
+                                            : cell
                                     )}
                                 </td>
                             )

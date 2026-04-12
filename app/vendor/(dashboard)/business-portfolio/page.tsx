@@ -1,28 +1,55 @@
-import React from "react";
+"use client";
+import React, { useEffect, useMemo, useState } from "react";
+import Link from "next/link";
+import { useDispatch, useSelector } from "react-redux";
+import { businessPortfolioByVendorId } from "@/services/business-portfolio-api";
+import { toast } from "react-toastify";
 
 const BusinessPortfolio = () => {
+  const dispatch = useDispatch() as any;
+  const { vendorAuth } = useSelector((state: any) => state);
+  const vendorId = vendorAuth?.vendorid;
+  const [portfolios, setPortfolios] = useState<any[]>([]);
+
+  useEffect(() => {
+    if (!vendorId) return;
+    (dispatch as any)(businessPortfolioByVendorId(vendorId))
+      .then((response: any) => {
+        if (response?.payload?.status) {
+          setPortfolios(response.payload.data || []);
+        } else {
+          setPortfolios([]);
+        }
+      })
+      .catch((error: any) => {
+        console.error("Error fetching portfolios:", error);
+        toast.error("Failed to load portfolios");
+      });
+  }, [dispatch, vendorId]);
+
+  const rows = useMemo(() => {
+    return portfolios.flatMap((portfolio: any) =>
+      (portfolio.events || []).map((event: any) => ({
+        portfolioId: portfolio._id,
+        eventId: event.event_id?._id || event.event_id,
+        eventName: event.event_id?.eventName || "Event",
+        imagesCount: event.images?.length || 0,
+        videosCount: event.videos?.length || 0
+      }))
+    );
+  }, [portfolios]);
+
   return (
     <>
-      <div className="pad">
         <div className="row mb-3 mb-md-0">
           <div className="col-12 col-md-8">
             <h2 className="page-title">Business Portfolio</h2>
           </div>
           <div className="col-12 col-md-4">
-            {" "}
-            <span style={{ margin: 3 }}>
-              {" "}
-              <a href="#" className="btn orange-btn btn-xs ">
-                {" "}
-                + Add Videos{" "}
-              </a>{" "}
-            </span>{" "}
-            <span style={{ margin: 3 }}>
-              {" "}
-              <a href="#" className="btn orange-btn btn-xs ">
-                {" "}
-                + Add Photos{" "}
-              </a>{" "}
+            <span style={{ margin: 3, float: "right" }}>
+              <Link href="/vendor/business-portfolio/create" className="btn orange-btn btn-xs ">
+                + Add Portfolio
+              </Link>
             </span>
           </div>
         </div>
@@ -39,100 +66,43 @@ const BusinessPortfolio = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  <tr>
-                    <td className="minn">1</td>
-                    <td className="midd">Marriage Event</td>
-                    <td className="midd">
-                      Photos - 2 <br /> Videos - 4{" "}
-                    </td>
-                    <td className="midd">
-                      <a
-                        href="add-business-portfolio.php"
-                        className="btn btn-primary py-2 px-2"
-                        style={{
-                          fontSize: 15,
-                          paddingLeft: "10px !important",
-                          paddingRight: "10px !important",
-                        }}
-                      >
-                        {" "}
-                        Edit / Delete{" "}
-                        <img src="assets/img/btn-arrow.png" alt="" width={10} />
-                      </a>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="minn">1</td>
-                    <td className="midd">Marriage Event</td>
-                    <td className="midd">
-                      Photos - 2 <br /> Videos - 4{" "}
-                    </td>
-                    <td className="midd">
-                      <a
-                        href="add-business-portfolio.php"
-                        className="btn btn-primary py-2 px-2"
-                        style={{
-                          fontSize: 15,
-                          paddingLeft: "10px !important",
-                          paddingRight: "10px !important",
-                        }}
-                      >
-                        {" "}
-                        Edit / Delete{" "}
-                        <img src="assets/img/btn-arrow.png" alt="" width={10} />
-                      </a>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="minn">1</td>
-                    <td className="midd">Marriage Event</td>
-                    <td className="midd">
-                      Photos - 2 <br /> Videos - 4{" "}
-                    </td>
-                    <td className="midd">
-                      <a
-                        href="add-business-portfolio.php"
-                        className="btn btn-primary py-2 px-2"
-                        style={{
-                          fontSize: 15,
-                          paddingLeft: "10px !important",
-                          paddingRight: "10px !important",
-                        }}
-                      >
-                        {" "}
-                        Edit / Delete{" "}
-                        <img src="assets/img/btn-arrow.png" alt="" width={10} />
-                      </a>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td className="minn">1</td>
-                    <td className="midd">Marriage Event</td>
-                    <td className="midd">
-                      Photos - 2 <br /> Videos - 4{" "}
-                    </td>
-                    <td className="midd">
-                      <a
-                        href="add-business-portfolio.php"
-                        className="btn btn-primary py-2 px-2"
-                        style={{
-                          fontSize: 15,
-                          paddingLeft: "10px !important",
-                          paddingRight: "10px !important",
-                        }}
-                      >
-                        {" "}
-                        Edit / Delete{" "}
-                        <img src="assets/img/btn-arrow.png" alt="" width={10} />
-                      </a>
-                    </td>
-                  </tr>
+                  {rows.length > 0 ? (
+                    rows.map((row, index) => (
+                      <tr key={`${row.portfolioId}-${row.eventId}`}
+                        >
+                        <td className="minn">{index + 1}</td>
+                        <td className="midd">{row.eventName}</td>
+                        <td className="midd">
+                          Photos - {row.imagesCount} <br /> Videos - {row.videosCount}
+                        </td>
+                        <td className="midd">
+                          <Link
+                            href={`/vendor/business-portfolio/create?eventId=${row.eventId}`}
+                            className="btn btn-primary py-2 px-2"
+                            style={{
+                              fontSize: 15,
+                              paddingLeft: "10px !important",
+                              paddingRight: "10px !important",
+                            }}
+                          >
+                            Manage
+                            <img src="assets/img/btn-arrow.png" alt="" width={10} />
+                          </Link>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={4} className="text-center">
+                        No portfolio entries found.
+                      </td>
+                    </tr>
+                  )}
                 </tbody>
               </table>
             </div>
           </div>
         </div>
-      </div>
     </>
   );
 };

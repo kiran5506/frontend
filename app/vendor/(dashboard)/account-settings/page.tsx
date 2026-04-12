@@ -77,6 +77,16 @@ const AccountSettings = () => {
   const [dataFetched, setDataFetched] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [profileImageFile, setProfileImageFile] = useState<File | null>(null);
+  const getProxyUrl = (url: string) => {
+    if (!url) return url;
+    if (url.startsWith('data:') || url.startsWith('/assets') || url.startsWith('blob:')) {
+      return url;
+    }
+    if (url.startsWith('http')) {
+      return `/api/image-proxy?url=${encodeURIComponent(url)}`;
+    }
+    return url;
+  };
 
   // Fetch vendor data on component mount or when vendorid changes
   useEffect(() => {
@@ -265,7 +275,7 @@ const AccountSettings = () => {
           <div className="form-sec">
             <div className="mb-4">
               <img
-                src={profileImage}
+                src={getProxyUrl(profileImage)}
                 alt="Profile"
                 width="150px"
                 height="150px"

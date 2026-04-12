@@ -20,9 +20,9 @@ const sidebarMenu = [
 
 const SidePanel = () => {
     const dispatch = useDispatch();
-  const handleLogout = () => {
-    dispatch(logout());
-  };
+    const handleLogout = () => {
+        dispatch(logout());
+    };
 
   return (
     <aside id="sidebar" className="sidebar">

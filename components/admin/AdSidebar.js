@@ -3,7 +3,7 @@ import { adminLogout } from '@/redux/features/admin-auth-slice'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import React, { useState } from 'react'
-import { BsBoxArrowRight, BsBoxes, BsChevronDown, BsChevronUp, BsCircle, BsFillPersonVcardFill, BsGrid, BsLaptop, BsPersonCheck, BsTools } from 'react-icons/bs'
+import { BsBoxArrowRight, BsBoxes, BsChevronDown, BsChevronUp, BsCircle, BsFillPersonVcardFill, BsGrid, BsLaptop, BsPerson, BsPersonCheck, BsTools } from 'react-icons/bs'
 import { useDispatch } from 'react-redux'
 
 const AdSidebar = () => {
@@ -24,9 +24,9 @@ const AdSidebar = () => {
         { name: 'Leads Reports', icon: <BsCircle />, link: '/admin/reports' },
     ]},
     { name: 'Approval Manager', icon: <BsPersonCheck />, link: '#', subMenu: [
-        { name: 'Vendor Request', icon: <BsCircle />, link: '/admin/collaborations' },
-        { name: 'Vendor Approved', icon: <BsCircle />, link: '/admin/reports' },
-        { name: 'Hold Approved', icon: <BsCircle />, link: '/admin/reports' },
+        { name: 'Vendor Request', icon: <BsCircle />, link: '/admin/vendor-requests' },
+        { name: 'Vendor Approved', icon: <BsCircle />, link: '/admin/vendor-approved' },
+        { name: 'Rejected Vendors', icon: <BsCircle />, link: '/admin/vendor-rejected' },
     ]},
     { name: 'Feedbacks', icon: <BsBoxes />, link: '#', subMenu: [
         { name: 'Customers', icon: <BsCircle />, link: '/admin/feedbacks?type=customer' },
@@ -40,8 +40,11 @@ const AdSidebar = () => {
     { name: 'Site Manager', icon: <BsLaptop />, link: '#', subMenu: [
         { name: 'Sliders', icon: <BsCircle />, link: '/admin/sliders' },
         { name: 'Services', icon: <BsCircle />, link: '/admin/services' },
-        { name: 'Cities', icon: <BsCircle />, link: '/admin/cities' },
+    { name: 'Videos', icon: <BsCircle />, link: '/admin/videos' },
+        
         { name: 'Events', icon: <BsCircle />, link: '/admin/events' },
+        { name: 'Cities', icon: <BsCircle />, link: '/admin/cities' },
+        { name: 'Suggestions', icon: <BsCircle />, link: '/admin/suggestions' },
         { name: 'Languages', icon: <BsCircle />, link: '/admin/languages' },
         { name: 'Lead Packages', icon: <BsCircle />, link: '/admin/leadpackages' },
         { name: 'Skills', icon: <BsCircle />, link: '/admin/skills' },
@@ -50,7 +53,7 @@ const AdSidebar = () => {
       ]
     },
     { name: 'Site Settings', icon: <BsTools />, link: '/admin/site-settings' },
-    { name: 'My Profile', icon: <BsTools />, link: '/admin/profile' },
+    { name: 'My Profile', icon: <BsPerson />, link: '/admin/profile' },
     // Add more sidebar items here as needed
   ];
 

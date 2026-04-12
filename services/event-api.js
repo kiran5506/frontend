@@ -34,3 +34,7 @@ export const eventDelete = createAsyncThunk('event/eventDelete', async (id) => {
     result.id = id;
     return result;
 })
+
+export const eventByServiceId = createAsyncThunk('event/eventByServiceId', async (service_id) => {
+    return (await axiosInstance.get(endpoints.EVENTS.findByServiceId.replace("{service_id}", service_id))).data;
+})

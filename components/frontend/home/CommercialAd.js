@@ -1,6 +1,27 @@
-import React from 'react'
+"use client";
+import React, { useEffect, useMemo } from 'react'
+import { useDispatch, useSelector } from 'react-redux'
+import { videoList } from '@/services/video-api'
 
 const CommercialAd = () => {
+        const dispatch = useDispatch();
+        const dispatchAction = dispatch;
+        const { Videos, loading } = useSelector((state) => state.video || {});
+
+        useEffect(() => {
+                dispatchAction(videoList());
+        }, [dispatchAction]);
+
+        const firstVideo = useMemo(() => (Array.isArray(Videos) ? Videos[0] : null), [Videos]);
+        const rawUrl = firstVideo?.videoUrl || 'https://www.youtube.com/embed/wQquISGhUlQ';
+        const embedUrl = rawUrl.includes('youtube.com/embed/')
+                ? rawUrl
+                : rawUrl.includes('watch?v=')
+                ? rawUrl.replace('watch?v=', 'embed/')
+                : rawUrl.includes('youtu.be/')
+                ? rawUrl.replace('youtu.be/', 'www.youtube.com/embed/')
+                : rawUrl;
+
   return (
     <section className="py-5" style={{ backgroundColor: "var(--primary-color)" }}>
         <div className="container">
@@ -16,11 +37,16 @@ const CommercialAd = () => {
                 }}
                 />
                 <div className="embed-container">
-                <iframe
-                    src="https://www.youtube.com/embed/wQquISGhUlQ"
-                    frameBorder={0}
-                    allowFullScreen=""
-                />
+                {loading ? (
+                    <p className="text-white text-center">Loading video...</p>
+                ) : (
+                    <iframe
+                        src={embedUrl}
+                        title="Commercial Ad"
+                        frameBorder={0}
+                        allowFullScreen
+                    />
+                )}
                 </div>
             </div>
             </div>

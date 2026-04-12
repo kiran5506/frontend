@@ -3,7 +3,7 @@ import React from 'react'
 
 const LeadsManagement = () => {
   return (
-    <div className="pad">
+    <>
       <div className="row align-items-center d-flex mb-4">
         <div className="col-md-4">
           <h2 className="page-title">Leads Management</h2>
@@ -51,7 +51,7 @@ const LeadsManagement = () => {
           </div>
           <div className="col-12 col-md-5 text-end two-btns">
             <Link
-              href="lead-packages.php"
+              href={'/vendor/lead-packages'}
               className="btn orange-btn btn-xs float-right"
             >
               Recharge
@@ -106,122 +106,10 @@ const LeadsManagement = () => {
                 </Link>
               </td>
             </tr>
-            <tr className="activecolor">
-              <td className="minn ">1</td>
-              <td className="midd">15-04-2025</td>
-              <td className="midd">
-                <Link
-                  href="https://api.whatsapp.com/send/?phone=919985886393&text&type=letmeknowcostbsfye"
-                  target="_blank"
-                  style={{ color: "#000" }}
-                >
-                  <img src="assets/img/whatsapp.png" alt="" width={25} /> 9999999999
-                </Link>
-              </td>
-              <td className="largee">Enquiry for Advertising Agencies</td>
-              <td className="midd">Vizag</td>
-              <td className="midd">
-                <Link href="#" className="btn btn-success">
-                  <i className="bi bi-hand-thumbs-up" />
-                </Link>
-                <Link
-                  href="#"
-                  data-bs-toggle="modal"
-                  data-bs-target="#negative-review"
-                  className="btn btn-danger"
-                >
-                  <i className="bi bi-hand-thumbs-down" />
-                </Link>
-              </td>
-            </tr>
-            <tr>
-              <td className="minn">1</td>
-              <td className="midd">15-04-2025</td>
-              <td className="midd">
-                <Link
-                  href="https://api.whatsapp.com/send/?phone=919985886393&text&type=letmeknowcostbsfye"
-                  target="_blank"
-                  style={{ color: "#000" }}
-                >
-                  <img src="assets/img/whatsapp.png" alt="" width={25} /> 9999999999
-                </Link>
-              </td>
-              <td className="largee">Enquiry for Advertising Agencies</td>
-              <td className="midd">Vizag</td>
-              <td className="midd">
-                <Link href="#" className="btn btn-success">
-                  <i className="bi bi-hand-thumbs-up" />
-                </Link>
-                <Link
-                  href="#"
-                  data-bs-toggle="modal"
-                  data-bs-target="#negative-review"
-                  className="btn btn-danger"
-                >
-                  <i className="bi bi-hand-thumbs-down" />
-                </Link>
-              </td>
-            </tr>
-            <tr>
-              <td className="minn">1</td>
-              <td className="midd">15-04-2025</td>
-              <td className="midd">
-                <Link
-                  href="https://api.whatsapp.com/send/?phone=919985886393&text&type=letmeknowcostbsfye"
-                  target="_blank"
-                  style={{ color: "#000" }}
-                >
-                  <img src="assets/img/whatsapp.png" alt="" width={25} /> 9999999999
-                </Link>
-              </td>
-              <td className="largee">Enquiry for Advertising Agencies</td>
-              <td className="midd">Vizag</td>
-              <td className="midd">
-                <Link href="#" className="btn btn-success">
-                  <i className="bi bi-hand-thumbs-up" />
-                </Link>
-                <Link
-                  href="#"
-                  data-bs-toggle="modal"
-                  data-bs-target="#negative-review"
-                  className="btn btn-danger"
-                >
-                  <i className="bi bi-hand-thumbs-down" />
-                </Link>
-              </td>
-            </tr>
-            <tr>
-              <td className="minn">1</td>
-              <td className="midd">15-04-2025</td>
-              <td className="midd">
-                <Link
-                  href="https://api.whatsapp.com/send/?phone=919985886393&text&type=letmeknowcostbsfye"
-                  target="_blank"
-                  style={{ color: "#000" }}
-                >
-                  <img src="assets/img/whatsapp.png" alt="" width={25} /> 9999999999
-                </Link>
-              </td>
-              <td className="largee">Enquiry for Advertising Agencies</td>
-              <td className="midd">Vizag</td>
-              <td className="midd">
-                <Link href="#" className="btn btn-success">
-                  <i className="bi bi-hand-thumbs-up" />
-                </Link>
-                <Link
-                  href="#"
-                  data-bs-toggle="modal"
-                  data-bs-target="#negative-review"
-                  className="btn btn-danger"
-                >
-                  <i className="bi bi-hand-thumbs-down" />
-                </Link>
-              </td>
-            </tr>
           </tbody>
         </table>
       </div>
-    </div>
+    </>
   )
 }
 

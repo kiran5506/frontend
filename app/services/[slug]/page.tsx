@@ -1,18 +1,38 @@
 "use client";
 import WithLayout from '@/hoc/WithLayout'
-import Service from '@/components/frontend/Service'
 import Pagination from '@/components/Pagination'
+import Service from '@/components/frontend/Service'
 import RequestCallbackModal from '@/components/frontend/RequestCallbackModal'
 import { usePathname } from 'next/navigation';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
+import { useSelector } from 'react-redux';
+import { fetchWishlistIds, toggleWishlist } from '@/services/wishlist-api'
+import axiosInstance from '@/utils/axios';
+import endpoints from '@/services/endpoints';
+import Link from 'next/link';
 
 const Services = () => {
     const pathname = usePathname();
     const slug = pathname?.split('/').pop() || '';
     const serviceId = slug.split('-').pop();
     const [isModalOpen, setIsModalOpen] = useState(false);
-    
-    console.log('Service ID:', serviceId);
+    const [serviceDetails, setServiceDetails] = useState<any>(null);
+    const [businessProfiles, setBusinessProfiles] = useState<any[]>([]);
+    const [loading, setLoading] = useState(false);
+    const [wishlistIds, setWishlistIds] = useState<string[]>([]);
+    const customerAuth = useSelector((state: any) => state.customerAuth);
+    const customerDetails = useMemo(() => {
+        if (!customerAuth?.details) return null;
+        if (typeof customerAuth.details === 'string') {
+            try {
+                return JSON.parse(customerAuth.details);
+            } catch (error) {
+                return null;
+            }
+        }
+        return customerAuth.details;
+    }, [customerAuth?.details]);
+    const customerId = customerDetails?._id;
 
     useEffect(() => {
         // Open modal automatically when page loads
@@ -23,6 +43,70 @@ const Services = () => {
         return () => clearTimeout(timer);
     }, []);
 
+    useEffect(() => {
+        if (!serviceId) return;
+        setLoading(true);
+        axiosInstance
+            .get(endpoints.SERVICES.findByIdWithProfiles.replace('{id}', serviceId))
+            .then((response) => {
+                if (response?.data?.status) {
+                    console.log('Service details response:', response.data.data?.service);
+                    setServiceDetails(response.data.data?.service || null);
+                    setBusinessProfiles(response.data.data?.business_profiles || []);
+                } else {
+                    setServiceDetails(null);
+                    setBusinessProfiles([]);
+                }
+            })
+            .catch((error) => {
+                console.error('Error fetching service details:', error);
+                setServiceDetails(null);
+                setBusinessProfiles([]);
+            })
+            .finally(() => setLoading(false));
+    }, [serviceId]);
+
+    useEffect(() => {
+        let isMounted = true;
+        const loadWishlist = async () => {
+            if (!customerAuth?.isAuthenticated) {
+                if (isMounted) setWishlistIds([]);
+                return;
+            }
+            try {
+                const response = await fetchWishlistIds(customerId);
+                if (isMounted && response?.status) {
+                    setWishlistIds(response.data || []);
+                }
+            } catch (error) {
+                if (isMounted) setWishlistIds([]);
+            }
+        };
+
+        loadWishlist();
+        return () => {
+            isMounted = false;
+        };
+    }, [customerAuth?.isAuthenticated]);
+
+    const handleToggleWishlist = async (profile: any) => {
+        if (!profile?._id) return;
+        try {
+            const response = await toggleWishlist(profile._id, customerId);
+            if (response?.status) {
+                setWishlistIds((prev) => {
+                    const exists = prev.includes(profile._id);
+                    if (response?.data?.added === false || exists) {
+                        return prev.filter((id) => id !== profile._id);
+                    }
+                    return [...prev, profile._id];
+                });
+            }
+        } catch (error) {
+            // ignore
+        }
+    };
+
   return (
     <>
         <RequestCallbackModal 
@@ -30,7 +114,7 @@ const Services = () => {
             onClose={() => setIsModalOpen(false)} 
         />
         <section className="inner-search-section2">
-            <h1 className="text-center py-3 ">Bridal Makeup Artists in Vizag - {serviceId}</h1>
+            <h1 className="text-center py-3 ">{serviceDetails?.serviceName || 'Service Name'}</h1>
         </section>
         <section className="inner-search-section" id="filterBy">
             <div className="container">
@@ -75,13 +159,58 @@ const Services = () => {
                 <div className="main-title d-flex justify-content-between align-items-center">
                     <h3>Top Suggestions</h3>
                 </div>
-                <div className="row d-flex justify-content-center">
-                    <Service />
-                    <Service />
-                    <Service />
-                    <Service />
+                {loading ? (
+                    <p>Loading...</p>
+                ) : (
+                    <>
+                        <div className="row d-flex justify-content-center">
+                            {businessProfiles.length > 0 ? (
+                                    businessProfiles.map((profile) => (
+                                        <Service
+                                            key={profile?._id}
+                                            profile={profile}
+                                            serviceDetails={serviceDetails}
+                                            isWishlisted={wishlistIds.includes(profile?._id)}
+                                            onToggleWishlist={handleToggleWishlist}
+                                        />
+                                    ))
+                            ) : (
+                                <p className="text-muted">No businesses found for this service.</p>
+                            )}
+                        </div>
+                        {businessProfiles.length > 8 && <Pagination />}
+                    </>
+                )}
+            </div>
+        </section>
+
+        <section className="services-section py-2">
+            <div className="container">
+                <div className="main-title d-flex justify-content-between align-items-center">
+                    <h3>Regular Vendors</h3>
                 </div>
-                <Pagination />
+                {loading ? (
+                    <p>Loading...</p>
+                ) : (
+                    <>
+                        <div className="row d-flex justify-content-center">
+                            {businessProfiles.length > 0 ? (
+                                    businessProfiles.map((profile) => (
+                                        <Service
+                                            key={profile?._id}
+                                            profile={profile}
+                                            serviceDetails={serviceDetails}
+                                            isWishlisted={wishlistIds.includes(profile?._id)}
+                                            onToggleWishlist={handleToggleWishlist}
+                                        />
+                                    ))
+                            ) : (
+                                <p className="text-muted">No businesses found for this service.</p>
+                            )}
+                        </div>
+                        {businessProfiles.length > 8 && <Pagination />}
+                    </>
+                )}
             </div>
         </section>
 

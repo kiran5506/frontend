@@ -1,23 +1,258 @@
+"use client";
 import WithLayout from '@/hoc/WithLayout'
 import Image from 'next/image'
 import Link from 'next/link'
-import React from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
+import { useParams, useRouter } from 'next/navigation'
+import { useSelector } from 'react-redux'
+import { toast } from 'react-toastify'
 import Vendorslist from '@/components/frontend/ServiceDetails/Vendorslist'
+import PackageCard from '@/components/frontend/ServiceDetails/PackageCard'
+import axiosInstance from '@/utils/axios'
+import endpoints from '@/services/endpoints'
 import "./servicedetails.css"
+import { fetchWishlistIds, toggleWishlist } from '@/services/wishlist-api'
 
 const ServiceDetails = () => {
+    const router = useRouter();
+    const params = useParams();
+    const rawSlug = Array.isArray(params?.slug) ? params.slug[0] : params?.slug;
+    const businessProfileId = rawSlug ? rawSlug.split('-').pop() : undefined;
+    const [businessProfile, setBusinessProfile] = useState<any>(null);
+    const [vendor, setVendor] = useState<any>(null);
+    const [portfolio, setPortfolio] = useState<any>(null);
+    const [packages, setPackages] = useState<any[]>([]);
+    const [events, setEvents] = useState<any[]>([]);
+    const [selectedEventId, setSelectedEventId] = useState<string>('all');
+    const [loading, setLoading] = useState(false);
+    const [reviews, setReviews] = useState<any[]>([]);
+    const [reviewRating, setReviewRating] = useState<number>(0);
+    const [reviewText, setReviewText] = useState<string>('');
+    const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+    const [wishlistIds, setWishlistIds] = useState<string[]>([]);
+    const customerAuth = useSelector((state: any) => state.customerAuth);
+    const customerDetails = useMemo(() => {
+        if (!customerAuth?.details) return null;
+        if (typeof customerAuth.details === 'string') {
+            try {
+                return JSON.parse(customerAuth.details);
+            } catch (error) {
+                return null;
+            }
+        }
+        return customerAuth.details;
+    }, [customerAuth?.details]);
+    const customerId = customerDetails?._id;
+    useEffect(() => {
+        let isMounted = true;
+        const loadWishlist = async () => {
+            if (!customerAuth?.isAuthenticated) {
+                if (isMounted) setWishlistIds([]);
+                return;
+            }
+            try {
+                const response = await fetchWishlistIds(customerId);
+                if (isMounted && response?.status) {
+                    setWishlistIds(response.data || []);
+                }
+            } catch (error) {
+                if (isMounted) setWishlistIds([]);
+            }
+        };
+
+        loadWishlist();
+        return () => {
+            isMounted = false;
+        };
+    }, [customerAuth?.isAuthenticated]);
+
+    const handleToggleWishlist = async () => {
+        if (!businessProfileId) return;
+        if (!customerAuth?.isAuthenticated) {
+            toast.info('Please login to add to wishlist.');
+            router.push('/login');
+            return;
+        }
+        try {
+            const response = await toggleWishlist(businessProfileId, customerId);
+            if (response?.status) {
+                setWishlistIds((prev) => {
+                    const exists = prev.includes(businessProfileId);
+                    if (response?.data?.added === false || exists) {
+                        return prev.filter((id) => id !== businessProfileId);
+                    }
+                    return [...prev, businessProfileId];
+                });
+            }
+        } catch (error) {
+            // ignore
+        }
+    };
+
+    const toProxy = (url?: string) => {
+        if (!url) return '';
+        return `/api/image-proxy?url=${encodeURIComponent(url)}`;
+    };
+
+    useEffect(() => {
+        if (!businessProfileId) return;
+        setLoading(true);
+        axiosInstance
+            .get(endpoints.BUSINESS_PROFILE.detailsById.replace('{id}', businessProfileId))
+            .then((response) => {
+                if (response?.data?.status) {
+                    const data = response.data.data || {};
+
+                    console.log('Business profile details response:', data);
+                    setBusinessProfile(data.business_profile || null);
+                    setVendor(data.vendor || null);
+                    setPortfolio(data.portfolio || null);
+                    setPackages(data.packages || []);
+                    setEvents(data.events || []);
+                } else {
+                    setBusinessProfile(null);
+                    setVendor(null);
+                    setPortfolio(null);
+                    setPackages([]);
+                    setEvents([]);
+                }
+            })
+            .catch((error) => {
+                console.error('Error fetching business profile details:', error);
+                setBusinessProfile(null);
+                setVendor(null);
+                setPortfolio(null);
+                setPackages([]);
+                setEvents([]);
+            })
+            .finally(() => setLoading(false));
+    }, [businessProfileId]);
+
+    const activeEventId = selectedEventId === 'all' ? null : selectedEventId;
+    const portfolioEvents = portfolio?.events || [];
+    const filteredPortfolioEvents = activeEventId
+        ? portfolioEvents.filter((event: any) => (event?.event_id?._id || event?.event_id) === activeEventId)
+        : portfolioEvents;
+
+    const portfolioImages = filteredPortfolioEvents.flatMap((event: any) => event?.images || []);
+    const portfolioVideos = filteredPortfolioEvents.flatMap((event: any) => event?.videos || []);
+
+    const filteredPackages = activeEventId
+        ? packages.filter((pkg: any) => (pkg?.event_id?._id || pkg?.event_id) === activeEventId)
+        : packages;
+
+    const pricingEntries = useMemo(() => {
+        return filteredPackages
+            .flatMap((pkg: any) => (Array.isArray(pkg?.cityPricing) ? pkg.cityPricing : []))
+            .map((pricing: any) => ({
+                offer: Number(pricing?.offerPrice),
+                market: Number(pricing?.marketPrice),
+            }))
+            .filter((pricing: any) => Number.isFinite(pricing.offer) && pricing.offer > 0);
+    }, [filteredPackages]);
+
+    const lowestPricing = useMemo(() => {
+        return pricingEntries.reduce((lowest: any, current: any) => {
+            if (!lowest) return current;
+            return current.offer < lowest.offer ? current : lowest;
+        }, null);
+    }, [pricingEntries]);
+
+    const lowestOffer = lowestPricing?.offer;
+    const lowestMarket = lowestPricing?.market;
+    const discountPercent =
+        lowestMarket && lowestOffer && lowestMarket > 0
+            ? Math.round(((lowestMarket - lowestOffer) / lowestMarket) * 100)
+            : null;
+
+    const formatPrice = (value?: number) =>
+        typeof value === 'number' && Number.isFinite(value)
+            ? value.toLocaleString('en-IN')
+            : '';
+
+    const coverImage = businessProfile?.cover_images?.[0] || '/images/services/banner_img.jpg';
+    const profileImage = businessProfile?.profilePicture || vendor?.profile_image || '/images/services/profile-pic.jpg';
+    const serviceName = businessProfile?.service_id?.serviceName || businessProfile?.serviceName || 'Service';
+    const businessName = businessProfile?.businessName || 'Business Name';
+    const cityName = businessProfile?.address?.city || vendor?.city;
+    const reviewSummary = useMemo(() => {
+        if (!reviews.length) {
+            return { average: 0, count: 0 };
+        }
+        const total = reviews.reduce((sum: number, item: any) => sum + Number(item?.rating || 0), 0);
+        return { average: Number((total / reviews.length).toFixed(1)), count: reviews.length };
+    }, [reviews]);
+
+    useEffect(() => {
+        const vendorId = vendor?._id || businessProfile?.vendor_id?._id || businessProfile?.vendor_id;
+        if (!vendorId) return;
+        axiosInstance
+            .get(endpoints.REVIEW.findByVendorId.replace('{vendor_id}', vendorId), {
+                params: { page: 1, limit: 50, status: 'accepted' }
+            })
+            .then((response) => {
+                if (response?.data?.status) {
+                    setReviews(response.data.data || []);
+                } else {
+                    setReviews([]);
+                }
+            })
+            .catch((error) => {
+                console.error('Error fetching reviews:', error);
+                setReviews([]);
+            });
+    }, [vendor?._id, businessProfile?.vendor_id]);
+
+    const handleReviewSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+        event.preventDefault();
+        if (!customerId) {
+            toast.error('Please login to submit a review.');
+            return;
+        }
+        if (!reviewRating || !reviewText.trim()) {
+            toast.error('Please add a rating and review.');
+            return;
+        }
+        const vendorId = vendor?._id || businessProfile?.vendor_id?._id || businessProfile?.vendor_id;
+        if (!vendorId) {
+            toast.error('Vendor information is missing.');
+            return;
+        }
+        setIsSubmittingReview(true);
+        axiosInstance
+            .post(endpoints.REVIEW.create, {
+                vendor_id: vendorId,
+                customer_id: customerId,
+                service_id: businessProfile?.service_id?._id || businessProfile?.service_id,
+                review: reviewText,
+                rating: reviewRating
+            })
+            .then((response) => {
+                if (response?.data?.status) {
+                    toast.success(response.data.message || 'Review submitted successfully.');
+                    setReviewRating(0);
+                    setReviewText('');
+                } else {
+                    toast.error(response?.data?.message || 'Unable to submit review.');
+                }
+            })
+            .catch((error) => {
+                const message = error?.response?.data?.message || 'Unable to submit review.';
+                toast.error(message);
+            })
+            .finally(() => setIsSubmittingReview(false));
+    };
   return (
     <>
         <section className="main-banner">
             <div className="container">
                 <div className="row">
                 <div className="col-sm-12">
-                    <Image
-                    src="/images/services/banner_img.jpg"
+                    <img
+                    src={toProxy(coverImage) || '/images/services/banner_img.jpg'}
                     alt=""
                     className="w-100 rounded-4"
-                    width={1296}
-                    height={421}
+                    style={{ height: '421px', objectFit: 'cover' }}
                     />
                 </div>
                 </div>
@@ -26,21 +261,20 @@ const ServiceDetails = () => {
                     <div className="item services-view featured-item">
                     <div className="row d-flex justify-content-center align-items-center">
                         <div className="col-md-4 col-lg-3 text-center text-md-start top-img">
-                        <Image
-                            src="/images/services/profile-pic.jpg"
+                        <img
+                            src={toProxy(profileImage) || '/images/services/profile-pic.jpg'}
                             alt=""
                             className="profile-pic"
-                            width={150}
-                            height={150}
+                            style={{ width: '150px', height: '150px', objectFit: 'cover' }}
                         />
                         </div>
                         <div className="col-md-8 col-lg-9">
                         <div className="content-sec">
                             <div className="d-flex">
-                            <small>Bridal Makeup</small>
+                            <small>{serviceName}</small>
                             </div>
                             <h1>
-                            Shashikala Makeup Artist
+                            {businessName}
                             <Image
                                 src="/images/icons/order-status_01.png"
                                 alt=""
@@ -51,7 +285,7 @@ const ServiceDetails = () => {
                             <h3>
                             
                             <span className="diso"> Verified ✓ </span> &nbsp; &nbsp;Vendor
-                            from Visakhapatnam
+                            {cityName ? `from ${cityName}` : ''}
                             </h3>
                             <ul>
                             <li>
@@ -61,13 +295,27 @@ const ServiceDetails = () => {
                                 width={15}
                                 height={15}
                                 />
-                                4.8 Rating (200 Reviews)
+                                {reviewSummary.count > 0
+                                    ? `${reviewSummary.average} Rating (${reviewSummary.count} Reviews)`
+                                    : 'No reviews yet'}
                             </li>
                             </ul>
                             <div className="mydivdd">
-                            <Link href="wishlist.php" className="wishlist_con">
-                                <Image src="/images/icons/wishlist.svg" alt="" width={20} height={20} />
-                            </Link>
+                            <button
+                                type="button"
+                                className="wishlist_con"
+                                onClick={handleToggleWishlist}
+                                aria-label="Add to wishlist"
+                            >
+                                <Image
+                                    src={wishlistIds.includes(businessProfileId || '')
+                                        ? "/images/icons/wishlist.svg"
+                                        : "/images/icons/wishlist-border.png"}
+                                    alt=""
+                                    width={20}
+                                    height={20}
+                                />
+                            </button>
                             <Link
                                 href="https://api.whatsapp.com/send/?phone=919985886393&text&type=letmeknowcostbsfye"
                                 target="_blank"
@@ -80,11 +328,13 @@ const ServiceDetails = () => {
                             </Link>
                             </div>
                             <h2>
-                            ₹ 6,000 <span style={{ fontSize: 12 }}>/Onwards</span>
-                            <span style={{ fontSize: 12 }} className="diso">
-                                
-                                50% Off
-                            </span>
+                            {lowestOffer ? `₹ ${formatPrice(lowestOffer)}` : '₹ 6,000'}
+                            <span style={{ fontSize: 12 }}> /Onwards</span>
+                            {discountPercent ? (
+                                <span style={{ fontSize: 12, marginLeft: 5 }} className="diso">
+                                    {discountPercent}% Off
+                                </span>
+                            ) : null}
                             </h2>
                         </div>
                         </div>
@@ -118,7 +368,6 @@ const ServiceDetails = () => {
                             className="dropdown-item d-flex align-items-center"
                             href="#about"
                         >
-                            
                             About
                         </Link>
                         </li>
@@ -199,14 +448,13 @@ const ServiceDetails = () => {
                         <h4 className="mb-3">
                             
                             <span> Portfolio &nbsp; &nbsp;</span>
-                            <span style={{ fontSize: 13 }}>
                             
-                            <Link href="#photos">Photos </Link> (30)
+                            <span style={{ fontSize: 13, marginRight: 10 }}>
+                                <Link href="#photos">Photos </Link> ({portfolioImages.length})
                             </span>
-                            <span style={{ fontSize: 13 }}>
-                            
-                            <Link href="#videos">Videos </Link> (5)
-                            </span>
+                            <span style={{ fontSize: 13 }}> 
+                                    <Link href="#videos">Videos </Link> ({portfolioVideos.length})
+                                </span> 
                         </h4>
                         </div>
                         <div className="col-md-4 col-lg-3">
@@ -214,25 +462,63 @@ const ServiceDetails = () => {
                             <div className="row gx-2 d-flex align-items-center">
                             <div className="col-18">
                                 <div className="search-container">
-                                <input
-                                    type="text"
-                                    id="search-package"
-                                    className="search-package"
-                                    placeholder="Choose Service"
-                                />
-                                <div className="search-icon">
-                                    <i className="fas fa-search" />
-                                </div>
-                                <div
-                                    id="package-suggestions"
-                                    className="package-suggestions-box"
-                                />
+                                <select
+                                    className="form-select search-package"
+                                    value={selectedEventId}
+                                    onChange={(event) => setSelectedEventId(event.target.value)}
+                                >
+                                    <option value="all">All Events</option>
+                                    {events.map((eventItem: any) => (
+                                        <option value={eventItem?._id} key={eventItem?._id}>
+                                            {eventItem?.eventName}
+                                        </option>
+                                    ))}
+                                </select>
                                 </div>
                             </div>
                             </div>
                         </form>
                         </div>
                     </div>
+
+                    {loading ? (
+                        <p>Loading...</p>
+                    ) : (
+                        <>
+                            <div className="row" id="photos">
+                                {portfolioImages.length > 0 ? (
+                                    portfolioImages.map((image: string, index: number) => (
+                                        <div className="col-6 col-md-4 col-lg-3 mb-3" key={`img-${index}`}>
+                                            <img
+                                                src={toProxy(image)}
+                                                alt=""
+                                                className="w-100 rounded"
+                                                style={{ height: '180px', objectFit: 'cover' }}
+                                            />
+                                        </div>
+                                    ))
+                                ) : (
+                                    <p className="text-muted">No photos available.</p>
+                                )}
+                            </div>
+                            <div className="row mt-3" id="videos">
+                                
+                                {portfolioVideos.length > 0 ? (
+                                    portfolioVideos.map((video: string, index: number) => (
+                                        <div className="col-12 col-md-6 col-lg-4 mb-3" key={`vid-${index}`}>
+                                            <video
+                                                src={toProxy(video)}
+                                                controls
+                                                className="w-100 rounded"
+                                            />
+                                        </div>
+                                    ))
+                                ) : (
+                                    <p className="text-muted">No videos available.</p>
+                                )}
+                            </div>
+                        </>
+                    )}
 
 
                     </div>
@@ -245,292 +531,30 @@ const ServiceDetails = () => {
                             <span> Packages &nbsp; &nbsp; </span>
                             <span style={{ fontSize: 13 }}>
                                 
-                                <Link href="#photos"> Packages </Link> (30)
+                                <Link href="#photos"> Packages </Link> ({filteredPackages.length})
                             </span>
                             </h4>
                         </div>
-                        <div className="col-md-4 col-lg-3">
-                            <form className="mb-4">
-                            <div className="row gx-2 d-flex align-items-center">
-                                <div className="col-18">
-                                <div className="search-container">
-                                    <input
-                                    type="text"
-                                    id="search-package"
-                                    className="search-package"
-                                    placeholder="Choose Service"
-                                    />
-                                    <div className="search-icon">
-                                    <i className="fas fa-search" />
-                                    </div>
-                                    <div
-                                    id="package-suggestions"
-                                    className="package-suggestions-box"
-                                    />
-                                </div>
-                                </div>
-                            </div>
-                            </form>
-                        </div>
                         </div>
                         <div className="row d-flex justify-content-center">
-                        <div className="main_box service-bx mb-4 p-3 border rounded bg-white">
-                            <div className="row align-items-center gy-3">
-                            {/* Image & Discount */}
-                            <div className="col-12 col-md-6 col-lg-2 position-relative text-center">
-                                <Image
-                                src="/images/common/cart_img.jpg"
-                                alt="Package Image"
-                                className="img-fluid photo rounded"
-                                width={150}
-                                height={150}
-                                />
-                                <div className="discount3">
-                                <p className="mb-0 text-white">
-                                    <span>Up-to</span> 50% Off
-                                </p>
-                                <Image
-                                    src="/images/common/tag.png"
-                                    alt="Tag"
-                                    style={{ width: 90, padding: 10 }}
-                                    width={90}
-                                    height={90}
-                                />
-                                </div>
-                            </div>
-                            {/* Package Info */}
-                            <div className="col-12 col-md-6 col-lg-4">
-                                <h5 className="mb-1">Package Name 1 Here</h5>
-                                <small className="d-block">
-                                <Link
-                                    href="service-view.php"
-                                    className="text-decoration-none text-muted"
-                                >
-                                    Candid Photography, Marriage Video, Album, One Photo
-                                    Frame, Candid Photography, Marriage Video, Album, One
-                                    Photo Frame, Candid Photography, Marriage Video, Album,
-                                    One Photo Frame
-                                </Link>
-                                </small>
-                            </div>
-                            {/* Market Price */}
-                            <div className="col-6 col-md-3 col-lg-2 text-center">
-                                <p className="mb-0 text-muted price">Market Price</p>
-                                <h4 className="text-muted">
-                                {/* <strike>₹8,000</strike> */}
-                                </h4>
-                            </div>
-                            {/* Offer Price */}
-                            <div className="col-6 col-md-3 col-lg-2 text-center">
-                                <p className="mb-0 text-success price">Offer Price</p>
-                                <h4 className="text-success">₹5,000</h4>
-                            </div>
-                            {/* Action Buttons */}
-                            <div className="col-12 col-md-6 col-lg-2">
-                                <Link
-                                href="#"
-                                className="btn btn-secondary whatsapp-icon d-block mb-2 text-white"
-                                data-bs-toggle="modal"
-                                data-bs-target="#request-callback"
-                                >
-                                Call Back Request
-                                </Link>
-                            </div>
-                            </div>
-                        </div>
-                        <div className="main_box service-bx mb-4 p-3 border rounded bg-white">
-                            <div className="row align-items-center gy-3">
-                            {/* Image & Discount */}
-                            <div className="col-12 col-md-6 col-lg-2 position-relative text-center">
-                                <Image
-                                src="/images/common/cart_img.jpg"
-                                alt="Package Image"
-                                className="img-fluid photo rounded"
-                                width={150}
-                                height={150}
-                                />
-                                <div className="discount3">
-                                <p className="mb-0 text-white">
-                                    <span>Up-to</span> 50% Off
-                                </p>
-                                <Image
-                                    src="/images/common/tag.png"
-                                    alt="Tag"
-                                    style={{ width: 90, padding: 10 }}
-                                    width={90}
-                                    height={90}
-                                />
-                                </div>
-                            </div>
-                            {/* Package Info */}
-                            <div className="col-12 col-md-6 col-lg-4">
-                                <h5 className="mb-1">Package Name 1 Here</h5>
-                                <small className="d-block">
-                                <Link
-                                    href="service-view.php"
-                                    className="text-decoration-none text-muted"
-                                >
-                                    Candid Photography, Marriage Video, Album, One Photo
-                                    Frame, Candid Photography, Marriage Video, Album, One
-                                    Photo Frame, Candid Photography, Marriage Video, Album,
-                                    One Photo Frame
-                                </Link>
-                                </small>
-                            </div>
-                            {/* Market Price */}
-                            <div className="col-6 col-md-3 col-lg-2 text-center">
-                                <p className="mb-0 text-muted price">Market Price</p>
-                                <h4 className="text-muted">
-                                {/* <strike>₹8,000</strike> */}
-                                </h4>
-                            </div>
-                            {/* Offer Price */}
-                            <div className="col-6 col-md-3 col-lg-2 text-center">
-                                <p className="mb-0 text-success price">Offer Price</p>
-                                <h4 className="text-success">₹5,000</h4>
-                            </div>
-                            {/* Action Buttons */}
-                            <div className="col-12 col-md-6 col-lg-2">
-                                <Link
-                                href="#"
-                                className="btn btn-secondary whatsapp-icon d-block mb-2 text-white"
-                                data-bs-toggle="modal"
-                                data-bs-target="#request-callback"
-                                >
-                                Call Back Request
-                                </Link>
-                            </div>
-                            </div>
-                        </div>
-                        <div className="main_box service-bx mb-4 p-3 border rounded bg-white">
-                            <div className="row align-items-center gy-3">
-                            {/* Image & Discount */}
-                            <div className="col-12 col-md-6 col-lg-2 position-relative text-center">
-                                <Image
-                                src="/images/common/cart_img.jpg"
-                                alt="Package Image"
-                                className="img-fluid photo rounded"
-                                width={150}
-                                height={150}
-                                />
-                                <div className="discount3">
-                                <p className="mb-0 text-white">
-                                    <span>Up-to</span> 50% Off
-                                </p>
-                                <Image
-                                    src="/images/common/tag.png"
-                                    alt="Tag"
-                                    style={{ width: 90, padding: 10 }}
-                                    width={90}
-                                    height={90}
-                                />
-                                </div>
-                            </div>
-                            {/* Package Info */}
-                            <div className="col-12 col-md-6 col-lg-4">
-                                <h5 className="mb-1">Package Name 1 Here</h5>
-                                <small className="d-block">
-                                <Link
-                                    href="service-view.php"
-                                    className="text-decoration-none text-muted"
-                                >
-                                    Candid Photography, Marriage Video, Album, One Photo
-                                    Frame, Candid Photography, Marriage Video, Album, One
-                                    Photo Frame, Candid Photography, Marriage Video, Album,
-                                    One Photo Frame
-                                </Link>
-                                </small>
-                            </div>
-                            {/* Market Price */}
-                            <div className="col-6 col-md-3 col-lg-2 text-center">
-                                <p className="mb-0 text-muted price">Market Price</p>
-                                <h4 className="text-muted">
-                                {/* <strike>₹8,000</strike> */}
-                                </h4>
-                            </div>
-                            {/* Offer Price */}
-                            <div className="col-6 col-md-3 col-lg-2 text-center">
-                                <p className="mb-0 text-success price">Offer Price</p>
-                                <h4 className="text-success">₹5,000</h4>
-                            </div>
-                            {/* Action Buttons */}
-                            <div className="col-12 col-md-6 col-lg-2">
-                                <Link
-                                href="#"
-                                className="btn btn-secondary whatsapp-icon d-block mb-2 text-white"
-                                data-bs-toggle="modal"
-                                data-bs-target="#request-callback"
-                                >
-                                Call Back Request
-                                </Link>
-                            </div>
-                            </div>
-                        </div>
-                        <div className="main_box service-bx mb-4 p-3 border rounded bg-white">
-                            <div className="row align-items-center gy-3">
-                            {/* Image & Discount */}
-                            <div className="col-12 col-md-6 col-lg-2 position-relative text-center">
-                                <Image
-                                src="/images/common/cart_img.jpg"
-                                alt="Package Image"
-                                className="img-fluid photo rounded"
-                                width={150}
-                                height={150}
-                                />
-                                <div className="discount3">
-                                <p className="mb-0 text-white">
-                                    <span>Up-to</span> 50% Off
-                                </p>
-                                <Image
-                                    src="/images/common/tag.png"
-                                    alt="Tag"
-                                    width={90}
-                                    height={90}
-                                    style={{ padding: 10 }}
-                                />
-                                </div>
-                            </div>
-                            {/* Package Info */}
-                            <div className="col-12 col-md-6 col-lg-4">
-                                <h5 className="mb-1">Package Name 1 Here</h5>
-                                <small className="d-block">
-                                <Link
-                                    href="service-view.php"
-                                    className="text-decoration-none text-muted"
-                                >
-                                    Candid Photography, Marriage Video, Album, One Photo
-                                    Frame, Candid Photography, Marriage Video, Album, One
-                                    Photo Frame, Candid Photography, Marriage Video, Album,
-                                    One Photo Frame
-                                </Link>
-                                </small>
-                            </div>
-                            {/* Market Price */}
-                            <div className="col-6 col-md-3 col-lg-2 text-center">
-                                <p className="mb-0 text-muted price">Market Price</p>
-                                <h4 className="text-muted">
-                                {/* <strike>₹8,000</strike> */}
-                                </h4>
-                            </div>
-                            {/* Offer Price */}
-                            <div className="col-6 col-md-3 col-lg-2 text-center">
-                                <p className="mb-0 text-success price">Offer Price</p>
-                                <h4 className="text-success">₹5,000</h4>
-                            </div>
-                            {/* Action Buttons */}
-                            <div className="col-12 col-md-6 col-lg-2">
-                                <Link
-                                href="#"
-                                className="btn btn-secondary whatsapp-icon d-block mb-2 text-white"
-                                data-bs-toggle="modal"
-                                data-bs-target="#request-callback"
-                                >
-                                Call Back Request
-                                </Link>
-                            </div>
-                            </div>
-                        </div>
-                        <div className="col-12 col-md-6 col-lg-2">
+                        {filteredPackages.length > 0 ? (
+                            filteredPackages.flatMap((pkg: any) => {
+                                const pricingList = Array.isArray(pkg?.cityPricing)
+                                    ? pkg.cityPricing
+                                    : [null];
+                                return pricingList.map((pricing: any, index: number) => (
+                                    <PackageCard
+                                        key={`${pkg?._id || 'pkg'}-${pricing?._id || index}`}
+                                        pkg={pkg}
+                                        pricing={pricing}
+                                        toProxy={toProxy}
+                                    />
+                                ));
+                            })
+                        ) : (
+                            <p className="text-muted">No packages found for this event.</p>
+                        )}
+                        {/* <div className="col-12 col-md-6 col-lg-2">
                             
                             <Link
                             href="#"
@@ -540,7 +564,7 @@ const ServiceDetails = () => {
                             >
                             ... Load More &gt;&gt;
                             </Link>
-                        </div>
+                        </div> */}
                         </div>
                     </div>
                     </div>
@@ -548,34 +572,7 @@ const ServiceDetails = () => {
                     <div className="item mt-4">
                         <div className="row">
                         <h4 className=" mb-3">About Us</h4>
-                        <p className="mb-3">
-                            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed a
-                            sem ut magna vestibulum rhoncus nec sed diam. Donec tristique
-                            placerat erat in pulvinar. Integer quis luctus est. Maecenas
-                            consequat in massa ut elementum. Duis condimentum gravida purus,
-                            a posuere risus cursus vel. Class aptent taciti sociosqu ad
-                            litora torquent per conubia nostra, per inceptos himenaeos.
-                            Quisque justo sapien, dictum eu sagittis id, porttitor eu leo.
-                            Phasellus porttitor quam odio. Suspendisse ex augue, convallis
-                            non rhoncus id, varius et magna. Nam id faucibus elit. Fusce
-                            venenatis nisi nunc, ac dictum nibh viverra ut. Phasellus est
-                            eros, tincidunt pellentesque ipsum et, rutrum sollicitudin nisl.
-                            Proin dictum mi a neque dapibus, sit amet sodales tortor cursus.
-                            Vestibulum vitae tristique sapien, et lobortis diam.
-                        </p>
-                        </div>
-                        <div className="row">
-                        <div className="col-12 col-md-6 col-lg-2">
-                            
-                            <Link
-                            href="#"
-                            className="btn btn-secondary d-block text-white py-2"
-                            data-bs-toggle="modal"
-                            data-bs-target="#request-callback"
-                            >
-                            ... Load More
-                            </Link>
-                        </div>
+                        <p className="mb-3"> {businessProfile?.about_us} </p>
                         </div>
                     </div>
                     </div>
@@ -615,68 +612,8 @@ const ServiceDetails = () => {
                                     </p>
                                 </div>
                                 </div>
-                                <div className="col-12 col-md-12 col-lg-6">
-                                <div className="row testm-box">
-                                    <h3>
-                                    
-                                    <Image
-                                        src="/images/common/testimonials_pic.jpg"
-                                        alt=""
-                                        width={150}
-                                        height={150}
-                                    />
-                                    &nbsp; Name Here
-                                    </h3>
-                                    <p>
-                                    
-                                    Lorem ipsum dolor sit amet, consectetur adipiscing
-                                    elit. Phasellus lacinia ante quis aliquet bibendum.
-                                    Lorem ipsum
-                                    </p>
-                                </div>
-                                </div>
-                                <div className="col-12 col-md-12 col-lg-6">
-                                <div className="row testm-box">
-                                    <h3>
-                                    
-                                    <Image
-                                        src="/images/common/testimonials_pic.jpg"
-                                        alt=""
-                                        width={150}
-                                        height={150}
-                                    />
-                                    &nbsp; Name Here
-                                    </h3>
-                                    <p>
-                                    
-                                    Lorem ipsum dolor sit amet, consectetur adipiscing
-                                    elit. Phasellus lacinia ante quis aliquet bibendum.
-                                    Lorem ipsum
-                                    </p>
-                                </div>
-                                </div>
-                                <div className="col-12 col-md-12 col-lg-6">
-                                <div className="row testm-box">
-                                    <h3>
-                                    
-                                    <Image
-                                        src="/images/common/testimonials_pic.jpg"
-                                        alt=""
-                                        width={150}
-                                        height={150}
-                                    />
-                                    &nbsp; Name Here
-                                    </h3>
-                                    <p>
-                                    
-                                    Lorem ipsum dolor sit amet, consectetur adipiscing
-                                    elit. Phasellus lacinia ante quis aliquet bibendum.
-                                    Lorem ipsum
-                                    </p>
-                                </div>
-                                </div>
                             </div>
-                            <div className="col-12 col-md-6 col-lg-2 mt-3">
+                            {/* <div className="col-12 col-md-6 col-lg-2 mt-3">
                                 
                                 <Link
                                 href="#"
@@ -686,71 +623,88 @@ const ServiceDetails = () => {
                                 >
                                 ... Load More &gt;&gt;
                                 </Link>
-                            </div>
+                            </div> */}
                             </div>
                         </div>
-                        {/* <div className="text-start mt-3" id="add-your-review">
+                        <div className="text-start mt-3" id="add-your-review">
                             <h4 className="mt-3">Add Your Ratings &amp; Reviews</h4>
-                            <form>
+                            <form onSubmit={handleReviewSubmit}>
                             <div className="mt-2">
                                 <div className="rating">
                                 <input
                                     type="radio"
                                     name="rating"
                                     defaultValue={5}
-                                    id={5}
+                                    id="rating-5"
+                                    checked={reviewRating === 5}
+                                    onChange={() => setReviewRating(5)}
                                 />
-                                <label htmlFor={5}>☆</label>
+                                <label htmlFor="rating-5">☆</label>
                                 <input
                                     type="radio"
                                     name="rating"
                                     defaultValue={4}
-                                    id={4}
+                                    id="rating-4"
+                                    checked={reviewRating === 4}
+                                    onChange={() => setReviewRating(4)}
                                 />
-                                <label htmlFor={4}>☆</label>
+                                <label htmlFor="rating-4">☆</label>
                                 <input
                                     type="radio"
                                     name="rating"
                                     defaultValue={3}
-                                    id={3}
+                                    id="rating-3"
+                                    checked={reviewRating === 3}
+                                    onChange={() => setReviewRating(3)}
                                 />
-                                <label htmlFor={3}>☆</label>
+                                <label htmlFor="rating-3">☆</label>
                                 <input
                                     type="radio"
                                     name="rating"
                                     defaultValue={2}
-                                    id={2}
+                                    id="rating-2"
+                                    checked={reviewRating === 2}
+                                    onChange={() => setReviewRating(2)}
                                 />
-                                <label htmlFor={2}>☆</label>
+                                <label htmlFor="rating-2">☆</label>
                                 <input
                                     type="radio"
                                     name="rating"
                                     defaultValue={1}
-                                    id={1}
+                                    id="rating-1"
+                                    checked={reviewRating === 1}
+                                    onChange={() => setReviewRating(1)}
                                 />
-                                <label htmlFor={1}>☆</label>
+                                <label htmlFor="rating-1">☆</label>
                                 </div>
                             </div>
                             <div className="mt-2 col-12 col-md-12 col-lg-6">
                                 <textarea
-                                type="text"
                                 className="form-control py-2 px-4 rounded-5"
                                 rows={7}
-                                defaultValue={""}
+                                value={reviewText}
+                                onChange={(event) => setReviewText(event.target.value)}
+                                placeholder={customerId ? "Share your review" : "Login to add a review"}
+                                disabled={!customerId || isSubmittingReview}
                                 />
                             </div>
                             <div className="mt-2 col-12 col-md-12 col-lg-6">
-                                <button type="submit" className="btn btn-secondary px-4">
-                                Add Review
+                                <button
+                                    type="submit"
+                                    className="btn btn-secondary px-4"
+                                    disabled={!customerId || isSubmittingReview}
+                                >
+                                Add Review 
                                 <Image
                                     src="/images/icons/btn-arrow.png"
                                     alt=""
                                     width={10}
+                                    height={10}
                                 />
                                 </button>
                             </div>
                             </form>
-                        </div> */}
+                        </div>
                         </div>
                     </div>
                     </div>

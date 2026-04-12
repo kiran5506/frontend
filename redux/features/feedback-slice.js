@@ -55,11 +55,14 @@ export const feedback = createSlice({
         state.loading = false;
         if(action.payload.status){
           state.feedbacks = action.payload.data;
+        } else {
+          state.feedbacks = [];
         }
       })
       .addCase(listFeedback.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message;
+        state.feedbacks = [];
       })
       
       // Get feedback by ID

@@ -35,6 +35,15 @@ export const fetchAllVendors = createAsyncThunk('vendor/list', async (_, { rejec
     }
 })
 
+export const fetchVendorsByStatus = createAsyncThunk('vendor/listByStatus', async (status, { rejectWithValue }) => {
+    try {
+        const query = status ? `?profile_status=${status}` : '';
+        return (await axiosInstance.get(`${endpoints.VENDOR.listWithStatus}${query}`)).data;
+    } catch (error) {
+        return rejectWithValue(error.response.data);
+    }
+})
+
 export const deleteVendor = createAsyncThunk('vendor/delete', async (id, { rejectWithValue }) => {
     try {
         return (await axiosInstance.delete(endpoints.VENDOR.delete.replace('{id}', id))).data;
@@ -46,6 +55,17 @@ export const deleteVendor = createAsyncThunk('vendor/delete', async (id, { rejec
 export const viewVendorById = createAsyncThunk('vendor/viewById', async (id, { rejectWithValue }) => {
     try {
         return (await axiosInstance.get(endpoints.VENDOR.findById.replace('{id}', id))).data;
+    } catch (error) {
+        return rejectWithValue(error.response.data);
+    }
+})
+
+export const approveOrRejectVendor = createAsyncThunk('vendor/approveOrReject', async ({ id, profile_status }, { rejectWithValue }) => {
+    try {
+        return (await axiosInstance.patch(
+            endpoints.VENDOR.approveReject.replace('{id}', id),
+            { profile_status }
+        )).data;
     } catch (error) {
         return rejectWithValue(error.response.data);
     }

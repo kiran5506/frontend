@@ -80,3 +80,18 @@ export const businessProfileByVendorId = createAsyncThunk(
         )).data;
     }
 );
+
+export const businessProfileCoverImageDelete = createAsyncThunk(
+    'businessProfile/deleteCoverImage',
+    async ({ id, vendor_id, image }) => {
+        try {
+            const result = await axiosInstance.patch(
+                endpoints.BUSINESS_PROFILE.deleteCoverImage.replace('{id}', id),
+                { vendor_id, image }
+            );
+            return result.data;
+        } catch (error) {
+            throw new Error(error.message || 'Something went wrong');
+        }
+    }
+);

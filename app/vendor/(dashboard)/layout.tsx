@@ -4,6 +4,7 @@ import { useSelector } from "react-redux";
 import { useRouter, usePathname } from "next/navigation";
 import "../../../public/assets/vendor/vendor_layout.css"
 import "../../../public/assets/vendor/vendor_layout_new.css"
+import Link from "next/link";
 
 const SidePanel = React.lazy(() => import("../../../components/vendor/SidePanel"));
 const Rightmenu = React.lazy(() => import("../../../components/vendor/Rightmenu"));
@@ -54,13 +55,13 @@ export default function VendorBaseLayout({
       </Suspense>
       <main id="main" className="main">
         <header id="header" className="header d-flex align-items-center">
-          <a href="dashboard.php" className="d-block d-lg-none dash-logo">
+          <Link href={'/vendor/dashboard'} className="d-block d-lg-none dash-logo">
             <img src="assets/img/m-logo.png" alt="" width={120} />
-          </a>
+          </Link>
           <nav className="d-none d-lg-block">
             <ol className="breadcrumb m-0">
               <li className="breadcrumb-item">
-                <a href="dashboard.php">Home</a>
+                <Link href={'/vendor/dashboard'}>Home</Link>
               </li>
               <li className="breadcrumb-item active">{pageTitle}</li>
             </ol>
@@ -81,7 +82,9 @@ export default function VendorBaseLayout({
         {/* Content */}
         <section className="section dashboard dashboard-section p-0">
         <div className="content">
-          {children}
+          <div className="pad" >
+            {children}
+            </div>
         </div>
       </section>
 

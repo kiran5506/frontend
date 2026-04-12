@@ -23,8 +23,11 @@ import customerAuthReducer from './features/customer-auth-slice';
 import customerReducer from './features/customer-slice';
 import siteSettingsReducer from './features/site-setting-slice';
 import businessProfileReducer from './features/business-profile-slice';
+import businessPackage from './features/business-package-slice';
 import feedbackReducer from './features/feedback-slice';
 import reviewReducer from './features/review-slice';
+import suggestionReducer from './features/suggestion-slice';
+import videoReducer from './features/video-slice';
 
 const vendorPersistConfig = {
   key: 'vendor',
@@ -73,8 +76,11 @@ const appReducer = combineReducers({
   customer: customerReducer,
   siteSettings: siteSettingsReducer,
   businessProfile: businessProfileReducer,
+  businessPackage: businessPackage,
   feedback: feedbackReducer,
   review: reviewReducer,
+  suggestions: suggestionReducer,
+  video: videoReducer,
 });
 
 // Root Reducer to reset the state on logout action

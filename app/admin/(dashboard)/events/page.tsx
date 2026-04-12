@@ -29,7 +29,11 @@ const AdEvents = () => {
         setHeaderData(tableHeader);
 
         if (!loading && Events && Events.length > 0) {
-            setBodyData(Events);
+            const normalizedEvents = Events.map((event: any) => ({
+                ...event,
+                serviceCategory: event.serviceCategory || (event.serviceCategories ? event.serviceCategories.join(', ') : ''),
+            }));
+            setBodyData(normalizedEvents);
         } else {
             setBodyData([]);
         }

@@ -10,19 +10,21 @@ import dynamic from 'next/dynamic';
 import Image from 'next/image';
 import Skeleton, { SkeletonTheme } from 'react-loading-skeleton';
 import 'react-loading-skeleton/dist/skeleton.css';
+import "slick-carousel/slick/slick.css";
+import "slick-carousel/slick/slick-theme.css";
 
 const settings = {
-        dots: false,
-        infinite: true,
-        speed: 500,
-        slidesToShow: 6,
-        slidesToScroll: 3,
-        autoplaySpeed: 4000, // 4 seconds
-        pauseOnHover: false,
+    dots: false,
+    infinite: true,
+    speed: 500,
+    slidesToShow: 6,
+    slidesToScroll: 3,
+    autoplaySpeed: 4000,
+    pauseOnHover: false,
 };
 
-const Slider = dynamic(() => import("react-slick"), {
-    ssr: false,
+const Slider: any = dynamic(() => import("react-slick"), {
+  ssr: false,
 });
 
 // Service type based on service-slice.js
@@ -250,53 +252,15 @@ const VendorLandingPage = () => {
                 </div>
                 </div>
             </div>
-        </section>
+        </section>    
 
-        {/* Main Services Section (copied from ServiceSection.js) */}
         <section className="services-section py-5 bg-gray-color">
             <div className="container">
-                <div className="main-title text-center">
-                    <h2>Who can register as Vendor?</h2>
-                </div>
-                <div className="services-list pt-0 pt-lg-0 pb-5">
+                <div className="services-list pt-0  pt-lg-0 pb-5">
                     <div className="main-title d-flex justify-content-between align-items-center px-3">
                         <h2>Main Services</h2>
                     </div>
-                    <div className="services-list-sec pdtopp" style={{width: '100%'}}>
-                        {loading ? (
-                            <SkeletonTheme baseColor="#f3f3f3" highlightColor="#e0e0e0">
-                                <div style={{ display: 'flex', gap: '20px', overflowX: 'auto', padding: '10px' }}>
-                                    {Array.from({ length: 6 }).map((_, index) => (
-                                        <Skeleton key={index} width={196} height={243} />
-                                    ))}
-                                </div>
-                            </SkeletonTheme>
-                        ) : (
-                            React.createElement(Slider as any, settings,
-                                Services && Services.map((service: ServiceType) => service.serviceType === 'Primary' && (
-                                    <div className="item text-center" key={service._id}>
-                                        <Link href={`services/${createSlug(service.serviceName)}-${service._id}`}>
-                                            <div className="box2">
-                                                <Image src={`/api/image-proxy?url=${encodeURIComponent(service.imagePath)}`} alt={service.serviceName} width={196} height={243} />
-                                                <span className="service-name">{service.serviceName}</span>
-                                            </div>
-                                        </Link>
-                                    </div>
-                                ))
-                            )
-                        )}
-                    </div>
-                </div>
-            </div>
-        </section>
-        
-        <div className="services-section py-5 bg-gray-color">
-            <div className="container">
-                <div className="services-list pt-0 pt-lg-0 pb-5">
-                    <div className="main-title d-flex justify-content-between align-items-center px-3">
-                        <h2>Secondary Services</h2>
-                    </div>
-                    <div className="services-list-sec pdtopp">
+                    <div className="services-list-sec" > 
                         {loading ? (
                         <SkeletonTheme baseColor="#f3f3f3" highlightColor="#e0e0e0">
                             <div style={{ display: 'flex', gap: '20px', overflowX: 'auto', padding: '10px' }}>
@@ -306,23 +270,51 @@ const VendorLandingPage = () => {
                             </div>
                         </SkeletonTheme>
                         ) : (
-                        React.createElement(Slider as any, settings,
-                            Services.map(service => service.serviceType === 'Secondary' && (
+                        <Slider {...settings}>
+                            {Services.filter((service: ServiceType) => service.serviceType === 'Primary').map((service: ServiceType) => (
                                 <div className="item text-center" key={service._id}>
-                                    <Link href={service.link || '/'}>
-                                        <div className="box2">
+                                    <Link href={`services/${createSlug(service.serviceName)}-${service._id}`}>
+                                        <div className="box">
                                             <Image src={`/api/image-proxy?url=${encodeURIComponent(service.imagePath)}`} alt={service.serviceName} width={196} height={243} />
+                                            <h5>{service.serviceName}</h5>
                                         </div>
                                     </Link>
                                 </div>
-                            ))
-                            )
+                            ))}
+                        </Slider>
                         )}
                     </div>
-                </div>
+
+                    <div className="main-title d-flex justify-content-between align-items-center px-3" style={{marginTop:'80px'}}>
+                        <h2>Secondary Services</h2>
+                    </div>
+                    <div className="services-list-sec">
+                        {loading ? (
+                        <SkeletonTheme baseColor="#f3f3f3" highlightColor="#e0e0e0">
+                            <div style={{ display: 'flex', gap: '20px', overflowX: 'auto', padding: '10px' }}>
+                            {Array.from({ length: 6 }).map((_, index) => (
+                                <Skeleton key={index} width={196} height={243} />
+                            ))}
+                            </div>
+                        </SkeletonTheme>
+                        ) : (
+                        <Slider {...settings}>
+                            {Services.filter((service: ServiceType) => service.serviceType === 'Secondary').map((service: ServiceType) => (
+                                <div className="item text-center" key={service._id}>
+                                    <Link href={service.link || '/'}>
+                                        <div className="box">
+                                            <Image src={`/api/image-proxy?url=${encodeURIComponent(service.imagePath)}`} alt={service.serviceName} width={196} height={243} />
+                                            <h5>{service.serviceName}</h5>
+                                        </div>
+                                    </Link>
+                                </div>
+                            ))}
+                        </Slider>
+                        )}
+                    </div>
+                </div>     
             </div>
-        </div>
-        
+        </section>
     </>
   )
 }

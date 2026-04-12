@@ -8,8 +8,9 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
 import { createEvent, eventById, eventEdit } from '@/services/event-api';
 import { resetCurrentEvent } from '@/redux/features/event-slice';
-import { categoryList } from '@/services/category-api';
+import { serviceList } from '@/services/service-api';
 import { skillList } from '@/services/skill-api';
+import MultiSelectWithPills, { OptionType } from '@/components/MultiSelectWithPills';
 
 interface EventFormProps {
   id?: string;
@@ -19,15 +20,18 @@ const EventForm = ({ id }: EventFormProps) => {
     const dispatch = useDispatch();
     const router = useRouter();
     const { currentEvent } = useSelector((state: any) => state.event);
-    const { Categories, loading: categoriesLoading } = useSelector((state: any) => state.category);
+    const { Services, loading: servicesLoading } = useSelector((state: any) => state.service);
     const { Skills, loading: skillsLoading } = useSelector((state: any) => state.skill);
 
     const [eventImg, setEventImg] = useState("");
     const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
+    const [selectedServices, setSelectedServices] = useState<OptionType[]>([]);
 
     const validationSchema = Yup.object().shape({
         eventName: Yup.string().required("Event name is required"),
-        serviceCategory: Yup.string().required("Service category is required"),
+        service_ids: Yup.array()
+            .of(Yup.string().required())
+            .min(1, "Service category is required"),
         image: Yup.mixed()
         .test(
         'required',
@@ -51,9 +55,9 @@ const EventForm = ({ id }: EventFormProps) => {
 
     // Fetch categories on component mount
     useEffect(() => {
-        (dispatch as any)(categoryList()).catch((error: any) => {
-            console.error('Error fetching categories:', error);
-            toast.error('Error loading categories');
+        (dispatch as any)(serviceList()).catch((error: any) => {
+            console.error('Error fetching services:', error);
+            toast.error('Error loading services');
         });
 
         (dispatch as any)(skillList()).catch((error: any) => {
@@ -74,17 +78,42 @@ const EventForm = ({ id }: EventFormProps) => {
     useEffect(() => {
         if(currentEvent && id) {
             const data = currentEvent.data || currentEvent;
+            let serviceIds = Array.isArray(data.service_ids)
+                ? data.service_ids
+                : data.service_id
+                ? [data.service_id]
+                : [];
+
+            if (serviceIds.length === 0 && Services && Services.length > 0) {
+                const serviceNames = Array.isArray(data.serviceCategories)
+                    ? data.serviceCategories
+                    : data.serviceCategory
+                    ? [data.serviceCategory]
+                    : [];
+
+                serviceIds = Services.filter((service: any) => serviceNames.includes(service.serviceName))
+                    .map((service: any) => service._id);
+            }
+
             setValue('eventName', data.eventName || '');
-            setValue('serviceCategory', data.serviceCategory || '');
+            setValue('service_ids', serviceIds);
             setEventImg(data.image);
             setSelectedSkills(data.skills || []);
+            if (Services && Services.length > 0) {
+                const mappedServices = Services.filter((service: any) => serviceIds.includes(service._id))
+                    .map((service: any) => ({ value: service._id, label: service.serviceName }));
+                setSelectedServices(mappedServices);
+            } else {
+                setSelectedServices([]);
+            }
         }
-    }, [currentEvent, setValue, id])
+    }, [currentEvent, setValue, id, Services])
 
     const onSubmit =  async (data: any) => {
         try {
             const formData = new FormData();
             Object.keys(data).forEach((key) => {
+                if (key === 'service_ids') return;
                 if (data[key]) {
                     if (data[key] instanceof FileList && data[key].length > 0) {
                         formData.append(key, data[key][0]);
@@ -93,6 +122,12 @@ const EventForm = ({ id }: EventFormProps) => {
                     }
                 }
             });
+
+            if (selectedServices.length > 0) {
+                selectedServices.forEach((service) => {
+                    formData.append('service_ids', String(service.value));
+                });
+            }
             
             // Add selected skills
             if (selectedSkills.length > 0) {
@@ -139,29 +174,23 @@ const EventForm = ({ id }: EventFormProps) => {
         </div>
 
         <div className="col-12">
-            <label htmlFor="serviceCategory" className="form-label">
-                Service Category
-            </label>
-            <select
-                className="form-select"
-                id="serviceCategory"
-                {...register('serviceCategory')}
-                disabled={categoriesLoading}
-            >
-                <option value="">
-                    {categoriesLoading ? 'Loading categories...' : 'Choose Category'}
-                </option>
-                {Categories && Categories.length > 0 ? (
-                    Categories.map((cat: any) => (
-                        <option key={cat._id} value={cat.categoryName}>
-                            {cat.categoryName}
-                        </option>
-                    ))
-                ) : (
-                    <option disabled>No categories available</option>
-                )}
-            </select>
-            {errors.serviceCategory && <p className="text-danger">{errors.serviceCategory.message}</p>}
+            <MultiSelectWithPills
+                id="service_ids"
+                label="Select Services"
+                options={Services?.map((service: any) => ({
+                    value: service._id,
+                    label: service.serviceName
+                })) || []}
+                placeholder={servicesLoading ? 'Loading services...' : 'Select services'}
+                value={selectedServices}
+                onChange={(value) => {
+                    const selected = (value as OptionType[]) || [];
+                    setSelectedServices(selected);
+                    setValue('service_ids', selected.map((option) => String(option.value)), { shouldValidate: true });
+                }}
+            />
+            <input type="hidden" {...register('service_ids')} />
+            {errors.service_ids && <p className="text-danger">{errors.service_ids.message as string}</p>}
         </div>
 
         <div className="col-12">

@@ -49,7 +49,7 @@ const BusinessProfilePage = () => {
     const { loading: profileLoading } = useSelector((state: any) => state.businessProfile);
 
     const validationSchema = Yup.object().shape({
-        serviceName: Yup.string().required('Service category is required'),
+        service_id: Yup.string().required('Service category is required'),
         businessName: Yup.string().required('Business name is required'),
         doorNumber: Yup.string().required('Door number is required'),
         area: Yup.string().optional(),
@@ -105,7 +105,7 @@ const BusinessProfilePage = () => {
 
             const formData = new FormData();
             formData.append('vendor_id', vendorId);
-            formData.append('serviceName', data.serviceName);
+            formData.append('service_id', data.service_id);
             formData.append('businessName', data.businessName);
             formData.append('doorNumber', data.doorNumber);
             formData.append('area', data.area || '');
@@ -156,9 +156,6 @@ const BusinessProfilePage = () => {
     };
   return (
     <>
-        {'isOtpVerified' + isOtpVerified}
-        {'isProfileCompleted' + isProfileCompleted}
-        {'isProfileVerified' + isProfileVerified}
         {isOtpVerified && !isProfileCompleted && (
             <>
                 <h2 className="page-title">Add New Business Profile</h2>
@@ -167,15 +164,15 @@ const BusinessProfilePage = () => {
                     <h3 className="form-section-title">1. Profile Info</h3>
                     <div className="col-12 col-md-6">
                         <label className="form-label">Select Service Category*</label>
-                        <select className="form-select" aria-label="Default select example" {...register('serviceName')}>
+                        <select className="form-select" aria-label="Default select example" {...register('service_id')}>
                             <option value="">Choose Service</option>
                             {Services.map((service: any) => (
-                                <option key={service._id} value={service.serviceName}>
+                                <option key={service._id} value={service._id}>
                                     {service.serviceName} - {service.serviceType}
                                 </option>
                             ))}
                         </select>
-                        {errors.serviceName && <p className="text-danger">{errors.serviceName.message}</p>}
+                        {errors.service_id && <p className="text-danger">{errors.service_id.message}</p>}
                     </div>
                     <div className="col-12 col-md-6" />
                     <div className="col-md-6">
@@ -186,7 +183,7 @@ const BusinessProfilePage = () => {
                         type="text"
                         className="form-control"
                         id="business-name"
-                        placeholder="Enter Your Business Name"
+                        placeholder="Enter your business name"
                         {...register('businessName')}
                         />
                         {errors.businessName && <p className="text-danger">{errors.businessName.message}</p>}
@@ -209,32 +206,62 @@ const BusinessProfilePage = () => {
                     </div>
                     <div className="mb-3  col-md-6">
                         <label className="form-label">Door Number or Flat Number*</label>
-                        <input type="text" className="form-control py-2 px-4 rounded-5" {...register('doorNumber')} />
+                                                <input
+                                                    type="text"
+                                                    className="form-control py-2 px-4 rounded-5"
+                                                    placeholder="Enter door or flat number"
+                                                    {...register('doorNumber')}
+                                                />
                         {errors.doorNumber && <p className="text-danger">{errors.doorNumber.message}</p>}
                     </div>
                     <div className="mb-3 col-md-6">
                         <label className="form-label">Area</label>
-                        <input type="text" className="form-control py-2 px-4 rounded-5" {...register('area')} />
+                                                <input
+                                                    type="text"
+                                                    className="form-control py-2 px-4 rounded-5"
+                                                    placeholder="Enter area"
+                                                    {...register('area')}
+                                                />
                         {errors.area && <p className="text-danger">{errors.area.message}</p>}
                     </div>
                     <div className="mb-3 col-md-6">
                         <label className="form-label">Landmark</label>
-                        <input type="text" className="form-control py-2 px-4 rounded-5" {...register('landmark')} />
+                                                <input
+                                                    type="text"
+                                                    className="form-control py-2 px-4 rounded-5"
+                                                    placeholder="Enter landmark"
+                                                    {...register('landmark')}
+                                                />
                         {errors.landmark && <p className="text-danger">{errors.landmark.message}</p>}
                     </div>
                     <div className="mb-3  col-md-6">
                         <label className="form-label">City*</label>
-                        <input type="text" className="form-control py-2 px-4 rounded-5" {...register('city')} />
+                                                <input
+                                                    type="text"
+                                                    className="form-control py-2 px-4 rounded-5"
+                                                    placeholder="Enter city"
+                                                    {...register('city')}
+                                                />
                         {errors.city && <p className="text-danger">{errors.city.message}</p>}
                     </div>
                     <div className="mb-3 col-md-6">
                         <label className="form-label">State*</label>
-                        <input type="text" className="form-control py-2 px-4 rounded-5" {...register('state')} />
+                                                <input
+                                                    type="text"
+                                                    className="form-control py-2 px-4 rounded-5"
+                                                    placeholder="Enter state"
+                                                    {...register('state')}
+                                                />
                         {errors.state && <p className="text-danger">{errors.state.message}</p>}
                     </div>
                     <div className="mb-3 col-md-6">
                         <label className="form-label">Pincode*</label>
-                        <input type="text" className="form-control py-2 px-4 rounded-5" {...register('pincode')} />
+                                                <input
+                                                    type="text"
+                                                    className="form-control py-2 px-4 rounded-5"
+                                                    placeholder="Enter pincode"
+                                                    {...register('pincode')}
+                                                />
                         {errors.pincode && <p className="text-danger">{errors.pincode.message}</p>}
                     </div>
                     <div className="col-12">

@@ -55,7 +55,7 @@ const callbackRequests = [
 
 const CallbackRequests = () => {
   return (
-    <div className="pad">
+    <>
       <div className="row align-items-center d-flex mb-4">
         <div className="col-md-4">
           <h2 className="page-title">Callback Requests</h2>
@@ -109,7 +109,7 @@ const CallbackRequests = () => {
 
         </table>
       </div>
-    </div>
+    </>
   );
 };
 

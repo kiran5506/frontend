@@ -9,7 +9,18 @@ import { resetSuccess, resetError } from '../../../../redux/features/review-slic
 const ReviewsManagement = () => {
   const dispatch = useDispatch() as any
   const { vendorReviews, loading, error, success, pagination } = useSelector((state: any) => state.review)
-  const { details } = useSelector((state: any) => state.vendorAuth)
+  const { details, vendorid } = useSelector((state: any) => state.vendorAuth)
+  const vendorDetails = React.useMemo(() => {
+    if (!details) return null
+    if (typeof details === 'string') {
+      try {
+        return JSON.parse(details)
+      } catch (error) {
+        return null
+      }
+    }
+    return details
+  }, [details])
   
   const [currentPage, setCurrentPage] = useState(1)
   const [filterStatus, setFilterStatus] = useState('')
@@ -18,17 +29,19 @@ const ReviewsManagement = () => {
 
   const limit = 10
 
+  const vendorId = vendorDetails?._id || vendorid
+
   // Fetch reviews on mount or when page/filter changes
   useEffect(() => {
-    if (details?._id) {
+    if (vendorId) {
       dispatch(reviewByVendorId({
-        vendor_id: details._id,
+        vendor_id: vendorId,
         page: currentPage,
         limit: limit,
         status: filterStatus || undefined
       }))
     }
-  }, [dispatch, details?._id, currentPage, filterStatus])
+  }, [dispatch, vendorId, currentPage, filterStatus])
 
   // Handle success messages
   useEffect(() => {
