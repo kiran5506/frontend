@@ -1,4 +1,4 @@
-export const baseURL = process.env.BASE_API_URL || 'http://localhost:5004/api/';
+export const baseURL = process.env.NEXT_PUBLIC_API_URL || 'https://api.bsfye.com/api/';
 
 export default {
     GENERATETOKEN: {
