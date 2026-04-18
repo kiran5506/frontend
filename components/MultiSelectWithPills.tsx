@@ -1,5 +1,9 @@
+"use client";
 import React, { useMemo, useState } from 'react';
-import Select, { MultiValue, SingleValue } from 'react-select';
+import dynamic from 'next/dynamic';
+import type { MultiValue, SingleValue } from 'react-select';
+
+const Select = dynamic(() => import('react-select').then(mod => mod.default), { ssr: false }) as any;
 
 export type OptionType = { value: string | number; label: string };
 
@@ -56,7 +60,7 @@ const MultiSelectWithPills: React.FC<MultiSelectWithPillsProps> = ({
                 onChange={handleChange}
                 placeholder={placeholder}
                 styles={{
-                    control: (base) => ({
+                    control: (base: React.CSSProperties) => ({
                         ...base,
                         borderRadius: 4,
                         background: '#ededed',
@@ -67,20 +71,20 @@ const MultiSelectWithPills: React.FC<MultiSelectWithPillsProps> = ({
                         boxShadow: 'none',
                         paddingLeft: 20,
                     }),
-                    valueContainer: (base) => ({
+                    valueContainer: (base: React.CSSProperties) => ({
                         ...base,
                         padding: 0,
                     }),
-                    multiValue: (base) => ({
+                    multiValue: (base: React.CSSProperties) => ({
                         ...base,
                         display: 'none', // Hide default react-select pills
                     }),
-                    placeholder: (base) => ({
+                    placeholder: (base: React.CSSProperties) => ({
                         ...base,
                         color: '#222',
                         fontWeight: 500,
                     }),
-                    dropdownIndicator: (base) => ({
+                    dropdownIndicator: (base: React.CSSProperties) => ({
                         ...base,
                         color: '#222',
                     }),
