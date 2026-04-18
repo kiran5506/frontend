@@ -1,3 +1,4 @@
+"use client";
 import SuggestionForm from '@/components/admin/forms/SuggestionForm'
 import CreateLayout from '@/components/common/Layouts/CreateLayout'
 import React from 'react'
