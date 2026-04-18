@@ -16,13 +16,10 @@ FROM node:alpine3.18 AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 
-# Install only production deps
-COPY package*.json ./
-RUN npm install --omit=dev
-
-# Copy the built app and public assets
-COPY --from=build /app/.next ./.next
+# Copy standalone output and static assets
+COPY --from=build /app/.next/standalone ./
+COPY --from=build /app/.next/static ./.next/static
 COPY --from=build /app/public ./public
 
 EXPOSE 3000
-CMD ["npm", "start"]
+CMD ["node", "server.js"]

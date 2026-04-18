@@ -4,6 +4,8 @@ import { Suspense } from "react";
 import Loader from "@/components/Loader";
 import React from "react";
 
+export const dynamic = 'force-dynamic';
+
 import "../node_modules/bootstrap/dist/css/bootstrap.min.css";
 import "../app/globals.css";
 import Providers from "./providers";
