@@ -8,3 +8,8 @@ export const createPaymentOrder = async (payload) => {
 export const verifyPayment = async (payload) => {
     return (await axiosInstance.post(endpoints.PAYMENT.verify, payload)).data;
 };
+
+export const getTransactions = async (vendorId) => {
+    const url = endpoints.PAYMENT.transactions.replace('{vendorId}', vendorId);
+    return (await axiosInstance.get(url)).data;
+};

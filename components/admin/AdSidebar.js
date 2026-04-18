@@ -20,8 +20,8 @@ const AdSidebar = () => {
   const sidebarData = [
     { name: 'Dashboard', icon: <BsGrid />, link: '/admin/dashboard' },
     { name: 'Leads Management', icon: <BsPersonCheck />, link: '#', subMenu: [
-        { name: 'Leads Collaborations', icon: <BsCircle />, link: '/admin/collaborations' },
-        { name: 'Leads Reports', icon: <BsCircle />, link: '/admin/reports' },
+        { name: 'Leads Collaborations', icon: <BsCircle />, link: '/admin/leads-collaborations' },
+        { name: 'Leads Reports', icon: <BsCircle />, link: '/admin/leads-report' },
     ]},
     { name: 'Approval Manager', icon: <BsPersonCheck />, link: '#', subMenu: [
         { name: 'Vendor Request', icon: <BsCircle />, link: '/admin/vendor-requests' },

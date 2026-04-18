@@ -1,0 +1,43 @@
+.lead-details .detail-row {
+    display: flex;
+    padding: 10px 0;
+    border-bottom: 1px solid #e5e7eb;
+}
+
+.lead-details .detail-row:last-child {
+    border-bottom: none;
+}
+
+.label {
+    font-weight: 600;
+    color: #374151;
+}
+
+.value {
+    color: #1f2937;
+}
+
+.lead-details {
+    display: table;
+    width: 100%;
+}
+
+.detail-row {
+    display: table-row;
+}
+
+.label,
+.value {
+    display: table-cell;
+    padding: 10px;
+    vertical-align: top;
+}
+
+.label {
+    font-weight: bold;
+    width: 30%;
+}
+
+.value {
+    width: 40%;
+}

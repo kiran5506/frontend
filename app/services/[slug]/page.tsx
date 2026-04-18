@@ -111,7 +111,8 @@ const Services = () => {
     <>
         <RequestCallbackModal 
             isOpen={isModalOpen} 
-            onClose={() => setIsModalOpen(false)} 
+            onClose={() => setIsModalOpen(false)}
+            serviceId={serviceId}
         />
         <section className="inner-search-section2">
             <h1 className="text-center py-3 ">{serviceDetails?.serviceName || 'Service Name'}</h1>

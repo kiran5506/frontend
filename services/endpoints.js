@@ -42,7 +42,8 @@ export default {
     },
     PAYMENT: {
         createOrder: '/payment/create-order',
-        verify: '/payment/verify'
+        verify: '/payment/verify',
+        transactions: '/payment/transactions/{vendorId}',
     },
     LANGUAGES: {
         create: '/language/create',
@@ -124,7 +125,8 @@ export default {
         byStatus: '/inquiry/byStatus/{status}',
         update: '/inquiry/update/{id}',
         updateStatus: '/inquiry/updateStatus/{id}',
-        delete: '/inquiry/delete/{id}'
+        delete: '/inquiry/delete/{id}',
+        verifyOtp: '/inquiry/verifyOtp'
     },
     CUSTOMER: {
         create: '/customer/create',
@@ -150,6 +152,17 @@ export default {
         findById: '/contact-support/findById/{id}',
         updateStatus: '/contact-support/update-status/{id}',
         delete: '/contact-support/delete/{id}'
+    },
+    LEAD_ASSIGNMENTS: {
+        listByVendor: '/lead-assignments/vendor/{vendorId}',
+        markViewed: '/lead-assignments/view',
+        updateStatus: '/lead-assignments/{id}/status',
+        requestReplacement: '/lead-assignments/replace-request',
+        reviewReplacement: '/lead-assignments/replace-request/{id}/review',
+        adminList: '/lead-assignments/admin/leads',
+        adminDetails: '/lead-assignments/admin/leads/{inquiryId}',
+        replacementRequests: '/lead-assignments/admin/replacements',
+        replacementDetails: '/lead-assignments/admin/replacements/{id}'
     },
     BUSINESS_PROFILE: {
         create: '/business-profile/create',

@@ -1,12 +1,13 @@
 "use client";
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import styles from '../../public/assets/frontend/RequestCallbackModal.module.css';
-import { useDispatch } from 'react-redux';
-import { createInquiry, updateInquiryStatus } from '@/services/inquiry-api';
+import { useDispatch, useSelector } from 'react-redux';
+import { createInquiry, verifyInquiryOtp } from '@/services/inquiry-api';
 import { toast } from 'react-toastify';
 
-const RequestCallbackModal = ({ isOpen, onClose }) => {
+const RequestCallbackModal = ({ isOpen, onClose, serviceId }) => {
   const dispatch = useDispatch();
+  const customerAuth = useSelector((state) => state.customerAuth);
   const [formStep, setFormStep] = useState('form'); // 'form' or 'otp'
   const [formData, setFormData] = useState({
     name: '',
@@ -19,6 +20,27 @@ const RequestCallbackModal = ({ isOpen, onClose }) => {
   const [maskedMobile, setMaskedMobile] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (customerAuth?.isAuthenticated && customerAuth?.details) {
+      let details = customerAuth.details;
+      if (typeof details === 'string') {
+        try {
+          details = JSON.parse(details);
+        } catch (parseError) {
+          details = null;
+        }
+      }
+
+      if (details) {
+        setFormData((prev) => ({
+          ...prev,
+          name: details.name || prev.name,
+          mobile: details.mobile_number || prev.mobile
+        }));
+      }
+    }
+  }, [customerAuth?.details, customerAuth?.isAuthenticated]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -60,10 +82,12 @@ const RequestCallbackModal = ({ isOpen, onClose }) => {
     try {
       // Call API to create inquiry
       const response = await dispatch(createInquiry({
-        customer_name: formData.name,
-        customer_mobile: formData.mobile,
+        name: formData.name,
+        mobile_number: formData.mobile,
         city: formData.city || '',
         event_date: formData.eventDate,
+        enquiry_type: 'enquiry',
+        service_id: serviceId || undefined
       }));
 
       // Check the response from the async thunk
@@ -73,7 +97,7 @@ const RequestCallbackModal = ({ isOpen, onClose }) => {
         // Check if the API response indicates success
         if (payload?.status === true) {
           setInquiryId(payload.data._id);
-          toast.success(payload.message || 'Inquiry created successfully!');
+          //toast.success(payload.message || 'Inquiry created successfully!');
           toast.info('OTP sent successfully!');
           const maskedNum = `+91${formData.mobile.slice(0, 4)}****${formData.mobile.slice(-2)}`;
           setMaskedMobile(maskedNum);
@@ -87,11 +111,11 @@ const RequestCallbackModal = ({ isOpen, onClose }) => {
       } else if (response.type.endsWith('/rejected')) {
         // Request was rejected (network error, etc.)
         console.log('Request rejected:', response);
-        setError(payload?.message || 'Failed to create inquiry. Please try again.');
-      }
+        setError(payload?.message || 'Mobile number is existed or failed to create inquiry. Please try again.');
+        }
     } catch (err) { 
       console.error('Error creating inquiry:', err);
-      setError('Failed to create inquiry. Please try again.');
+      setError(err?.message || 'Failed to create inquiry. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -134,12 +158,9 @@ const RequestCallbackModal = ({ isOpen, onClose }) => {
     setLoading(true);
     try {
       // Call API to verify OTP
-      const response = await dispatch(updateInquiryStatus({
-        id: inquiryId,
-        formData: {
-          OTP: otpCode,
-          is_verified: true
-        }
+      const response = await dispatch(verifyInquiryOtp({
+        inquiry_id: inquiryId,
+        otp_code: otpCode
       }));
 
       const payload = response.payload;
@@ -147,9 +168,8 @@ const RequestCallbackModal = ({ isOpen, onClose }) => {
       if (response.type.endsWith('/fulfilled')) {
         // Check if the API response indicates success
         if (payload?.status === true) {
-          toast.success('OTP verified successfully!');
           toast.success('Your inquiry has been submitted.');
-          
+
           // Reset and close modal
           setTimeout(() => {
             onClose();
