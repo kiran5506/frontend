@@ -1,3 +1,4 @@
+"use client";
 import SkillForm from '@/components/admin/forms/SkillForm'
 import CreateLayout from '@/components/common/Layouts/CreateLayout'
 import React from 'react'

@@ -1,3 +1,4 @@
+"use client";
 import LeadPackageForm from '@/components/admin/forms/LeadPackageForm'
 import CreateLayout from '@/components/common/Layouts/CreateLayout'
 import React from 'react'

@@ -1,8 +1,10 @@
 "use client";
-import EventForm from '@/components/admin/forms/EventForm'
+import dynamic from 'next/dynamic'
 import CreateLayout from '@/components/common/Layouts/CreateLayout'
 import { useParams } from 'next/navigation';
 import React, { useMemo } from 'react'
+
+const EventForm = dynamic(() => import('@/components/admin/forms/EventForm'), { ssr: false })
 
 const EventEdit = () => {
     const params = useParams();

@@ -1,3 +1,4 @@
+"use client";
 import EmployeeForm from '@/components/admin/forms/EmployeeForm'
 import CreateLayout from '@/components/common/Layouts/CreateLayout'
 import React from 'react'

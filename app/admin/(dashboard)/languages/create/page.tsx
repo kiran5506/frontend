@@ -1,3 +1,4 @@
+"use client";
 import LanguageForm from '@/components/admin/forms/LanguageForm'
 import CreateLayout from '@/components/common/Layouts/CreateLayout'
 import React from 'react'

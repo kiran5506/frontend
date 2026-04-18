@@ -1,3 +1,4 @@
+"use client";
 import SliderForm from '@/components/admin/forms/SliderForm'
 import CreateLayout from '@/components/common/Layouts/CreateLayout'
 import React from 'react'

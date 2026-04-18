@@ -1,3 +1,4 @@
+"use client";
 import VideoForm from '@/components/admin/forms/VideoForm'
 import CreateLayout from '@/components/common/Layouts/CreateLayout'
 import React from 'react'

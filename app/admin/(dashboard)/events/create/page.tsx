@@ -1,6 +1,9 @@
-import EventForm from '@/components/admin/forms/EventForm'
+"use client";
+import dynamic from 'next/dynamic'
 import CreateLayout from '@/components/common/Layouts/CreateLayout'
 import React from 'react'
+
+const EventForm = dynamic(() => import('@/components/admin/forms/EventForm'), { ssr: false })
 
 const CreateEvent = () => {
     const id = "";

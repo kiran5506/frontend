@@ -1,7 +1,8 @@
 "use client";
 import React, { useEffect, useState } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
-import MultiSelectWithPills from '@/components/MultiSelectWithPills';
+import dynamic from 'next/dynamic';
+const MultiSelectWithPills = dynamic(() => import('@/components/MultiSelectWithPills'), { ssr: false });
 import { serviceList } from '@/services/service-api';
 import { skillList } from '@/services/skill-api';
 import { languageList } from '@/services/language-api';

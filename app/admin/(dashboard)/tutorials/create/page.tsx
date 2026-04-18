@@ -1,3 +1,4 @@
+"use client";
 import TutorialForm from '@/components/admin/forms/TutorialForm'
 import CreateLayout from '@/components/common/Layouts/CreateLayout'
 import React from 'react'

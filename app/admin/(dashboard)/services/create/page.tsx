@@ -1,3 +1,4 @@
+"use client";
 
 import ServiceForm from '@/components/admin/forms/ServiceForm';
 import CreateLayout from '@/components/common/Layouts/CreateLayout'
