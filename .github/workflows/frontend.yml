@@ -28,6 +28,7 @@ jobs:
           tags: bsfye/bsfye-frontend:latest
           build-args: |
             NEXT_PUBLIC_API_URL=${{ secrets.NEXT_PUBLIC_API_URL }}
+            NEXT_PUBLIC_RAZORPAY_KEY_ID=${{ secrets.NEXT_PUBLIC_RAZORPAY_KEY_ID }}
 
   deploy:
     needs: build-and-dockerize
@@ -45,4 +46,5 @@ jobs:
         run: |
           docker run -d --restart=always -p 3000:3000 --name bsfye-frontend-container \
             -e NEXT_PUBLIC_API_URL="${{ secrets.NEXT_PUBLIC_API_URL }}" \
+            -e NEXT_PUBLIC_RAZORPAY_KEY_ID="${{ secrets.NEXT_PUBLIC_RAZORPAY_KEY_ID }}" \
             bsfye/bsfye-frontend:latest
