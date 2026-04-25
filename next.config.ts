@@ -12,6 +12,7 @@ const nextConfig: NextConfig = {
     }
   },
   images: {
+    domains: ['bsfye.com', 'localhost', 'bsfye-bucket.s3.amazonaws.com'],
     remotePatterns: [
       {
         protocol: "https",

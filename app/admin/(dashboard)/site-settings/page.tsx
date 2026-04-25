@@ -127,7 +127,7 @@ const SiteSettingsPage = () => {
                     </div>
                     <div className="col-2">
                         <img
-                            src={logoPreview ? `/api/image-proxy?url=${encodeURIComponent(logoPreview)}` : "/assets/admin/img/logo.png"}
+                            src={logoPreview ? `/api/image-proxy?url=${encodeURIComponent(logoPreview)}` : ""}
                             style={{ border: "1px solid #ddd7d7", width: "100%" }}
                         />
                     </div>
