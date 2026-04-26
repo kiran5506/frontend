@@ -12,7 +12,7 @@ const nextConfig: NextConfig = {
     }
   },
   images: {
-    domains: ['bsfye.com', 'localhost', 'bsfye-bucket.s3.amazonaws.com'],
+    domains: ['bsfye.com', 'localhost', 'bsfye-bucket.s3.amazonaws.com', 'api.bsfye.com'],
     remotePatterns: [
       {
         protocol: "https",
@@ -34,6 +34,11 @@ const nextConfig: NextConfig = {
       {
         protocol: "http",
         hostname: "localhost"
+      },
+      {
+        protocol: "https",
+        hostname: "api.bsfye.com",
+        pathname: "/**",
       },
     ],
     localPatterns: [
