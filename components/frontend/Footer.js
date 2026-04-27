@@ -25,7 +25,7 @@ const Footer = () => {
         { href: '/about-us', text: 'About Us', imgSrc: '/images/icons/right-arrow.png' },
         { href: '/services', text: 'Services', imgSrc: '/images/icons/right-arrow.png' },
         { href: '/blog', text: 'Blog', imgSrc: '/images/icons/right-arrow.png' },
-        { href: '/contact', text: 'Contact Us', imgSrc: '/images/icons/right-arrow.png' },
+        { href: '/contact-us', text: 'Contact Us', imgSrc: '/images/icons/right-arrow.png' },
     ];
 
     const GetInTouch = [
