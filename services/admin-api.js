@@ -29,3 +29,11 @@ export const updateSiteSettings = createAsyncThunk('adminSettings/updateSettings
         return rejectWithValue(error.response.data);
     }
 })
+
+export const getAdminDashboardCounts = createAsyncThunk('admin/dashboardCounts', async (_, { rejectWithValue }) => {
+    try {
+        return (await axiosInstance.get(endpoints.ADMIN.dashboardCounts)).data;
+    } catch (error) {
+        return rejectWithValue(error.response?.data || { message: 'Failed to fetch admin dashboard counts' });
+    }
+})

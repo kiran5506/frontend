@@ -3,18 +3,24 @@ import WithLayout from '@/hoc/WithLayout'
 import Pagination from '@/components/Pagination'
 import Service from '@/components/frontend/Service'
 import RequestCallbackModal from '@/components/frontend/RequestCallbackModal'
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { useState, useEffect, useMemo } from 'react';
 import { useSelector } from 'react-redux';
 import { fetchWishlistIds, toggleWishlist } from '@/services/wishlist-api'
 import axiosInstance from '@/utils/axios';
 import endpoints from '@/services/endpoints';
-import Link from 'next/link';
 
 const Services = () => {
     const pathname = usePathname();
+    const router = useRouter();
+    const searchParams = useSearchParams();
     const slug = pathname?.split('/').pop() || '';
     const serviceId = slug.split('-').pop();
+    const cityId = searchParams?.get('city_id') || '';
+    const vendorId = searchParams?.get('vendor_id') || '';
+    const budgetSort = searchParams?.get('budget_sort') || '';
+    const discountSort = searchParams?.get('discount_sort') || '';
+    const ratingFilter = searchParams?.get('rating') || '';
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [serviceDetails, setServiceDetails] = useState<any>(null);
     const [businessProfiles, setBusinessProfiles] = useState<any[]>([]);
@@ -46,8 +52,16 @@ const Services = () => {
     useEffect(() => {
         if (!serviceId) return;
         setLoading(true);
+        const query = new URLSearchParams();
+        if (cityId) query.set('city_id', cityId);
+        if (vendorId) query.set('vendor_id', vendorId);
+        if (budgetSort) query.set('budget_sort', budgetSort);
+        if (discountSort) query.set('discount_sort', discountSort);
+        if (ratingFilter) query.set('rating', ratingFilter);
+        const endpoint = `${endpoints.SERVICES.findByIdWithProfiles.replace('{id}', serviceId)}${query.toString() ? `?${query.toString()}` : ''}`;
+
         axiosInstance
-            .get(endpoints.SERVICES.findByIdWithProfiles.replace('{id}', serviceId))
+            .get(endpoint)
             .then((response) => {
                 if (response?.data?.status) {
                     console.log('Service details response:', response.data.data?.service);
@@ -64,7 +78,20 @@ const Services = () => {
                 setBusinessProfiles([]);
             })
             .finally(() => setLoading(false));
-    }, [serviceId]);
+    }, [serviceId, cityId, vendorId, budgetSort, discountSort, ratingFilter]);
+
+    const handleFilterChange = (key: string, value: string) => {
+        const params = new URLSearchParams(searchParams?.toString() || '');
+        const safePathname = pathname || '/services';
+        if (!value) {
+            params.delete(key);
+        } else {
+            params.set(key, value);
+        }
+
+        const queryString = params.toString();
+        router.push(queryString ? `${safePathname}?${queryString}` : safePathname);
+    };
 
     useEffect(() => {
         let isMounted = true;
@@ -127,25 +154,27 @@ const Services = () => {
                         <label>Filter by :</label>
                         </div>
                         <div className="col-3 myfill">
-                        <select className="form-select">
-                            <option>Budget</option>
-                            <option>Low to High</option>
-                            <option>High to Low</option>
+                        <select className="form-select" value={budgetSort} onChange={(event) => handleFilterChange('budget_sort', event.target.value)}>
+                            <option value="">Budget</option>
+                            <option value="low_to_high">Price - Low to High</option>
+                            <option value="high_to_low">Price - High to Low</option>
                         </select>
                         </div>
                         <div className="col-3 myfill">
-                        <select className="form-select">
-                            <option>Discount</option>
-                            <option>Low to High</option>
-                            <option>High to Low</option>
+                        <select className="form-select" value={discountSort} onChange={(event) => handleFilterChange('discount_sort', event.target.value)}>
+                            <option value="">Discount</option>
+                            <option value="high_to_low">Discount - High to Low</option>
+                            <option value="low_to_high">Discount - Low to High</option>
                         </select>
                         </div>
                         <div className="col-3 myfill">
-                        <select className="form-select">
-                            <option>Ratings</option>
-                            <option>4.0 Above</option>
-                            <option>3.0 Above</option>
-                            <option>2.0 Above</option>
+                        <select className="form-select" value={ratingFilter} onChange={(event) => handleFilterChange('rating', event.target.value)}>
+                            <option value="">Ratings</option>
+                            <option value="5">5.0 & Above</option>
+                            <option value="4">4.0 & Above</option>
+                            <option value="3">3.0 & Above</option>
+                            <option value="2">2.0 & Above</option>
+                            <option value="1">1.0 & Above</option>
                         </select>
                         </div>
                     </div>

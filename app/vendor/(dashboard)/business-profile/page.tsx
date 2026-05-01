@@ -2,16 +2,18 @@
 import { serviceList } from '@/services/service-api';
 import { skillList } from '@/services/skill-api';
 import { languageList } from '@/services/language-api';
+import { cityList } from '@/services/city-api';
 import { createBusinessProfile, businessProfileByVendorId } from '@/services/business-profile-api';
 import { updateProfileCompletionStatus, viewVendorById } from '@/services/vendor-api';
 import { resetCurrentBusinessProfile } from '@/redux/features/business-profile-slice';
-import React, { use, useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux';
-import { useForm } from 'react-hook-form';
+import { Controller, useForm } from 'react-hook-form';
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as Yup from 'yup';
 import { toast } from 'react-toastify';
 import { useRouter } from 'next/navigation';
+import Select from 'react-select';
 
 const BusinessProfilePage = () => {
     const dispatch = useDispatch();
@@ -46,7 +48,39 @@ const BusinessProfilePage = () => {
     const { Services, loading, error } = useSelector((state: any) => state.service);
     const { Skills } = useSelector((state: any) => state.skill);
     const { Languages } = useSelector((state: any) => state.language);
+    const { Cities } = useSelector((state: any) => state.city);
     const { loading: profileLoading } = useSelector((state: any) => state.businessProfile);
+
+    const cityOptions = (Cities || []).map((city: any) => ({
+        value: city._id,
+        label: city.cityName,
+    }));
+
+    const citySelectStyles = {
+        control: (provided: any, state: any) => ({
+            ...provided,
+            minHeight: '42px',
+            backgroundColor: '#ececec',
+            borderColor: state.isFocused ? '#ececec' : '#ececec',
+            boxShadow: 'none',
+        }),
+        placeholder: (provided: any) => ({
+            ...provided,
+            color: '#6c757d',
+        }),
+        singleValue: (provided: any) => ({
+            ...provided,
+            color: '#6c757d',
+        }),
+        input: (provided: any) => ({
+            ...provided,
+            color: '#6c757d',
+        }),
+        menu: (provided: any) => ({
+            ...provided,
+            zIndex: 20,
+        }),
+    };
 
     const validationSchema = Yup.object().shape({
         service_id: Yup.string().required('Service category is required'),
@@ -67,16 +101,20 @@ const BusinessProfilePage = () => {
     const {
         register,
         handleSubmit,
+        control,
         formState: { errors },
-        setValue
     } = useForm({
         resolver: yupResolver(validationSchema),
+        defaultValues: {
+            city: ''
+        }
     });
     
     useEffect(() => {
         (dispatch as any)(serviceList());
         (dispatch as any)(skillList());
         (dispatch as any)(languageList());
+        (dispatch as any)(cityList());
     }, [dispatch]); 
 
     useEffect(() => {
@@ -236,11 +274,20 @@ const BusinessProfilePage = () => {
                     </div>
                     <div className="mb-3  col-md-6">
                         <label className="form-label">City*</label>
-                                                <input
-                                                    type="text"
-                                                    className="form-control py-2 px-4 rounded-5"
-                                                    placeholder="Enter city"
-                                                    {...register('city')}
+                                                <Controller
+                                                    name="city"
+                                                    control={control}
+                                                    render={({ field }) => (
+                                                        <Select
+                                                            options={cityOptions}
+                                                            value={cityOptions.find((opt: any) => opt.value === field.value) || null}
+                                                            onChange={(selectedOption: any) => field.onChange(selectedOption?.value || '')}
+                                                            placeholder="Select city"
+                                                            isSearchable
+                                                            classNamePrefix="react-select"
+                                                            styles={citySelectStyles}
+                                                        />
+                                                    )}
                                                 />
                         {errors.city && <p className="text-danger">{errors.city.message}</p>}
                     </div>

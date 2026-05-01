@@ -49,13 +49,11 @@ const CityForm = ({ id }: CityFormProps) => {
 
     const onSubmit =  async (data: any) => {
         try {
-            const formData = new FormData();
-            Object.keys(data).forEach((key) => {
-                if (data[key]) {
-                    formData.append(key, data[key]);
-                }
-            });
-            const action = id ? cityEdit({ id, formData } as any) : createCity(formData as any);
+            const payload = {
+                cityName: data?.cityName?.trim?.() || ''
+            };
+
+            const action = id ? cityEdit({ id, payload } as any) : createCity(payload as any);
             const response = await (dispatch as any)(action as any).unwrap();
             if (response?.status) {
                 toast.success(`City ${ id ? 'Updated' : 'Created' } successfully!`);
@@ -76,7 +74,6 @@ const CityForm = ({ id }: CityFormProps) => {
         role="form"
         id="updateContent"
         name="updateContent"
-        encType="multipart/form-data"
         onSubmit={handleSubmit(onSubmit)} 
     >
         <div className="col-12">

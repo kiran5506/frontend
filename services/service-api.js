@@ -34,3 +34,12 @@ export const serviceDelete = createAsyncThunk('service/serviceDelete', async (id
     result.id = id;
     return result;
 })
+
+export const searchServiceSuggestions = createAsyncThunk('service/searchSuggestions', async (query, { rejectWithValue }) => {
+    try {
+        const queryString = new URLSearchParams({ q: query }).toString();
+        return (await axiosInstance.get(`${endpoints.SERVICES.search}?${queryString}`)).data;
+    } catch (error) {
+        return rejectWithValue(error.response?.data || { message: 'Unable to fetch service suggestions' });
+    }
+})

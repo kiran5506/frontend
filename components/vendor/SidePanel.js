@@ -2,7 +2,7 @@
 import { logout } from '@/redux/features/vendor-auth-slice';
 import Link from 'next/link';
 import React from 'react'
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 
 const sidebarMenu = [
   { name: 'Dashboard', link: '/vendor/dashboard' },
@@ -20,6 +20,20 @@ const sidebarMenu = [
 
 const SidePanel = () => {
     const dispatch = useDispatch();
+    const vendorDetailsRaw = useSelector((state) => state?.vendorAuth?.details);
+
+    let vendorDetails = null;
+    try {
+        vendorDetails = vendorDetailsRaw ? JSON.parse(vendorDetailsRaw) : null;
+    } catch {
+        vendorDetails = null;
+    }
+
+    const canShowSidebarMenu =
+        vendorDetails?.is_otp_verified === true &&
+        vendorDetails?.is_profile_completed === true &&
+        vendorDetails?.is_profile_verified === true;
+
     const handleLogout = () => {
         dispatch(logout());
     };
@@ -35,12 +49,12 @@ const SidePanel = () => {
             <i className="bi bi-x-lg" />
         </button>
         <div className="mb-4">
-            <Link href="/vendor/dashboard">
+            <Link href={`${canShowSidebarMenu ? "/vendor/dashboard" : "#"}`}>
             <img src="/assets/vendor/img/logo.png" alt="" />
             </Link>
         </div>
         <ul className="sidebar-nav mb-4" id="sidebar-nav">
-            {sidebarMenu.map((item) => (
+            {canShowSidebarMenu && sidebarMenu.map((item) => (
                 <li className="nav-item" key={item.link}>
                     <Link className="nav-link" href={item.link}>
                         <span>{item.name}</span>

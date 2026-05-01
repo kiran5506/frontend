@@ -18,6 +18,19 @@ export default function VendorBaseLayout({
   const isAuthenticated = useSelector((state: any) => !!state?.vendorAuth?.isAuthenticated);
   const router = useRouter();
   const pathname = usePathname();
+
+  const vendorDetailsRaw = useSelector((state: any) => state?.vendorAuth?.details);
+  let vendorDetails = null;
+  try {
+      vendorDetails = vendorDetailsRaw ? JSON.parse(vendorDetailsRaw) : null;
+  } catch {
+      vendorDetails = null;
+  }
+
+  const canShowSidebarMenu =
+      vendorDetails?.is_otp_verified === true &&
+      vendorDetails?.is_profile_completed === true &&
+      vendorDetails?.is_profile_verified === true;
   
   // Extract page title from pathname
   const getPageTitle = () => {
@@ -61,7 +74,7 @@ export default function VendorBaseLayout({
           <nav className="d-none d-lg-block">
             <ol className="breadcrumb m-0">
               <li className="breadcrumb-item">
-                <Link href={'/vendor/dashboard'}>Home</Link>
+                <Link href={`${canShowSidebarMenu ? '/vendor/dashboard' : '#'}`}>Home</Link>
               </li>
               <li className="breadcrumb-item active">{pageTitle}</li>
             </ol>

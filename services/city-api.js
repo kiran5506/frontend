@@ -6,11 +6,11 @@ export const createCity = createAsyncThunk('city/create', async (request) =>{
     return (await axiosInstance.post(endpoints.CITIES.create, request)).data;
 })
 
-export const cityEdit = createAsyncThunk('city/edit', async ({id, formData}) => {
+export const cityEdit = createAsyncThunk('city/edit', async ({id, payload}) => {
     try {
         const result = await axiosInstance.put(
           endpoints.CITIES.edit.replace('{id}', id),
-          formData
+                    payload
         );
         return result.data;
     } catch (error) {
@@ -30,4 +30,13 @@ export const cityDelete = createAsyncThunk('city/cityDelete', async (id) => {
     const result = (await axiosInstance.delete(endpoints.CITIES.delete.replace("{id}", id))).data;
     result.id = id;
     return result;
+})
+
+export const searchCitySuggestions = createAsyncThunk('city/searchSuggestions', async (query, { rejectWithValue }) => {
+    try {
+        const queryString = new URLSearchParams({ q: query }).toString();
+        return (await axiosInstance.get(`${endpoints.CITIES.search}?${queryString}`)).data;
+    } catch (error) {
+        return rejectWithValue(error.response?.data || { message: 'Unable to fetch city suggestions' });
+    }
 })

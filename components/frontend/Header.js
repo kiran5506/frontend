@@ -1,5 +1,5 @@
 "use client";
-import React, { use, useEffect } from 'react'
+import React, { useEffect, useRef } from 'react'
 import Topbar from './Topbar'
 import logo from '../../public/images/common/logo.png'
 import user from '../../public/images/common/user.png'  
@@ -9,17 +9,36 @@ import { FaMapMarkerAlt, FaSearch } from 'react-icons/fa'
 import { useSelector, useDispatch } from 'react-redux';
 import { customerLogout } from '@/redux/features/customer-auth-slice';
 import { toast } from 'react-toastify';
-import { useRouter } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { FaXmark } from 'react-icons/fa6';
 import { getSiteSettings } from '@/services/admin-api';
 import { generateToken } from '@/services/generate-api';
+import { searchCitySuggestions } from '@/services/city-api';
+import { searchServiceSuggestions } from '@/services/service-api';
+
+const SITE_SETTINGS_ID = "694e6ca8aa5aae1acb87f836";
 
 const Header = () => {
-    let id = "694e6ca8aa5aae1acb87f836";
     const dispatch = useDispatch();
     const router = useRouter();
+    const pathname = usePathname();
+    const searchParams = useSearchParams();
     const [siteSettings, setSiteSettings] = React.useState({});
     const isAuthenticated = useSelector((state) => !!state?.customerAuth?.isAuthenticated);
+    const [locationQuery, setLocationQuery] = React.useState('');
+    const [selectedCity, setSelectedCity] = React.useState(null);
+    const [citySuggestions, setCitySuggestions] = React.useState([]);
+    const [isCityLoading, setIsCityLoading] = React.useState(false);
+    const [showCitySuggestions, setShowCitySuggestions] = React.useState(false);
+
+    const [serviceVendorQuery, setServiceVendorQuery] = React.useState('');
+    const [selectedServiceVendor, setSelectedServiceVendor] = React.useState(null);
+    const [serviceVendorSuggestions, setServiceVendorSuggestions] = React.useState([]);
+    const [isServiceVendorLoading, setIsServiceVendorLoading] = React.useState(false);
+    const [showServiceVendorSuggestions, setShowServiceVendorSuggestions] = React.useState(false);
+
+    const citySearchTimerRef = useRef(null);
+    const serviceVendorSearchTimerRef = useRef(null);
 
     const [isUserMenuOpen, setUserMenuOpen] = React.useState(false);
     const handleUserMenuToggle = () => {
@@ -36,7 +55,7 @@ const Header = () => {
     useEffect(() => {
         (async () => {
             await (dispatch)(generateToken()).unwrap();
-            await dispatch(getSiteSettings(id)).then((response) => {
+            await dispatch(getSiteSettings(SITE_SETTINGS_ID)).then((response) => {
                     if (response.payload && response.payload.status) {
                         const settings = response.payload.data;
                         setSiteSettings(settings);
@@ -44,6 +63,216 @@ const Header = () => {
                 });
         })();
     },[dispatch]);
+
+    useEffect(() => {
+        return () => {
+            if (citySearchTimerRef.current) clearTimeout(citySearchTimerRef.current);
+            if (serviceVendorSearchTimerRef.current) clearTimeout(serviceVendorSearchTimerRef.current);
+        };
+    }, []);
+
+    const handleClearCity = () => {
+        const currentPath = pathname || '';
+        const params = new URLSearchParams(searchParams?.toString() || '');
+        params.delete('city_id');
+        params.delete('city_name');
+
+        if (currentPath.startsWith('/services/') && currentPath !== '/services') {
+            const queryString = params.toString();
+            router.push(queryString ? `${currentPath}?${queryString}` : currentPath);
+            return;
+        }
+
+        if (selectedServiceVendor?.value) {
+            navigateToSearchPage({ city: null, serviceVendor: selectedServiceVendor });
+            return;
+        }
+
+        if (currentPath === '/services') {
+            const queryString = params.toString();
+            router.push(queryString ? `${currentPath}?${queryString}` : currentPath);
+        }
+    };
+
+    useEffect(() => {
+        const cityNameFromUrl = searchParams?.get('city_name') || '';
+        const cityIdFromUrl = searchParams?.get('city_id') || '';
+        const queryTextFromUrl = searchParams?.get('query_text') || '';
+
+        setLocationQuery(cityNameFromUrl);
+        setServiceVendorQuery(queryTextFromUrl);
+
+        if (cityNameFromUrl && cityIdFromUrl) {
+            setSelectedCity({ _id: cityIdFromUrl, cityName: cityNameFromUrl });
+        } else if (!cityNameFromUrl) {
+            setSelectedCity(null);
+        }
+
+        if (!queryTextFromUrl) {
+            setSelectedServiceVendor(null);
+        }
+    }, [searchParams]);
+
+    const handleLocationInputChange = (event) => {
+        const value = event.target.value;
+        setLocationQuery(value);
+        setSelectedCity(null);
+        setShowCitySuggestions(true);
+
+        if (citySearchTimerRef.current) clearTimeout(citySearchTimerRef.current);
+
+        if (!value.trim() || value.trim().length < 2) {
+            setIsCityLoading(false);
+            setCitySuggestions([]);
+
+            if (!value.trim()) {
+                handleClearCity();
+            }
+
+            return;
+        }
+
+        citySearchTimerRef.current = setTimeout(async () => {
+            try {
+                setIsCityLoading(true);
+                const response = await dispatch(searchCitySuggestions(value.trim())).unwrap();
+                setCitySuggestions(response?.data || []);
+            } catch {
+                setCitySuggestions([]);
+            } finally {
+                setIsCityLoading(false);
+            }
+        }, 300);
+    };
+
+    const handleServiceVendorInputChange = (event) => {
+        const value = event.target.value;
+        setServiceVendorQuery(value);
+        setSelectedServiceVendor(null);
+        setShowServiceVendorSuggestions(true);
+
+        if (serviceVendorSearchTimerRef.current) clearTimeout(serviceVendorSearchTimerRef.current);
+
+        if (!value.trim() || value.trim().length < 2) {
+            setIsServiceVendorLoading(false);
+            setServiceVendorSuggestions([]);
+            return;
+        }
+
+        serviceVendorSearchTimerRef.current = setTimeout(async () => {
+            try {
+                setIsServiceVendorLoading(true);
+                const response = await dispatch(searchServiceSuggestions(value.trim())).unwrap();
+                setServiceVendorSuggestions(response?.data || []);
+            } catch {
+                setServiceVendorSuggestions([]);
+            } finally {
+                setIsServiceVendorLoading(false);
+            }
+        }, 300);
+    };
+
+    const selectCity = (city) => {
+        setLocationQuery(city?.cityName || '');
+        setSelectedCity(city || null);
+        setShowCitySuggestions(false);
+
+        navigateToSearchPage({
+            city: city || null,
+            serviceVendor: selectedServiceVendor
+        });
+    };
+
+    const selectServiceVendor = (item) => {
+        setServiceVendorQuery(item?.label || '');
+        setSelectedServiceVendor(item || null);
+        setShowServiceVendorSuggestions(false);
+
+        navigateToSearchPage({
+            city: selectedCity,
+            serviceVendor: item || null
+        });
+    };
+
+    const createSlug = (value = '') =>
+        value
+            .toLowerCase()
+            .trim()
+            .replace(/[^a-z0-9\s-]/g, '')
+            .replace(/\s+/g, '-')
+            .replace(/-+/g, '-');
+
+    const navigateToSearchPage = ({ city, serviceVendor }) => {
+        const currentPath = pathname || '';
+        const isSelectedServicePage = currentPath.startsWith('/services/') && currentPath !== '/services';
+        const currentServiceId = isSelectedServicePage
+            ? (currentPath.split('/').pop() || '').split('-').pop()
+            : '';
+
+        if (!serviceVendor?.value && city?._id && currentServiceId) {
+            const params = new URLSearchParams(searchParams?.toString() || '');
+            params.set('city_id', city._id);
+            if (city?.cityName) {
+                params.set('city_name', city.cityName);
+            } else {
+                params.delete('city_name');
+            }
+
+            router.push(`${currentPath}?${params.toString()}`);
+            return;
+        }
+
+        if (!serviceVendor?.value && city?._id) {
+            const cityQuery = new URLSearchParams();
+            cityQuery.set('city_id', city._id);
+            if (city?.cityName) cityQuery.set('city_name', city.cityName);
+            router.push(`/services?${cityQuery.toString()}`);
+            return;
+        }
+
+        if (!serviceVendor?.value) {
+            toast.info('Please select location or a service/vendor from the list.');
+            return;
+        }
+
+        const isVendor = serviceVendor?.type === 'Vendor';
+        const serviceId = isVendor
+            ? serviceVendor?.serviceId
+            : serviceVendor?.value;
+
+        if (!serviceId) {
+            toast.info('No service mapped for this vendor. Please select a service.');
+            return;
+        }
+
+        const params = new URLSearchParams();
+        if (city?._id) params.set('city_id', city._id);
+    if (city?.cityName) params.set('city_name', city.cityName);
+        if (isVendor && serviceVendor?.value) params.set('vendor_id', serviceVendor.value);
+    params.set('query_text', serviceVendor?.label || '');
+    params.set('query_type', serviceVendor?.type || 'Service');
+
+        const slug = createSlug(serviceVendor?.label || 'service');
+        const queryString = params.toString();
+        router.push(`/services/${slug}-${serviceId}${queryString ? `?${queryString}` : ''}`);
+    };
+
+    const handleSearchSubmit = () => {
+        navigateToSearchPage({
+            city: selectedCity,
+            serviceVendor: selectedServiceVendor
+        });
+    };
+
+    const handleSearchInputKeyDown = (event) => {
+        if (event.key === 'Enter') {
+            event.preventDefault();
+            handleSearchSubmit();
+        }
+    };
+
+    const serviceCategorySuggestions = serviceVendorSuggestions.filter((item) => item?.type === 'Service');
+    const vendorCategorySuggestions = serviceVendorSuggestions.filter((item) => item?.type === 'Vendor');
 
   return (
     <header>
@@ -67,11 +296,34 @@ const Header = () => {
                             id="search-bar"
                             className="search-bar"
                             placeholder="Select Location"
+                            value={locationQuery}
+                            onChange={handleLocationInputChange}
+                            onFocus={() => setShowCitySuggestions(true)}
+                            onBlur={() => setTimeout(() => setShowCitySuggestions(false), 150)}
                         />
                         <div className="search-icon">
                             <FaMapMarkerAlt />
                         </div>
-                        <div id="suggestions" className="suggestions-box" />
+                        <div
+                            className="suggestions-box"
+                            style={{ display: showCitySuggestions && (isCityLoading || citySuggestions.length > 0 || locationQuery.trim().length >= 2) ? 'block' : 'none' }}
+                        >
+                            {isCityLoading ? (
+                                <div className="loading">Loading...</div>
+                            ) : citySuggestions.length > 0 ? (
+                                citySuggestions.map((city) => (
+                                    <div
+                                        key={city?._id}
+                                        className="suggestion-item"
+                                        onMouseDown={() => selectCity(city)}
+                                    >
+                                        {city?.cityName}
+                                    </div>
+                                ))
+                            ) : locationQuery.trim().length >= 2 ? (
+                                <div className="loading">No city found</div>
+                            ) : null}
+                        </div>
                         </div>
                     </div>
                     <div className="row desktop-search">
@@ -82,11 +334,34 @@ const Header = () => {
                             id="search-bar"
                             className="search-bar"
                             placeholder="Select Location"
+                            value={locationQuery}
+                            onChange={handleLocationInputChange}
+                            onFocus={() => setShowCitySuggestions(true)}
+                            onBlur={() => setTimeout(() => setShowCitySuggestions(false), 150)}
                             />
                             <div className="search-icon">
                             <FaMapMarkerAlt />
                             </div>
-                            <div id="suggestions" className="suggestions-box" />
+                            <div
+                                className="suggestions-box"
+                                style={{ display: showCitySuggestions && (isCityLoading || citySuggestions.length > 0 || locationQuery.trim().length >= 2) ? 'block' : 'none' }}
+                            >
+                                {isCityLoading ? (
+                                    <div className="loading">Loading...</div>
+                                ) : citySuggestions.length > 0 ? (
+                                    citySuggestions.map((city) => (
+                                        <div
+                                            key={city?._id}
+                                            className="suggestion-item"
+                                            onMouseDown={() => selectCity(city)}
+                                        >
+                                            {city?.cityName}
+                                        </div>
+                                    ))
+                                ) : locationQuery.trim().length >= 2 ? (
+                                    <div className="loading">No city found</div>
+                                ) : null}
+                            </div>
                         </div>
                         </div>
                         <div className="col-md-6">
@@ -96,11 +371,61 @@ const Header = () => {
                             id="service-search"
                             className="service-search-bar"
                             placeholder="Select Service / Vendor"
+                            value={serviceVendorQuery}
+                            onChange={handleServiceVendorInputChange}
+                            onKeyDown={handleSearchInputKeyDown}
+                            onFocus={() => setShowServiceVendorSuggestions(true)}
+                            onBlur={() => setTimeout(() => setShowServiceVendorSuggestions(false), 150)}
                             />
-                            <div className="service-search-icon">
+                            <div className="service-search-icon" onClick={handleSearchSubmit} role="button" aria-label="Search services" style={{ cursor: 'pointer' }}>
                             <FaSearch />
                             </div>
-                            <div id="service-suggestions" className="service-suggestions-box" />
+                            <div
+                                className="service-suggestions-box"
+                                style={{ display: showServiceVendorSuggestions && (isServiceVendorLoading || serviceVendorSuggestions.length > 0 || serviceVendorQuery.trim().length >= 2) ? 'block' : 'none' }}
+                            >
+                                {isServiceVendorLoading ? (
+                                    <div className="service-loading">Loading...</div>
+                                ) : serviceVendorSuggestions.length > 0 ? (
+                                    <>
+                                        {serviceCategorySuggestions.length > 0 && (
+                                            <>
+                                                <div className="service-loading" style={{ fontWeight: 600, textAlign: 'left', paddingBottom: '4px' }}>
+                                                    Services
+                                                </div>
+                                                {serviceCategorySuggestions.map((item) => (
+                                                    <div
+                                                        key={`${item?.type}-${item?.value}`}
+                                                        className="service-suggestion-item"
+                                                        onMouseDown={() => selectServiceVendor(item)}
+                                                    >
+                                                        {item?.label}
+                                                    </div>
+                                                ))}
+                                            </>
+                                        )}
+
+                                        {vendorCategorySuggestions.length > 0 && (
+                                            <>
+                                                <div className="service-loading" style={{ fontWeight: 600, textAlign: 'left', paddingBottom: '4px', borderTop: serviceCategorySuggestions.length > 0 ? '1px solid #eee' : 'none', marginTop: serviceCategorySuggestions.length > 0 ? '4px' : '0px' }}>
+                                                    Vendors
+                                                </div>
+                                                {vendorCategorySuggestions.map((item) => (
+                                                    <div
+                                                        key={`${item?.type}-${item?.value}`}
+                                                        className="service-suggestion-item"
+                                                        onMouseDown={() => selectServiceVendor(item)}
+                                                    >
+                                                        {item?.label}
+                                                    </div>
+                                                ))}
+                                            </>
+                                        )}
+                                    </>
+                                ) : serviceVendorQuery.trim().length >= 2 ? (
+                                    <div className="service-loading">No service or vendor found</div>
+                                ) : null}
+                            </div>
                         </div>
                         </div>
                     </div>

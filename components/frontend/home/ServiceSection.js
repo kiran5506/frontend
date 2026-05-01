@@ -120,7 +120,7 @@ const ServiceSection = () => {
                     <Slider {...settings}>
                         {Services.map(service => service.serviceType === 'Primary' && (
                             <div className="item text-center" key={service._id}>
-                                <Link href={`services/${createSlug(service.serviceName)}-${service._id}`}>
+                                <Link href={`services/${createSlug(service.serviceName)}-${service._id}?query_text=${service.serviceName}&query_type=Service`}>
                                     <div className="box2">
                                         <Image src={`/api/image-proxy?url=${encodeURIComponent(service.imagePath)}`} alt={service.serviceName} width={196} height={243} />
                                         <span className="service-name">{service.serviceName}</span>
@@ -150,7 +150,7 @@ const ServiceSection = () => {
                     <Slider {...settings}>
                         {Services.map(service => service.serviceType === 'Secondary' && (
                             <div className="item text-center" key={service._id}>
-                                <Link href={service.link || '/'}>
+                                <Link href={`services/${createSlug(service.serviceName)}-${service._id}?query_text=${service.serviceName}&query_type=Service`}>
                                     <div className="box2">
                                         <Image src={`/api/image-proxy?url=${encodeURIComponent(service.imagePath)}`} alt={service.serviceName} width={196} height={243} />
                                     </div>

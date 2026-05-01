@@ -15,6 +15,7 @@ export default {
         create: '/service/create',
         edit: '/service/edit/{id}',
         list: '/service/list',
+        search: '/service/search',
         findById: '/service/findById/{id}',
         findByIdWithProfiles: '/service/findByIdWithProfiles/{id}',
         delete: '/service/delete/{id}'
@@ -56,6 +57,7 @@ export default {
         create: '/city/create',
         edit: '/city/edit/{id}',
         list: '/city/list',
+        search: '/city/search',
         findById: '/city/findById/{id}',
         delete: '/city/delete/{id}'
     },
@@ -98,7 +100,8 @@ export default {
     ADMIN: {
         login: '/admin/login',
         updateSettings: '/admin/siteSettings/{id}',
-        getSettings: '/admin/getSiteSettings/{id}'
+        getSettings: '/admin/getSiteSettings/{id}',
+        dashboardCounts: '/admin/dashboard-counts'
     },
     AUTH: {
         authLogin: '/auth/login',

@@ -19,10 +19,10 @@ const Service = ({ profile, serviceDetails, isWishlisted, onToggleWishlist }) =>
   const customerAuth = useSelector((state) => state.customerAuth);
   const isLoggedIn = Boolean(customerAuth?.isAuthenticated);
   const serviceName =
-    profile?.serviceName || serviceDetails?.serviceName || "Catering";
-  const businessName = profile?.businessName || "Green Leaf Foods";
+    profile?.serviceName || serviceDetails?.serviceName || "";
+  const businessName = profile?.businessName || "";
   const city = profile?.address?.city;
-  const serviceType = profile?.serviceType;
+  const averageRating = Number(profile?.averageRating || 0);
   const imageSrc =
     profile?.profilePicture || "/images/common/suggestions_1.jpg";
   const lowestOfferPrice = Number(profile?.lowestOfferPrice || 0);
@@ -96,7 +96,7 @@ const Service = ({ profile, serviceDetails, isWishlisted, onToggleWishlist }) =>
               />
             </h2>
             <ul>
-              {city || serviceType ? (
+              {(city || Number.isFinite(averageRating)) && (
                 <>
                   {city && (
                     <li>
@@ -109,28 +109,16 @@ const Service = ({ profile, serviceDetails, isWishlisted, onToggleWishlist }) =>
                       from {city}
                     </li>
                   )}
-                  {serviceType && (
-                    <li>
-                      <Image
-                        src="/images/icons/suggestions-rating.png"
-                        alt=""
-                        width={15}
-                        height={15}
-                      />
-                      {serviceType}
-                    </li>
-                  )}
+                  <li>
+                    <Image
+                      src="/images/icons/suggestions-rating.png"
+                      alt=""
+                      width={15}
+                      height={15}
+                    />
+                    {Number.isFinite(averageRating) ? averageRating.toFixed(1) : "0.0"} Avg Rating
+                  </li>
                 </>
-              ) : (
-                <li>
-                  <Image
-                    src="/images/icons/suggestions-rating.png"
-                    alt=""
-                    width={15}
-                    height={15}
-                  />
-                  4.8 Rating
-                </li>
               )}
             </ul>
           </Link>

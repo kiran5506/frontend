@@ -1,16 +1,43 @@
+"use client";
 import Link from 'next/link'
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { BsBox, BsCart, BsMap, BsPeople, BsShop, BsTools, BsTranslate } from 'react-icons/bs'
+import { useDispatch } from 'react-redux';
+import { getAdminDashboardCounts } from '@/services/admin-api';
 
 const DashboardPage = () => {
+  const dispatch = useDispatch();
+  const [dashboardCounts, setDashboardCounts] = useState({
+    leads: 0,
+    packages: 0,
+    vendors: 0,
+    customers: 0,
+    cities: 0,
+    languages: 0,
+    skills: 0,
+  });
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const response = await (dispatch as any)(getAdminDashboardCounts()).unwrap();
+        if (response?.status && response?.data) {
+          setDashboardCounts((prev) => ({ ...prev, ...response.data }));
+        }
+      } catch (error) {
+        console.error('Failed to fetch dashboard counts', error);
+      }
+    })();
+  }, [dispatch]);
+
   const  dashboardData = [
-    { title: 'Leads', icon: <BsCart />, count: '500+', link: 'leads.php' },
-    { title: 'Packages', icon: <BsBox />, count: '150', link: 'services.php' },
-    { title: 'Vendors', icon: <BsShop />, count: '145', link: 'vendors.php' },
-    { title: 'Customers', icon: <BsPeople />, count: '1500', link: 'customers-list.php' },
-    { title: 'Cities', icon: <BsMap />, count: '10+', link: 'cities.php' },
-    { title: 'Languages', icon: <BsTranslate />, count: '10+', link: '#' },
-    { title: 'Skills', icon: <BsTools />, count: '10+', link: '#' },
+    { title: 'Leads', icon: <BsCart />, count: dashboardCounts.leads, link: '/admin/leads-collaborations' },
+    { title: 'Packages', icon: <BsBox />, count: dashboardCounts.packages, link: '/admin/leadpackages' },
+    { title: 'Vendors', icon: <BsShop />, count: dashboardCounts.vendors, link: '/admin/vendor-approved' },
+    { title: 'Customers', icon: <BsPeople />, count: dashboardCounts.customers, link: '/admin/customers' },
+    { title: 'Cities', icon: <BsMap />, count: dashboardCounts.cities, link: '/admin/cities' },
+    { title: 'Languages', icon: <BsTranslate />, count: dashboardCounts.languages, link: '/admin/languages' },
+    { title: 'Skills', icon: <BsTools />, count: dashboardCounts.skills, link: '/admin/skills' },
   ]
 
   return (
