@@ -5,7 +5,7 @@ import endpoints from "./endpoints";
 interface CreateReviewPayload {
     vendor_id: string;
     customer_id: string;
-    service_id?: string;
+    business_profile_id?: string;
     review: string;
     rating: number;
 }

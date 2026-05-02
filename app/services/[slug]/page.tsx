@@ -9,6 +9,7 @@ import { useSelector } from 'react-redux';
 import { fetchWishlistIds, toggleWishlist } from '@/services/wishlist-api'
 import axiosInstance from '@/utils/axios';
 import endpoints from '@/services/endpoints';
+import { toast } from 'react-toastify';
 
 const Services = () => {
     const pathname = usePathname();
@@ -121,6 +122,7 @@ const Services = () => {
         try {
             const response = await toggleWishlist(profile._id, customerId);
             if (response?.status) {
+                toast.success(response?.message);
                 setWishlistIds((prev) => {
                     const exists = prev.includes(profile._id);
                     if (response?.data?.added === false || exists) {
@@ -140,6 +142,7 @@ const Services = () => {
             isOpen={isModalOpen} 
             onClose={() => setIsModalOpen(false)}
             serviceId={serviceId}
+            packageId={undefined}
         />
         <section className="inner-search-section2">
             <h1 className="text-center py-3 ">{serviceDetails?.serviceName || 'Service Name'}</h1>

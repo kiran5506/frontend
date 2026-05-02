@@ -9,8 +9,8 @@ export const createCity = createAsyncThunk('city/create', async (request) =>{
 export const cityEdit = createAsyncThunk('city/edit', async ({id, payload}) => {
     try {
         const result = await axiosInstance.put(
-          endpoints.CITIES.edit.replace('{id}', id),
-                    payload
+            endpoints.CITIES.edit.replace('{id}', id),
+            payload
         );
         return result.data;
     } catch (error) {

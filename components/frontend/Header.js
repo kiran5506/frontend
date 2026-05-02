@@ -271,6 +271,8 @@ const Header = () => {
         }
     };
 
+    const shouldShowHeaderSearch = !(pathname || '').startsWith('/c/');
+
     const serviceCategorySuggestions = serviceVendorSuggestions.filter((item) => item?.type === 'Service');
     const vendorCategorySuggestions = serviceVendorSuggestions.filter((item) => item?.type === 'Vendor');
 
@@ -287,22 +289,61 @@ const Header = () => {
                 <Link className="navbar-brand" href={'/'}>
                     <Image src={`/api/image-proxy?url=${encodeURIComponent(siteSettings?.logo)}` || logo} alt="logo" className="logo" width={110} height={52}/>
                 </Link>
-                {!isAuthenticated && (
-                    <>
-                    <div className="mobile-location-search">
-                        <div className="search-container">
+                {shouldShowHeaderSearch && (
+                <div className="mobile-location-search">
+                    <div className="search-container">
+                    <input
+                        type="text"
+                        id="search-bar"
+                        className="search-bar"
+                        placeholder="Select Location"
+                        value={locationQuery}
+                        onChange={handleLocationInputChange}
+                        onFocus={() => setShowCitySuggestions(true)}
+                        onBlur={() => setTimeout(() => setShowCitySuggestions(false), 150)}
+                    />
+                    <div className="search-icon">
+                        <FaMapMarkerAlt />
+                    </div>
+                    <div
+                        className="suggestions-box"
+                        style={{ display: showCitySuggestions && (isCityLoading || citySuggestions.length > 0 || locationQuery.trim().length >= 2) ? 'block' : 'none' }}
+                    >
+                        {isCityLoading ? (
+                            <div className="loading">Loading...</div>
+                        ) : citySuggestions.length > 0 ? (
+                            citySuggestions.map((city) => (
+                                <div
+                                    key={city?._id}
+                                    className="suggestion-item"
+                                    onMouseDown={() => selectCity(city)}
+                                >
+                                    {city?.cityName}
+                                </div>
+                            ))
+                        ) : locationQuery.trim().length >= 2 ? (
+                            <div className="loading">No city found</div>
+                        ) : null}
+                    </div>
+                    </div>
+                </div>
+                )}
+                {shouldShowHeaderSearch && (
+                <div className="row desktop-search">
+                    <div className="col-md-6">
+                    <div className="search-container">
                         <input
-                            type="text"
-                            id="search-bar"
-                            className="search-bar"
-                            placeholder="Select Location"
-                            value={locationQuery}
-                            onChange={handleLocationInputChange}
-                            onFocus={() => setShowCitySuggestions(true)}
-                            onBlur={() => setTimeout(() => setShowCitySuggestions(false), 150)}
+                        type="text"
+                        id="search-bar"
+                        className="search-bar"
+                        placeholder="Select Location"
+                        value={locationQuery}
+                        onChange={handleLocationInputChange}
+                        onFocus={() => setShowCitySuggestions(true)}
+                        onBlur={() => setTimeout(() => setShowCitySuggestions(false), 150)}
                         />
                         <div className="search-icon">
-                            <FaMapMarkerAlt />
+                        <FaMapMarkerAlt />
                         </div>
                         <div
                             className="suggestions-box"
@@ -324,112 +365,73 @@ const Header = () => {
                                 <div className="loading">No city found</div>
                             ) : null}
                         </div>
-                        </div>
                     </div>
-                    <div className="row desktop-search">
-                        <div className="col-md-6">
-                        <div className="search-container">
-                            <input
-                            type="text"
-                            id="search-bar"
-                            className="search-bar"
-                            placeholder="Select Location"
-                            value={locationQuery}
-                            onChange={handleLocationInputChange}
-                            onFocus={() => setShowCitySuggestions(true)}
-                            onBlur={() => setTimeout(() => setShowCitySuggestions(false), 150)}
-                            />
-                            <div className="search-icon">
-                            <FaMapMarkerAlt />
-                            </div>
-                            <div
-                                className="suggestions-box"
-                                style={{ display: showCitySuggestions && (isCityLoading || citySuggestions.length > 0 || locationQuery.trim().length >= 2) ? 'block' : 'none' }}
-                            >
-                                {isCityLoading ? (
-                                    <div className="loading">Loading...</div>
-                                ) : citySuggestions.length > 0 ? (
-                                    citySuggestions.map((city) => (
-                                        <div
-                                            key={city?._id}
-                                            className="suggestion-item"
-                                            onMouseDown={() => selectCity(city)}
-                                        >
-                                            {city?.cityName}
-                                        </div>
-                                    ))
-                                ) : locationQuery.trim().length >= 2 ? (
-                                    <div className="loading">No city found</div>
-                                ) : null}
-                            </div>
+                    </div>
+                    <div className="col-md-6">
+                    <div className="search-container">
+                        <input
+                        type="text"
+                        id="service-search"
+                        className="service-search-bar"
+                        placeholder="Select Service / Vendor"
+                        value={serviceVendorQuery}
+                        onChange={handleServiceVendorInputChange}
+                        onKeyDown={handleSearchInputKeyDown}
+                        onFocus={() => setShowServiceVendorSuggestions(true)}
+                        onBlur={() => setTimeout(() => setShowServiceVendorSuggestions(false), 150)}
+                        />
+                        <div className="service-search-icon" onClick={handleSearchSubmit} role="button" aria-label="Search services" style={{ cursor: 'pointer' }}>
+                        <FaSearch />
                         </div>
-                        </div>
-                        <div className="col-md-6">
-                        <div className="search-container">
-                            <input
-                            type="text"
-                            id="service-search"
-                            className="service-search-bar"
-                            placeholder="Select Service / Vendor"
-                            value={serviceVendorQuery}
-                            onChange={handleServiceVendorInputChange}
-                            onKeyDown={handleSearchInputKeyDown}
-                            onFocus={() => setShowServiceVendorSuggestions(true)}
-                            onBlur={() => setTimeout(() => setShowServiceVendorSuggestions(false), 150)}
-                            />
-                            <div className="service-search-icon" onClick={handleSearchSubmit} role="button" aria-label="Search services" style={{ cursor: 'pointer' }}>
-                            <FaSearch />
-                            </div>
-                            <div
-                                className="service-suggestions-box"
-                                style={{ display: showServiceVendorSuggestions && (isServiceVendorLoading || serviceVendorSuggestions.length > 0 || serviceVendorQuery.trim().length >= 2) ? 'block' : 'none' }}
-                            >
-                                {isServiceVendorLoading ? (
-                                    <div className="service-loading">Loading...</div>
-                                ) : serviceVendorSuggestions.length > 0 ? (
-                                    <>
-                                        {serviceCategorySuggestions.length > 0 && (
-                                            <>
-                                                <div className="service-loading" style={{ fontWeight: 600, textAlign: 'left', paddingBottom: '4px' }}>
-                                                    Services
+                        <div
+                            className="service-suggestions-box"
+                            style={{ display: showServiceVendorSuggestions && (isServiceVendorLoading || serviceVendorSuggestions.length > 0 || serviceVendorQuery.trim().length >= 2) ? 'block' : 'none' }}
+                        >
+                            {isServiceVendorLoading ? (
+                                <div className="service-loading">Loading...</div>
+                            ) : serviceVendorSuggestions.length > 0 ? (
+                                <>
+                                    {serviceCategorySuggestions.length > 0 && (
+                                        <>
+                                            <div className="service-loading" style={{ fontWeight: 600, textAlign: 'left', paddingBottom: '4px' }}>
+                                                Services
+                                            </div>
+                                            {serviceCategorySuggestions.map((item) => (
+                                                <div
+                                                    key={`${item?.type}-${item?.value}`}
+                                                    className="service-suggestion-item"
+                                                    onMouseDown={() => selectServiceVendor(item)}
+                                                >
+                                                    {item?.label}
                                                 </div>
-                                                {serviceCategorySuggestions.map((item) => (
-                                                    <div
-                                                        key={`${item?.type}-${item?.value}`}
-                                                        className="service-suggestion-item"
-                                                        onMouseDown={() => selectServiceVendor(item)}
-                                                    >
-                                                        {item?.label}
-                                                    </div>
-                                                ))}
-                                            </>
-                                        )}
+                                            ))}
+                                        </>
+                                    )}
 
-                                        {vendorCategorySuggestions.length > 0 && (
-                                            <>
-                                                <div className="service-loading" style={{ fontWeight: 600, textAlign: 'left', paddingBottom: '4px', borderTop: serviceCategorySuggestions.length > 0 ? '1px solid #eee' : 'none', marginTop: serviceCategorySuggestions.length > 0 ? '4px' : '0px' }}>
-                                                    Vendors
+                                    {vendorCategorySuggestions.length > 0 && (
+                                        <>
+                                            <div className="service-loading" style={{ fontWeight: 600, textAlign: 'left', paddingBottom: '4px', borderTop: serviceCategorySuggestions.length > 0 ? '1px solid #eee' : 'none', marginTop: serviceCategorySuggestions.length > 0 ? '4px' : '0px' }}>
+                                                Vendors
+                                            </div>
+                                            {vendorCategorySuggestions.map((item) => (
+                                                <div
+                                                    key={`${item?.type}-${item?.value}`}
+                                                    className="service-suggestion-item"
+                                                    onMouseDown={() => selectServiceVendor(item)}
+                                                >
+                                                    {item?.label}
                                                 </div>
-                                                {vendorCategorySuggestions.map((item) => (
-                                                    <div
-                                                        key={`${item?.type}-${item?.value}`}
-                                                        className="service-suggestion-item"
-                                                        onMouseDown={() => selectServiceVendor(item)}
-                                                    >
-                                                        {item?.label}
-                                                    </div>
-                                                ))}
-                                            </>
-                                        )}
-                                    </>
-                                ) : serviceVendorQuery.trim().length >= 2 ? (
-                                    <div className="service-loading">No service or vendor found</div>
-                                ) : null}
-                            </div>
-                        </div>
+                                            ))}
+                                        </>
+                                    )}
+                                </>
+                            ) : serviceVendorQuery.trim().length >= 2 ? (
+                                <div className="service-loading">No service or vendor found</div>
+                            ) : null}
                         </div>
                     </div>
-                </>
+                    </div>
+                </div>
                 )}
                 <div className="side-bar">
                     <div className="menu-close-btn">

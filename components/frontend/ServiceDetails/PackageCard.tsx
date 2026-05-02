@@ -5,9 +5,10 @@ interface PackageCardProps {
   pkg: any;
   pricing?: any;
   toProxy: (url?: string) => string;
+  onRequestCallback?: (packageId?: string) => void;
 }
 
-const PackageCard = ({ pkg, pricing, toProxy }: PackageCardProps) => {
+const PackageCard = ({ pkg, pricing, toProxy, onRequestCallback }: PackageCardProps) => {
   const coverImage = pkg?.coverImage || '/images/common/cart_img.jpg';
   const description = pkg?.description || '';
   const eventName = pkg?.event_id?.eventName;
@@ -58,14 +59,13 @@ const PackageCard = ({ pkg, pricing, toProxy }: PackageCardProps) => {
           </h4>
         </div>
         <div className="col-12 col-md-6 col-lg-2">
-          <Link
-            href="#"
+          <button
+            type="button"
             className="btn btn-secondary whatsapp-icon d-block mb-2 text-white"
-            data-bs-toggle="modal"
-            data-bs-target="#request-callback"
+            onClick={() => onRequestCallback?.(pkg?._id)}
           >
             Call Back Request
-          </Link>
+          </button>
         </div>
       </div>
     </div>

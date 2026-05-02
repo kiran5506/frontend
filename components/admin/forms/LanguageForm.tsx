@@ -49,13 +49,10 @@ const LanguageForm = ({ id }: LanguageFormProps) => {
 
     const onSubmit =  async (data: any) => {
         try {
-            const formData = new FormData();
-            Object.keys(data).forEach((key) => {
-                if (data[key]) {
-                    formData.append(key, data[key]);
-                }
-            });
-            const action = id ? languageEdit({ id, formData } as any) : createLanguage(formData as any);
+            const payload = {
+                languageName: data?.languageName?.trim?.() || ''
+            };
+            const action = id ? languageEdit({ id, payload } as any) : createLanguage(payload as any);
             const response = await (dispatch as any)(action as any).unwrap();
             if (response?.status) {
                 toast.success(`Language ${ id ? 'Updated' : 'Created' } successfully!`);

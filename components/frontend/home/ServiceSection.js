@@ -122,7 +122,7 @@ const ServiceSection = () => {
                             <div className="item text-center" key={service._id}>
                                 <Link href={`services/${createSlug(service.serviceName)}-${service._id}?query_text=${service.serviceName}&query_type=Service`}>
                                     <div className="box2">
-                                        <Image src={`/api/image-proxy?url=${encodeURIComponent(service.imagePath)}`} alt={service.serviceName} width={196} height={243} />
+                                        <Image src={`${service.imagePath ? `/api/image-proxy?url=${encodeURIComponent(service.imagePath)}` : '/images/common/noimage.jpg'}`} alt={service.serviceName} width={196} height={243} />
                                         <span className="service-name">{service.serviceName}</span>
                                     </div>
                                 </Link>
@@ -152,7 +152,8 @@ const ServiceSection = () => {
                             <div className="item text-center" key={service._id}>
                                 <Link href={`services/${createSlug(service.serviceName)}-${service._id}?query_text=${service.serviceName}&query_type=Service`}>
                                     <div className="box2">
-                                        <Image src={`/api/image-proxy?url=${encodeURIComponent(service.imagePath)}`} alt={service.serviceName} width={196} height={243} />
+                                        <Image src={`${service.imagePath ? `/api/image-proxy?url=${encodeURIComponent(service.imagePath)}` : '/images/common/noimage.jpg'}`} alt={service.serviceName} width={196} height={243} />
+                                        <span className="service-name">{service.serviceName}</span>
                                     </div>
                                 </Link>
                             </div>

@@ -21,6 +21,19 @@ const emptyPricingRow = {
   discount: ""
 };
 
+const calculateDiscount = (marketPrice: string, offerPrice: string): string => {
+  const market = Number(marketPrice);
+  const offer = Number(offerPrice);
+
+  if (!market || market <= 0 || Number.isNaN(market) || Number.isNaN(offer) || offer < 0) {
+    return "";
+  }
+
+  const discount = ((market - offer) / market) * 100;
+  const normalized = Math.round(Math.max(0, discount) * 100) / 100;
+  return normalized.toString();
+};
+
 const CreateBusinessPackagesPage = () => {
   const dispatch = useDispatch() as any;
   const router = useRouter();
@@ -124,7 +137,13 @@ const CreateBusinessPackagesPage = () => {
   };
 
   const handlePricingChange = (field: string, value: string) => {
-    setPricingDraft((prev: any) => ({ ...prev, [field]: value }));
+    setPricingDraft((prev: any) => {
+      const nextDraft = { ...prev, [field]: value };
+      if (field === "marketPrice" || field === "offerPrice") {
+        nextDraft.discount = calculateDiscount(nextDraft.marketPrice, nextDraft.offerPrice);
+      }
+      return nextDraft;
+    });
   };
 
   const handleAddPricingRow = () => {
@@ -132,6 +151,25 @@ const CreateBusinessPackagesPage = () => {
       toast.error("Please select a city before adding.");
       return;
     }
+
+    const market = Number(pricingDraft.marketPrice);
+    const offer = Number(pricingDraft.offerPrice);
+
+    if (!market || market <= 0) {
+      toast.error("Please enter a valid market price.");
+      return;
+    }
+
+    if (offer < 0) {
+      toast.error("Offer price cannot be negative.");
+      return;
+    }
+
+    if (offer > market) {
+      toast.error("Offer price cannot be greater than market price.");
+      return;
+    }
+
     setCityPricing((prev) => [...prev, { ...pricingDraft }]);
     setPricingDraft({ ...emptyPricingRow });
   };
@@ -324,7 +362,8 @@ const CreateBusinessPackagesPage = () => {
                           type="number"
                           className="form-control"
                           value={pricingDraft.discount}
-                          onChange={(e) => handlePricingChange("discount", e.target.value)}
+                          disabled
+                          readOnly
                           placeholder="%"
                         />
                       </td>

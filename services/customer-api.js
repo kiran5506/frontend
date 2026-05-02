@@ -29,7 +29,13 @@ export const verifyCustomerOtp = createAsyncThunk('customerauth/verifyOtp', asyn
 
 export const resendCustomerOtp = createAsyncThunk('customerauth/resendOtp', async (customerId, { rejectWithValue }) => {
     try {
-        return (await axiosInstance.post(endpoints.CUSTOMER_AUTH.resendOtp, { customer_id: customerId })).data;
+        const payload = typeof customerId === 'object'
+            ? {
+                customer_id: customerId?.customer_id || customerId?.customerId,
+                purpose: customerId?.purpose
+            }
+            : { customer_id: customerId };
+        return (await axiosInstance.post(endpoints.CUSTOMER_AUTH.resendOtp, payload)).data;
     } catch (error) {
         return rejectWithValue(error.response?.data || { message: error.message });
     }
@@ -38,6 +44,14 @@ export const resendCustomerOtp = createAsyncThunk('customerauth/resendOtp', asyn
 export const forgotPassword = createAsyncThunk('customerauth/forgotPassword', async (email, { rejectWithValue }) => {
     try {
         return (await axiosInstance.post(endpoints.CUSTOMER_AUTH.forgotPassword, { email })).data;
+    } catch (error) {
+        return rejectWithValue(error.response?.data || { message: error.message });
+    }
+});
+
+export const verifyForgotPasswordOtp = createAsyncThunk('customerauth/verifyForgotPasswordOtp', async (otpData, { rejectWithValue }) => {
+    try {
+        return (await axiosInstance.post(endpoints.CUSTOMER_AUTH.verifyForgotPasswordOtp, otpData)).data;
     } catch (error) {
         return rejectWithValue(error.response?.data || { message: error.message });
     }
@@ -122,3 +136,24 @@ export const fetchCustomersByType = createAsyncThunk('customer/listByType', asyn
         return rejectWithValue(error.response.data);
     }
 });
+
+// Direct request helpers for typed TS pages
+export const forgotPasswordRequest = async (email) => {
+    return (await axiosInstance.post(endpoints.CUSTOMER_AUTH.forgotPassword, { email })).data;
+};
+
+export const verifyForgotPasswordOtpRequest = async (otpData) => {
+    return (await axiosInstance.post(endpoints.CUSTOMER_AUTH.verifyForgotPasswordOtp, otpData)).data;
+};
+
+export const verifyCustomerOtpRequest = async (otpData) => {
+    return (await axiosInstance.post(endpoints.CUSTOMER_AUTH.verifyOtp, otpData)).data;
+};
+
+export const resendCustomerOtpRequest = async (payload) => {
+    return (await axiosInstance.post(endpoints.CUSTOMER_AUTH.resendOtp, payload)).data;
+};
+
+export const resetPasswordRequest = async (resetData) => {
+    return (await axiosInstance.post(endpoints.CUSTOMER_AUTH.resetPassword, resetData)).data;
+};

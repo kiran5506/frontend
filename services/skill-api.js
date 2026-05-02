@@ -8,11 +8,11 @@ export const createSkill = createAsyncThunk('skill/create', async (request) =>{
     return (await axiosInstance.post(endpoints.SKILLS.create, request)).data;
 })
 
-export const skillEdit = createAsyncThunk('skill/edit', async ({id, formData}) => {
+export const skillEdit = createAsyncThunk('skill/edit', async ({id, payload}) => {
     try {
         const result = await axiosInstance.put(
           endpoints.SKILLS.edit.replace('{id}', id),
-          formData
+          payload
         );
         return result.data;
     } catch (error) {

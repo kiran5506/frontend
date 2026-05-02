@@ -39,7 +39,10 @@ const Footer = () => {
         {hideLinksFooter && (
         <div className="links-footer">
             <div className="container">
-            <div className="row">
+                <div className='row'>
+                    {siteSettings?.why_bsfye && (<p>{siteSettings.why_bsfye}</p>)}
+                </div>
+            {/* <div className="row">
                 <div className="col-md-12 mb-4">
                 <h5>Wedding Vendors in over 100 cities :-</h5>
                 <div className="mt-2">
@@ -112,7 +115,7 @@ const Footer = () => {
                     <Link href="#">Wedding Choreographers</Link>
                 </div>
                 </div>
-            </div>
+            </div> */}
             </div>
         </div>
         )}

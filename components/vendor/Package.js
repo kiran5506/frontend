@@ -22,7 +22,7 @@ const Package = ({ pkg, onSubscribe }) => {
     const totalLeads = pkg?.totalLeads ?? 0;
 
     return (
-        <div className="col-md-4">
+        <div className="col-md-4 mb-4">
             <div className="package_item active text-center">
                 <img src={imageSrc} alt={packageName} width={150} />
                 <h5>{packageName}</h5>

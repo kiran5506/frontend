@@ -5,9 +5,10 @@ import { useDispatch, useSelector } from 'react-redux';
 import { createInquiry, verifyInquiryOtp } from '@/services/inquiry-api';
 import { toast } from 'react-toastify';
 
-const RequestCallbackModal = ({ isOpen, onClose, serviceId }) => {
+const RequestCallbackModal = ({ isOpen, onClose, serviceId, packageId, enquiryType = 'enquiry' }) => {
   const dispatch = useDispatch();
   const customerAuth = useSelector((state) => state.customerAuth);
+  const isAuthenticatedCustomer = Boolean(customerAuth?.isAuthenticated);
   const [formStep, setFormStep] = useState('form'); // 'form' or 'otp'
   const [formData, setFormData] = useState({
     name: '',
@@ -22,6 +23,8 @@ const RequestCallbackModal = ({ isOpen, onClose, serviceId }) => {
   const [error, setError] = useState('');
 
   useEffect(() => {
+    if (!isOpen) return;
+
     if (customerAuth?.isAuthenticated && customerAuth?.details) {
       let details = customerAuth.details;
       if (typeof details === 'string') {
@@ -39,8 +42,14 @@ const RequestCallbackModal = ({ isOpen, onClose, serviceId }) => {
           mobile: details.mobile_number || prev.mobile
         }));
       }
+    } else {
+      setFormData((prev) => ({
+        ...prev,
+        name: '',
+        mobile: ''
+      }));
     }
-  }, [customerAuth?.details, customerAuth?.isAuthenticated]);
+  }, [customerAuth?.details, customerAuth?.isAuthenticated, isOpen]);
 
   const handleInputChange = (e) => {
     const { name, value } = e.target;
@@ -86,8 +95,10 @@ const RequestCallbackModal = ({ isOpen, onClose, serviceId }) => {
         mobile_number: formData.mobile,
         city: formData.city || '',
         event_date: formData.eventDate,
-        enquiry_type: 'enquiry',
-        service_id: serviceId || undefined
+        enquiry_type: enquiryType,
+        service_id: serviceId || undefined,
+        package_id: packageId || undefined,
+        skip_otp: isAuthenticatedCustomer
       }));
 
       // Check the response from the async thunk
@@ -97,7 +108,16 @@ const RequestCallbackModal = ({ isOpen, onClose, serviceId }) => {
         // Check if the API response indicates success
         if (payload?.status === true) {
           setInquiryId(payload.data._id);
-          //toast.success(payload.message || 'Inquiry created successfully!');
+          if (isAuthenticatedCustomer) {
+            toast.success(payload.message || 'Your inquiry has been submitted.');
+            onClose();
+            setFormStep('form');
+            setOtp(['', '', '', '']);
+            setInquiryId(null);
+            setMaskedMobile('');
+            return;
+          }
+
           toast.info('OTP sent successfully!');
           const maskedNum = `+91${formData.mobile.slice(0, 4)}****${formData.mobile.slice(-2)}`;
           setMaskedMobile(maskedNum);

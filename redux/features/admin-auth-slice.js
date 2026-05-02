@@ -7,7 +7,8 @@ const initialState = {
     token: undefined,
     isAuthenticated: false,
     adminid: null,
-    role:null
+    role:null,
+    details: null
 }
 
 export const adminAuth = createSlice({
@@ -16,7 +17,7 @@ export const adminAuth = createSlice({
     reducers: {
         setAuthState: (state, action) => {
             console.log('setAuthState ==> ', action.payload)
-            const { isAuthenticated, token, role, adminid, details } = action.payload;
+            const { isAuthenticated, token, adminid, details } = action.payload;
             state.adminState = isAuthenticated;
             state.isAuthenticated = isAuthenticated;
             state.token = token;
@@ -24,6 +25,11 @@ export const adminAuth = createSlice({
             state.adminid = adminid;
             state.details = JSON.stringify(details);
             localStorage.setItem('adminToken', token);
+        },
+        updateAdminDetails: (state, action) => {
+            const details = action.payload;
+            if (!details) return;
+            state.details = JSON.stringify(details);
         },
         adminLogout: (state) => {
             console.log('Logout called ==> ', state)
@@ -53,5 +59,5 @@ export const adminAuth = createSlice({
     },
 });
 
-export const { setAuthState, adminLogout } = adminAuth.actions;
+export const { setAuthState, adminLogout, updateAdminDetails } = adminAuth.actions;
 export default adminAuth.reducer;

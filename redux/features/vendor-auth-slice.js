@@ -83,7 +83,7 @@ export const vendorAuth = createSlice({
         .addCase(verifyVendorOtp.fulfilled, (state, action) => {
             state.otpVerificationLoading = false;
             if(action.payload.status){
-                const { vendorData } = action.payload.data;
+                const { vendorData, token } = action.payload.data || {};
                 state.registeredVendor = vendorData;
                 console.log('OTP verification successful, updated vendor data ==> ', vendorData);
                 state.details = JSON.stringify({
@@ -92,6 +92,17 @@ export const vendorAuth = createSlice({
                     is_profile_verified: vendorData?.is_profile_verified,
                     profile_status: vendorData?.profile_status
                 });
+
+                // For register flow, backend returns token on OTP verify.
+                // Keep vendor authenticated so redirect to /vendor/business-profile works.
+                if (token && vendorData?._id) {
+                    state.token = token;
+                    state.isAuthenticated = true;
+                    state.vendorState = true;
+                    state.vendorid = vendorData._id;
+                    state.role = 'vendor';
+                    localStorage.setItem('token', token);
+                }
             }
         })
         .addCase(verifyVendorOtp.rejected, (state, action) => {

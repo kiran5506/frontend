@@ -8,6 +8,7 @@ import { useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
 import Vendorslist from '@/components/frontend/ServiceDetails/Vendorslist'
 import PackageCard from '@/components/frontend/ServiceDetails/PackageCard'
+import RequestCallbackModal from '@/components/frontend/RequestCallbackModal'
 import axiosInstance from '@/utils/axios'
 import endpoints from '@/services/endpoints'
 import "./servicedetails.css"
@@ -29,6 +30,8 @@ const ServiceDetails = () => {
     const [reviewRating, setReviewRating] = useState<number>(0);
     const [reviewText, setReviewText] = useState<string>('');
     const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+    const [isCallbackModalOpen, setIsCallbackModalOpen] = useState(false);
+    const [selectedPackageId, setSelectedPackageId] = useState<string>('');
     const [wishlistIds, setWishlistIds] = useState<string[]>([]);
     const customerAuth = useSelector((state: any) => state.customerAuth);
     const customerDetails = useMemo(() => {
@@ -76,6 +79,7 @@ const ServiceDetails = () => {
         try {
             const response = await toggleWishlist(businessProfileId, customerId);
             if (response?.status) {
+                toast.success(response?.message);
                 setWishlistIds((prev) => {
                     const exists = prev.includes(businessProfileId);
                     if (response?.data?.added === false || exists) {
@@ -180,19 +184,28 @@ const ServiceDetails = () => {
             return { average: 0, count: 0 };
         }
         const total = reviews.reduce((sum: number, item: any) => sum + Number(item?.rating || 0), 0);
-        return { average: Number((total / reviews.length).toFixed(1)), count: reviews.length };
+        const average = reviews.length > 0 ? total / reviews.length : 0;
+        return { average, count: reviews.length };
     }, [reviews]);
 
     useEffect(() => {
         const vendorId = vendor?._id || businessProfile?.vendor_id?._id || businessProfile?.vendor_id;
-        if (!vendorId) return;
+        if (!vendorId || !businessProfileId) return;
+
+        const currentBusinessProfileId = businessProfileId.toString();
         axiosInstance
             .get(endpoints.REVIEW.findByVendorId.replace('{vendor_id}', vendorId), {
-                params: { page: 1, limit: 50, status: 'accepted' }
+                params: { page: 1, limit: 100 }
             })
             .then((response) => {
                 if (response?.data?.status) {
-                    setReviews(response.data.data || []);
+                    const allVendorReviews = response.data.data || [];
+                    const filteredByBusinessProfile = allVendorReviews.filter((item: any) => {
+                        const profileId = (item?.business_profile_id?._id || item?.business_profile_id || '').toString();
+                        const status = (item?.status || '').toString().toLowerCase();
+                        return profileId === currentBusinessProfileId && status !== 'rejected';
+                    });
+                    setReviews(filteredByBusinessProfile);
                 } else {
                     setReviews([]);
                 }
@@ -201,7 +214,7 @@ const ServiceDetails = () => {
                 console.error('Error fetching reviews:', error);
                 setReviews([]);
             });
-    }, [vendor?._id, businessProfile?.vendor_id]);
+    }, [vendor?._id, businessProfile?.vendor_id, businessProfileId]);
 
     const handleReviewSubmit = (event: React.FormEvent<HTMLFormElement>) => {
         event.preventDefault();
@@ -223,13 +236,22 @@ const ServiceDetails = () => {
             .post(endpoints.REVIEW.create, {
                 vendor_id: vendorId,
                 customer_id: customerId,
-                service_id: businessProfile?.service_id?._id || businessProfile?.service_id,
+                business_profile_id: businessProfileId,
                 review: reviewText,
                 rating: reviewRating
             })
             .then((response) => {
                 if (response?.data?.status) {
                     toast.success(response.data.message || 'Review submitted successfully.');
+                    setReviews((prev: any[]) => ([
+                        {
+                            rating: reviewRating,
+                            review: reviewText,
+                            status: 'pending',
+                            business_profile_id: businessProfileId
+                        },
+                        ...prev
+                    ]));
                     setReviewRating(0);
                     setReviewText('');
                 } else {
@@ -242,8 +264,51 @@ const ServiceDetails = () => {
             })
             .finally(() => setIsSubmittingReview(false));
     };
+
+    const handleShareProfile = async () => {
+        if (typeof window === 'undefined') return;
+
+        const shareUrl = window.location.href;
+        const shareTitle = businessName || 'Business Profile';
+        const shareText = `Check out this business profile on Bsfye: ${shareTitle}`;
+
+        try {
+            if (navigator.share) {
+                await navigator.share({
+                    title: shareTitle,
+                    text: shareText,
+                    url: shareUrl
+                });
+                return;
+            }
+
+            if (navigator.clipboard?.writeText) {
+                await navigator.clipboard.writeText(shareUrl);
+                toast.success('Profile link copied to clipboard.');
+                return;
+            }
+
+            toast.info('Sharing is not supported on this browser.');
+        } catch (error) {
+            // Ignore abort errors from native share sheet cancellation
+            const err = error as { name?: string };
+            if (err?.name !== 'AbortError') {
+                toast.error('Unable to share profile right now.');
+            }
+        }
+    };
   return (
     <>
+        <RequestCallbackModal
+            isOpen={isCallbackModalOpen}
+            onClose={() => {
+                setIsCallbackModalOpen(false);
+                setSelectedPackageId('');
+            }}
+            serviceId={businessProfile?.service_id?._id || businessProfile?.service_id}
+            packageId={selectedPackageId || undefined}
+            enquiryType="callback"
+        />
         <section className="main-banner">
             <div className="container">
                 <div className="row">
@@ -265,7 +330,7 @@ const ServiceDetails = () => {
                             src={toProxy(profileImage) || '/images/services/profile-pic.jpg'}
                             alt=""
                             className="profile-pic"
-                            style={{ width: '150px', height: '150px', objectFit: 'cover' }}
+                            style={{ minHeight: '215px'}}
                         />
                         </div>
                         <div className="col-md-8 col-lg-9">
@@ -274,7 +339,7 @@ const ServiceDetails = () => {
                             <small>{serviceName}</small>
                             </div>
                             <h1>
-                            {businessName}
+                            {businessName}&nbsp;
                             <Image
                                 src="/images/icons/order-status_01.png"
                                 alt=""
@@ -284,8 +349,8 @@ const ServiceDetails = () => {
                             </h1>
                             <h3>
                             
-                            <span className="diso"> Verified ✓ </span> &nbsp; &nbsp;Vendor
-                            {cityName ? `from ${cityName}` : ''}
+                            <span className="diso"> Verified ✓ </span> &nbsp; &nbsp;
+                            {cityName ? `From ${cityName}` : ''}
                             </h3>
                             <ul>
                             <li>
@@ -295,9 +360,7 @@ const ServiceDetails = () => {
                                 width={15}
                                 height={15}
                                 />
-                                {reviewSummary.count > 0
-                                    ? `${reviewSummary.average} Rating (${reviewSummary.count} Reviews)`
-                                    : 'No reviews yet'}
+                                {`${reviewSummary.average.toFixed(1)} (${reviewSummary.count})`}
                             </li>
                             </ul>
                             <div className="mydivdd">
@@ -306,11 +369,12 @@ const ServiceDetails = () => {
                                 className="wishlist_con"
                                 onClick={handleToggleWishlist}
                                 aria-label="Add to wishlist"
+                                style={{border: 'none', backgroundColor: '#fff'}}
                             >
                                 <Image
                                     src={wishlistIds.includes(businessProfileId || '')
-                                        ? "/images/icons/wishlist.svg"
-                                        : "/images/icons/wishlist-border.png"}
+                                        ? "/images/icons/wishlist-fill.png"
+                                        : "/images/icons/wishlist.svg"}
                                     alt=""
                                     width={20}
                                     height={20}
@@ -323,9 +387,15 @@ const ServiceDetails = () => {
                             >
                                 <Image src="/images/icons/whatsapp.png" alt="" width={20} height={20} />
                             </Link>
-                            <Link href="#" target="_blank" className="share_con">
+                            <button
+                                type="button"
+                                className="share_con"
+                                onClick={handleShareProfile}
+                                aria-label="Share profile"
+                                style={{ border: 'none', background: 'transparent' }}
+                            >
                                 <Image src="/images/icons/share.png" alt="" width={20} height={20} />
-                            </Link>
+                            </button>
                             </div>
                             <h2>
                             {lowestOffer ? `₹ ${formatPrice(lowestOffer)}` : '₹ 6,000'}
@@ -548,6 +618,10 @@ const ServiceDetails = () => {
                                         pkg={pkg}
                                         pricing={pricing}
                                         toProxy={toProxy}
+                                        onRequestCallback={(packageId) => {
+                                            setSelectedPackageId(packageId || '');
+                                            setIsCallbackModalOpen(true);
+                                        }}
                                     />
                                 ));
                             })

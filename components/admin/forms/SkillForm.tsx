@@ -49,13 +49,10 @@ const SkillForm = ({ id }: SkillFormProps) => {
 
     const onSubmit =  async (data: any) => {
         try {
-            const formData = new FormData();
-            Object.keys(data).forEach((key) => {
-                if (data[key]) {
-                    formData.append(key, data[key]);
-                }
-            });
-            const action = id ? skillEdit({ id, formData } as any) : createSkill(formData as any);
+            const payload = {
+                skillName: data?.skillName?.trim?.() || ''
+            };
+            const action = id ? skillEdit({ id, payload } as any) : createSkill(payload as any);
             const response = await (dispatch as any)(action as any).unwrap();
             if (response?.status) {
                 toast.success(`Skill ${ id ? 'Updated' : 'Created' } successfully!`);

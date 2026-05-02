@@ -44,7 +44,7 @@ const generatePersistConfig = (key) => ({
 const adminPersistConfig = {
   key: 'admin',
   storage: storage,
-  whitelist: ['adminState', 'token', 'isAuthenticated', 'adminid', 'role'],
+  whitelist: ['adminState', 'token', 'isAuthenticated', 'adminid', 'role', 'details'],
 };
 
 const customerPersistConfig = {

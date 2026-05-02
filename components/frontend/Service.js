@@ -23,6 +23,7 @@ const Service = ({ profile, serviceDetails, isWishlisted, onToggleWishlist }) =>
   const businessName = profile?.businessName || "";
   const city = profile?.address?.city;
   const averageRating = Number(profile?.averageRating || 0);
+  const reviewCount = Number(profile?.reviewCount || 0);
   const imageSrc =
     profile?.profilePicture || "/images/common/suggestions_1.jpg";
   const lowestOfferPrice = Number(profile?.lowestOfferPrice || 0);
@@ -116,7 +117,7 @@ const Service = ({ profile, serviceDetails, isWishlisted, onToggleWishlist }) =>
                       width={15}
                       height={15}
                     />
-                    {Number.isFinite(averageRating) ? averageRating.toFixed(1) : "0.0"} Avg Rating
+                    {(Number.isFinite(averageRating) ? averageRating : 0).toFixed(1)} ({reviewCount})
                   </li>
                 </>
               )}

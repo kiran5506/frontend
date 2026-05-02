@@ -3,8 +3,26 @@ import Link from 'next/link'
 import React, { useCallback } from 'react'
 import { BsList } from 'react-icons/bs'
 import styles from '../../public/assets/admin/AdHeader.module.css';
+import { useSelector } from 'react-redux';
 
 const AdHeader = () => {
+  const details = useSelector((state) => state?.adminAuth?.details);
+
+  let adminDetails = null;
+  try {
+    adminDetails = details ? JSON.parse(details) : null;
+  } catch {
+    adminDetails = null;
+  }
+
+  const adminName = adminDetails
+    ? `${adminDetails.first_name || ''} ${adminDetails.last_name || ''}`.trim()
+    : 'Admin';
+
+  const profileImage = adminDetails?.profile_image
+    ? `/api/image-proxy?url=${encodeURIComponent(adminDetails.profile_image)}`
+    : '/assets/admin/img/profile-img.jpg';
+
   // Toggle sidebar visibility: add/remove a stable class on the sidebar element (id="sidebar")
   // and dispatch a custom event so other parts of the app can react if needed.
   const toggleSidebar = useCallback(() => {
@@ -18,7 +36,7 @@ const AdHeader = () => {
       }
       // emit an event other components can listen to
       window.dispatchEvent(new CustomEvent("vendor:toggleSidebar"));
-    } catch (e) {
+    } catch {
       // ignore in non-browser environments
     }
   }, []);
@@ -33,7 +51,7 @@ const AdHeader = () => {
           menu.classList.toggle('show');
         }
       });
-    } catch (e) {
+    } catch {
       // ignore in non-browser environments
     }
   }, []);
@@ -41,7 +59,7 @@ const AdHeader = () => {
   return (
     <header id="header" className={`header fixed-top d-flex align-items-center ${styles.adHeader}`}>
       <div className="d-flex align-items-center justify-content-between">
-        <Link href="index.php" className="logo d-flex align-items-center">
+        <Link href="/admin/dashboard" className="logo d-flex align-items-center">
           <img className={styles.logoImg} src="/assets/admin/img/logo.png" alt="" />
         </Link>
         <button
@@ -68,15 +86,15 @@ const AdHeader = () => {
               }}
             >
               <img
-                src="/assets/admin/img/profile-img.jpg"
+                src={profileImage}
                 alt="Profile"
                 className="rounded-circle"
               />
-              <span className="d-none d-md-block dropdown-toggle ps-2">Admin</span>
+              <span className="d-none d-md-block dropdown-toggle ps-2">{adminName || 'Admin'}</span>
             </Link>
             <ul className="dropdown-menu dropdown-menu-end dropdown-menu-arrow profile">
               <li className="dropdown-header">
-                <h6>Admin</h6>
+                <h6>{adminName || 'Admin'}</h6>
               </li>
               <li>
                 <hr className="dropdown-divider" />

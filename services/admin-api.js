@@ -37,3 +37,31 @@ export const getAdminDashboardCounts = createAsyncThunk('admin/dashboardCounts',
         return rejectWithValue(error.response?.data || { message: 'Failed to fetch admin dashboard counts' });
     }
 })
+
+export const getAdminProfile = createAsyncThunk('admin/profile', async (_, { rejectWithValue }) => {
+    try {
+        return (await axiosInstance.get(endpoints.ADMIN.profile)).data;
+    } catch (error) {
+        return rejectWithValue(error.response?.data || { message: 'Failed to fetch admin profile' });
+    }
+})
+
+export const updateAdminProfile = createAsyncThunk('admin/updateProfile', async (profileData, { rejectWithValue }) => {
+    try {
+        return (await axiosInstance.put(endpoints.ADMIN.profile, profileData, {
+            headers: profileData instanceof FormData
+                ? { 'Content-Type': 'multipart/form-data' }
+                : undefined,
+        })).data;
+    } catch (error) {
+        return rejectWithValue(error.response?.data || { message: 'Failed to update admin profile' });
+    }
+})
+
+export const changeAdminPassword = createAsyncThunk('admin/changePassword', async (passwordData, { rejectWithValue }) => {
+    try {
+        return (await axiosInstance.put(endpoints.ADMIN.changePassword, passwordData)).data;
+    } catch (error) {
+        return rejectWithValue(error.response?.data || { message: 'Failed to change admin password' });
+    }
+})

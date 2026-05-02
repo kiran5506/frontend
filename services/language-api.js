@@ -6,11 +6,11 @@ export const createLanguage = createAsyncThunk('language/create', async (request
     return (await axiosInstance.post(endpoints.LANGUAGES.create, request)).data;
 })
 
-export const languageEdit = createAsyncThunk('language/edit', async ({id, formData}) => {
+export const languageEdit = createAsyncThunk('language/edit', async ({id, payload}) => {
     try {
         const result = await axiosInstance.put(
           endpoints.LANGUAGES.edit.replace('{id}', id),
-          formData
+          payload
         );
         return result.data;
     } catch (error) {

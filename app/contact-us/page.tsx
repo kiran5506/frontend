@@ -68,19 +68,19 @@ const ContactUs = () => {
                 <div className="row">
                 <div className="col-md-6">
                     <div className="item text-center">
-                    <img src="assets/images/icons/location-icon.png" alt="" />
+                    <img src="/images/icons/location-icon.png" alt="" />
                     <h4>Address</h4>
                     <p>
                         {siteSettings?.address}
                     </p>
                     </div>
                     <div className="item text-center">
-                    <img src="assets/images/icons/email-icon.png" alt="" />
+                    <img src="/images/icons/email-icon.png" alt="" />
                     <h4>Email Address</h4>
                     <p>{siteSettings?.email}</p>
                     </div>
                     <div className="item text-center">
-                    <img src="assets/images/icons/call-icon.png" alt="" />
+                    <img src="/images/icons/call-icon.png" alt="" />
                     <h4>Phone Number</h4>
                     <p>{siteSettings?.mobile_number}</p>
                     </div>

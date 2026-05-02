@@ -81,9 +81,31 @@ export const updateProfileCompletionStatus = createAsyncThunk('vendorauth/update
 
 export const generateVendorOTP = createAsyncThunk('vendorauth/generateOTP', async (vendorId, { rejectWithValue }) => {
     try {
-        return (await axiosInstance.post(endpoints.VENDOR.generateOtp, { vendor_id: vendorId })).data;
+        const payload = typeof vendorId === 'object'
+            ? {
+                vendor_id: vendorId?.vendor_id || vendorId?.vendorId,
+                purpose: vendorId?.purpose
+            }
+            : { vendor_id: vendorId };
+        return (await axiosInstance.post(endpoints.VENDOR.generateOtp, payload)).data;
     } catch (error) {
         return rejectWithValue(error.response.data);
+    }
+})
+
+export const forgotVendorPassword = createAsyncThunk('vendorauth/forgotPassword', async (email, { rejectWithValue }) => {
+    try {
+        return (await axiosInstance.post(endpoints.VENDOR.forgotPassword, { email })).data;
+    } catch (error) {
+        return rejectWithValue(error.response?.data || { message: error.message });
+    }
+})
+
+export const resetVendorPassword = createAsyncThunk('vendorauth/resetPassword', async (resetData, { rejectWithValue }) => {
+    try {
+        return (await axiosInstance.post(endpoints.VENDOR.resetPassword, resetData)).data;
+    } catch (error) {
+        return rejectWithValue(error.response?.data || { message: error.message });
     }
 })
 

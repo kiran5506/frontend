@@ -53,7 +53,7 @@ const AdSidebar = () => {
       ]
     },
     { name: 'Site Settings', icon: <BsTools />, link: '/admin/site-settings' },
-    { name: 'My Profile', icon: <BsPerson />, link: '/admin/profile' },
+    { name: 'My Profile', icon: <BsPerson />, link: '/admin/my-profile' },
     // Add more sidebar items here as needed
   ];
 

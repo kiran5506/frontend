@@ -1,24 +1,45 @@
 "use client";
 import React, { useRef, useState, useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
+import Image from 'next/image';
 import { verifyVendorOtp, generateVendorOTP } from '@/services/vendor-api';
-import { setAuthState } from '@/redux/features/vendor-auth-slice';
 import { toast } from 'react-toastify';
+import Link from 'next/link';
+
+type RootState = {
+  vendorAuth: {
+    registeredVendor?: { _id?: string; mobile_number?: string; email?: string } | null;
+    otpVerificationLoading?: boolean;
+  };
+};
+
+type OtpActionResponse = {
+  status?: boolean;
+  message?: string;
+  data?: {
+    vendor_id?: string;
+  };
+};
+
+type ActionResult = {
+  type?: string;
+  payload?: OtpActionResponse;
+};
 
 const OtpVerificationPage = () => {
   const dispatch = useDispatch();
   const router = useRouter();
-  const { registeredVendor, otpVerificationLoading } = useSelector((state: any) => state.vendorAuth);
+  const searchParams = useSearchParams();
+  const { registeredVendor, otpVerificationLoading } = useSelector((state: RootState) => state.vendorAuth);
+  const flowType = (searchParams?.get('type') || 'register').toLowerCase();
   
   const [otp, setOtp] = useState(['', '', '', '']);
   const inputRefs = [useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null), useRef<HTMLInputElement>(null)];
   const [maskedMobile, setMaskedMobile] = useState('');
-  const [vendorData, setVendorData] = useState<any>(null);
+  const [vendorData, setVendorData] = useState<{ _id?: string; mobile_number?: string; email?: string } | null>(null);
   const [resendLoading, setResendLoading] = useState(false);
   const [resendCountdown, setResendCountdown] = useState(0);
-
-  const { vendorAuth } = useSelector((state: any) => state);
 
   useEffect(() => {
     // Check if vendor data exists in Redux (from registration) or localStorage
@@ -36,9 +57,21 @@ const OtpVerificationPage = () => {
       }
     }
 
+    const vendorIdFromQuery = searchParams?.get('vendorId') || searchParams?.get('vendor_id');
+    const mobileFromQuery = searchParams?.get('mobile') || '';
+    const emailFromQuery = searchParams?.get('email') || '';
+
+    if (!vendorDataTemp && vendorIdFromQuery) {
+      vendorDataTemp = {
+        _id: vendorIdFromQuery,
+        mobile_number: mobileFromQuery,
+        email: emailFromQuery,
+      };
+    }
+
     if (!vendorDataTemp) {
       toast.error('Please complete registration first');
-      router.push('/vendor/register');
+      router.push(flowType === 'forgot' ? '/vendor/forgot-password' : '/vendor/register');
       return;
     }
 
@@ -55,7 +88,7 @@ const OtpVerificationPage = () => {
       console.error('Invalid mobile number:', vendorDataTemp.mobile_number);
       setMaskedMobile('');
     }
-  }, [registeredVendor, router]);
+  }, [registeredVendor, router, searchParams, flowType]);
 
   // Countdown timer effect
   useEffect(() => {
@@ -106,19 +139,33 @@ const OtpVerificationPage = () => {
     }
 
     try {
-      const result = await (dispatch as any)((verifyVendorOtp as any)({
+      const verifyVendorOtpThunk = verifyVendorOtp as unknown as (payload: {
+        vendor_id: string;
+        otp_code: string;
+        type: string;
+      }) => unknown;
+      const dispatchAction = dispatch as unknown as (action: unknown) => Promise<ActionResult>;
+      const result = await dispatchAction(verifyVendorOtpThunk({
         vendor_id: vendorData._id,
-        otp_code: otpCode
+        otp_code: otpCode,
+        type: flowType
       }));
 
       if (result.type === 'vendorauth/verifyOtp/fulfilled') {
         const response = result.payload;
         if (response?.status) {
-          localStorage.removeItem('vendorData');
           toast.success('OTP verified successfully!');
-          setTimeout(() => {
-            router.push('/vendor/business-profile');
-          }, 1000);
+          localStorage.removeItem('vendorData');
+          if (flowType === 'forgot') {
+            const vendorId = response?.data?.vendor_id || vendorData?._id;
+            setTimeout(() => {
+              router.push(`/vendor/change-password?vendorId=${vendorId}&type=forgot`);
+            }, 600);
+          } else {
+            setTimeout(() => {
+              router.push('/vendor/business-profile');
+            }, 600);
+          }
         } else {
           toast.error(response?.message || 'OTP verification failed');
         }
@@ -126,8 +173,8 @@ const OtpVerificationPage = () => {
         const error = result.payload;
         toast.error(error?.message || 'Invalid OTP. Please try again.');
       }
-    } catch (error: any) {
-      toast.error(error?.message || 'Error verifying OTP');
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'Error verifying OTP');
       console.error('OTP verification error:', error);
     }
   };
@@ -145,7 +192,9 @@ const OtpVerificationPage = () => {
 
     setResendLoading(true);
     try {
-      const result = await (dispatch as any)((generateVendorOTP as any)(vendorData._id));
+    const generateVendorOtpThunk = generateVendorOTP as unknown as (payload: { vendor_id: string; purpose: string }) => unknown;
+    const dispatchAction = dispatch as unknown as (action: unknown) => Promise<ActionResult>;
+    const result = await dispatchAction(generateVendorOtpThunk({ vendor_id: vendorData._id, purpose: flowType }));
 
       if (result.type === 'vendorauth/generateOTP/fulfilled') {
         const response = result.payload;
@@ -161,8 +210,8 @@ const OtpVerificationPage = () => {
         const error = result.payload;
         toast.error(error?.message || 'Failed to resend OTP. Please try again.');
       }
-    } catch (error: any) {
-      toast.error(error?.message || 'Error resending OTP');
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : 'Error resending OTP');
       console.error('Resend OTP error:', error);
     } finally {
       setResendLoading(false);
@@ -176,17 +225,22 @@ const OtpVerificationPage = () => {
           <div className="col-md-5">
             <div className="form-sec">
               <div className="content text-center">
-                <a href="/">
+                <Link href="/vendor">
                   <center>
-                    <img
+                    <Image
                       src="/assets/images/common/logo.png"
                       alt="logo"
+                      width={160}
+                      height={56}
                       className="logo pb-4"
+                      style={{ height: 'auto' }}
                     />
                   </center>
-                </a>
+                </Link>
                 <h3 className="secondary-color text-center">OTP Verification</h3>
-                <p>Enter OTP Code sent to +91 {maskedMobile}</p>
+                <p>
+                  Enter OTP Code sent to {flowType === 'forgot' ? (vendorData?.email || '') : `+91 ${maskedMobile}`}
+                </p>
                 <div className="row mb-3 pt-4 otp-box">
                   {otp.map((digit, index) => (
                     <input
@@ -205,7 +259,7 @@ const OtpVerificationPage = () => {
                 </div>
 
                 <p className="py-3">
-                  Don't receive OTP Code?{" "}
+                  Don&apos;t receive OTP Code?{" "}
                   <button
                     type="button"
                     className="btn btn-link p-0 text-success"
@@ -228,7 +282,7 @@ const OtpVerificationPage = () => {
                   onClick={handleVerifyOtp}
                   disabled={otpVerificationLoading}
                 >
-                  {otpVerificationLoading ? 'Verifying...' : "Let's Build Business"}
+                  {otpVerificationLoading ? 'Verifying...' : (flowType === 'forgot' ? 'Verify OTP' : "Let's Build Business")}
                 </button>
               </div>
             </div>

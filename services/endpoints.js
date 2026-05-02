@@ -1,6 +1,6 @@
 export const baseURL = process.env.NEXT_PUBLIC_API_URL || 'https://api.bsfye.com/api/';
 
-export default {
+const endpoints = {
     GENERATETOKEN: {
         create: '/generate-token',
     },
@@ -89,6 +89,8 @@ export default {
         verifyOtp: '/vendorauth/verify-otp',
         updateProfileCompletion: '/vendorauth/update-profile-completion',
         generateOtp: '/vendorauth/generate-otp',
+        forgotPassword: '/vendorauth/forgot-password',
+        resetPassword: '/vendorauth/reset-password',
         list: '/vendor/list',
         listWithStatus: '/vendor/list-with-status',
         findById: '/vendor/view/{id}',
@@ -101,7 +103,9 @@ export default {
         login: '/admin/login',
         updateSettings: '/admin/siteSettings/{id}',
         getSettings: '/admin/getSiteSettings/{id}',
-        dashboardCounts: '/admin/dashboard-counts'
+        dashboardCounts: '/admin/dashboard-counts',
+        profile: '/admin/profile',
+        changePassword: '/admin/change-password'
     },
     AUTH: {
         authLogin: '/auth/login',
@@ -146,6 +150,7 @@ export default {
         verifyOtp: '/customerauth/verify-otp',
         resendOtp: '/customerauth/resend-otp',
         forgotPassword: '/customerauth/forgot-password',
+        verifyForgotPasswordOtp: '/customerauth/verify-forgot-password-otp',
         resetPassword: '/customerauth/reset-password',
         changePassword: '/customerauth/change-password'
     },
@@ -236,3 +241,5 @@ export default {
         ids: '/wishlist/ids'
     }
 }
+
+export default endpoints;
