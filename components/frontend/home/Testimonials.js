@@ -1,62 +1,109 @@
 "use client";
 import dynamic from 'next/dynamic';
-import React, { useEffect } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux';
 import { testimonialList } from '@/services/testimonial-api';
 import Skeleton, { SkeletonTheme } from 'react-loading-skeleton';
 
-const settings = {
+// const settings = {
+//     dots: true,
+//     infinite: true,
+//     speed: 500,
+//     slidesToShow: 3,
+//     slidesToScroll: 1,
+//     autoplay: true,
+//     autoplaySpeed: 4000,
+//     pauseOnHover: false,
+//     arrows: false,
+//     responsive: [
+//       {
+//         breakpoint: 576,
+//         settings: {
+//           slidesToShow: 1,
+//           slidesToScroll: 1,
+//         },
+//       },
+//       {
+//         breakpoint: 768,
+//         settings: {
+//           slidesToShow: 2,
+//           slidesToScroll: 1,
+//         },
+//       },
+//       {
+//         breakpoint: 992,
+//         settings: {
+//           slidesToShow: 3,
+//           slidesToScroll: 1,
+//         },
+//       },
+//       {
+//         breakpoint: 1200,
+//         settings: {
+//           slidesToShow: 3,
+//           slidesToScroll: 1,
+//         },
+//       },
+//     ],
+// };
+const baseSliderSettings = {
     dots: true,
-    infinite: true,
+    infinite: false,
     speed: 500,
-    slidesToShow: 3,
-    slidesToScroll: 1,
+    swipeToSlide: true,
     autoplay: true,
     autoplaySpeed: 4000,
     pauseOnHover: false,
     arrows: false,
-    responsive: [
-      {
-        breakpoint: 576,
-        settings: {
-          slidesToShow: 1,
-          slidesToScroll: 1,
-        },
-      },
-      {
-        breakpoint: 768,
-        settings: {
-          slidesToShow: 2,
-          slidesToScroll: 1,
-        },
-      },
-      {
-        breakpoint: 992,
-        settings: {
-          slidesToShow: 3,
-          slidesToScroll: 1,
-        },
-      },
-      {
-        breakpoint: 1200,
-        settings: {
-          slidesToShow: 3,
-          slidesToScroll: 1,
-        },
-      },
-    ],
 };
-
 const Slider = dynamic(() => import("react-slick"), {
   ssr: false,
 });
 
 const Testimonials = () => {
   const dispatch = useDispatch();
+  const [viewportWidth, setViewportWidth] = useState(
+      typeof window !== 'undefined' ? window.innerWidth : 1200
+    );
 
   useEffect(() => {
     dispatch(testimonialList());
   }, [dispatch]);
+
+  useEffect(() => {
+    const handleResize = () => {
+    setViewportWidth(window.innerWidth);
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+}, []);
+
+const sliderSettings = useMemo(() => {
+    let slidesToShow = 3;
+    let slidesToScroll = 1;
+
+    if (viewportWidth < 576) {
+      slidesToShow = 1;
+      slidesToScroll = 1;
+    } else if (viewportWidth < 768) {
+      slidesToShow = 2;
+      slidesToScroll = 1;
+    } else if (viewportWidth < 992) {
+      slidesToShow = 3;
+      slidesToScroll = 1;
+    } else if (viewportWidth < 1200) {
+      slidesToShow = 3;
+      slidesToScroll = 1;
+    }
+
+    return {
+      ...baseSliderSettings,
+      slidesToShow,
+      slidesToScroll,
+    };
+  }, [viewportWidth]);
 
   const { Testimonials: testimonials, loading, error } = useSelector((state) => state.testimonial);
 
@@ -74,7 +121,7 @@ const Testimonials = () => {
                                 <Skeleton height={250} count={3} />
                             </SkeletonTheme>
                         ) : (
-                            <Slider {...settings}>
+                            <Slider {...sliderSettings} >
                                 {testimonials && testimonials.length > 0 ? (
                                     testimonials.map((testimonial) => (
                                         <div className="item" key={testimonial._id}>

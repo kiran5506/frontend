@@ -16,6 +16,8 @@ import { generateToken } from '@/services/generate-api';
 import { searchCitySuggestions } from '@/services/city-api';
 import { searchServiceSuggestions } from '@/services/service-api';
 import { BsList } from 'react-icons/bs';
+import Skeleton from 'react-loading-skeleton';
+import 'react-loading-skeleton/dist/skeleton.css';
 
 const SITE_SETTINGS_ID = "694e6ca8aa5aae1acb87f836";
 
@@ -303,7 +305,17 @@ const Header = () => {
                     <BsList/>
                 </div>
                 <Link className="navbar-brand" href={'/'}>
-                    <Image src={`/api/image-proxy?url=${encodeURIComponent(siteSettings?.logo)}` || logo} alt="logo" className="logo" width={110} height={52}/>
+                    {siteSettings?.logo === undefined ? (
+                        <Skeleton width={110} height={52} />
+                    ) : (
+                        <Image
+                            src={siteSettings?.logo ? `/api/image-proxy?url=${encodeURIComponent(siteSettings?.logo)}` : logo}
+                            alt="logo"
+                            className="logo"
+                            width={110}
+                            height={52}
+                        />
+                    )}
                 </Link>
                 {shouldShowHeaderSearch && (
                 <div className="mobile-location-search">

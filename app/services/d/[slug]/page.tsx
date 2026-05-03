@@ -33,6 +33,8 @@ const ServiceDetails = () => {
     const [isCallbackModalOpen, setIsCallbackModalOpen] = useState(false);
     const [selectedPackageId, setSelectedPackageId] = useState<string>('');
     const [wishlistIds, setWishlistIds] = useState<string[]>([]);
+    const [topSuggestions, setTopSuggestions] = useState<any[]>([]);
+    const [isTopSuggestionsLoading, setIsTopSuggestionsLoading] = useState(false);
     const customerAuth = useSelector((state: any) => state.customerAuth);
     const customerDetails = useMemo(() => {
         if (!customerAuth?.details) return null;
@@ -130,6 +132,28 @@ const ServiceDetails = () => {
                 setEvents([]);
             })
             .finally(() => setLoading(false));
+    }, [businessProfileId]);
+
+    useEffect(() => {
+        if (!businessProfileId) {
+            setTopSuggestions([]);
+            return;
+        }
+
+        setIsTopSuggestionsLoading(true);
+        axiosInstance
+            .get(endpoints.SERVICES.topSuggestions.replace('{business_profile_id}', businessProfileId))
+            .then((response) => {
+                if (response?.data?.status) {
+                    setTopSuggestions(response?.data?.data?.business_profiles || []);
+                } else {
+                    setTopSuggestions([]);
+                }
+            })
+            .catch(() => {
+                setTopSuggestions([]);
+            })
+            .finally(() => setIsTopSuggestionsLoading(false));
     }, [businessProfileId]);
 
     const activeEventId = selectedEventId === 'all' ? null : selectedEventId;
@@ -628,17 +652,7 @@ const ServiceDetails = () => {
                         ) : (
                             <p className="text-muted">No packages found for this event.</p>
                         )}
-                        {/* <div className="col-12 col-md-6 col-lg-2">
-                            
-                            <Link
-                            href="#"
-                            className="btn btn-secondary d-block text-white py-2"
-                            data-bs-toggle="modal"
-                            data-bs-target="#request-callback"
-                            >
-                            ... Load More &gt;&gt;
-                            </Link>
-                        </div> */}
+                        
                         </div>
                     </div>
                     </div>
@@ -667,37 +681,26 @@ const ServiceDetails = () => {
                             <div className="col-md-12">
                             <div className="row testimonials-carousal">
                                 <div className="col-12 col-md-12 col-lg-6">
-                                <div className="row testm-box">
-                                    <h3>
-                                    
-                                    <Image
-                                        src="/images/common/testimonials_pic.jpg"
-                                        alt=""
-                                        width={150}
-                                        height={150}
-                                    />
-                                    &nbsp; Name Here
-                                    </h3>
-                                    <p>
-                                    
-                                    Lorem ipsum dolor sit amet, consectetur adipiscing
-                                    elit. Phasellus lacinia ante quis aliquet bibendum.
-                                    Lorem ipsum
-                                    </p>
-                                </div>
+                                    <div className="row testm-box">
+                                        <h3>
+                                        
+                                        <Image
+                                            src="/images/common/testimonials_pic.jpg"
+                                            alt=""
+                                            width={150}
+                                            height={150}
+                                        />
+                                        &nbsp; Name Here
+                                        </h3>
+                                        <p>
+                                        
+                                        Lorem ipsum dolor sit amet, consectetur adipiscing
+                                        elit. Phasellus lacinia ante quis aliquet bibendum.
+                                        Lorem ipsum
+                                        </p>
+                                    </div>
                                 </div>
                             </div>
-                            {/* <div className="col-12 col-md-6 col-lg-2 mt-3">
-                                
-                                <Link
-                                href="#"
-                                className="btn btn-secondary d-block text-white py-2"
-                                data-bs-toggle="modal"
-                                data-bs-target="#request-callback"
-                                >
-                                ... Load More &gt;&gt;
-                                </Link>
-                            </div> */}
                             </div>
                         </div>
                         <div className="text-start mt-3" id="add-your-review">
@@ -787,7 +790,14 @@ const ServiceDetails = () => {
             </div>
         </section>
 
-        <Vendorslist title="Top Suggestions" />
+        <Vendorslist
+            title="Top Suggestions"
+            profiles={topSuggestions}
+            loading={isTopSuggestionsLoading}
+            emptyMessage="Top Suggestion Vendors Not Found."
+            wishlistIds={wishlistIds}
+            onToggleWishlist={handleToggleWishlist}
+        />
         <Vendorslist title="Similar Vendors" />
     </>
   )

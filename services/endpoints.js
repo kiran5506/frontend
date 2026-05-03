@@ -17,6 +17,7 @@ const endpoints = {
         list: '/service/list',
         search: '/service/search',
         findById: '/service/findById/{id}',
+        topSuggestions: '/service/topSuggestions/{business_profile_id}',
         findByIdWithProfiles: '/service/findByIdWithProfiles/{id}',
         delete: '/service/delete/{id}'
     },

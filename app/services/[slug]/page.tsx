@@ -25,7 +25,13 @@ const Services = () => {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [serviceDetails, setServiceDetails] = useState<any>(null);
     const [businessProfiles, setBusinessProfiles] = useState<any[]>([]);
+    const [regularBusinessProfiles, setRegularBusinessProfiles] = useState<any[]>([]);
     const [loading, setLoading] = useState(false);
+    const [regularLoading, setRegularLoading] = useState(false);
+    const [topPage, setTopPage] = useState(1);
+    const [regularPage, setRegularPage] = useState(1);
+    const [topTotalPages, setTopTotalPages] = useState(0);
+    const [regularTotalPages, setRegularTotalPages] = useState(0);
     const [wishlistIds, setWishlistIds] = useState<string[]>([]);
     const customerAuth = useSelector((state: any) => state.customerAuth);
     const customerDetails = useMemo(() => {
@@ -51,9 +57,17 @@ const Services = () => {
     }, []);
 
     useEffect(() => {
+        setTopPage(1);
+        setRegularPage(1);
+    }, [serviceId, cityId, vendorId, budgetSort, discountSort, ratingFilter]);
+
+    useEffect(() => {
         if (!serviceId) return;
         setLoading(true);
         const query = new URLSearchParams();
+        query.set('type', 'top');
+    query.set('page', String(topPage));
+    query.set('limit', '12');
         if (cityId) query.set('city_id', cityId);
         if (vendorId) query.set('vendor_id', vendorId);
         if (budgetSort) query.set('budget_sort', budgetSort);
@@ -68,18 +82,54 @@ const Services = () => {
                     console.log('Service details response:', response.data.data?.service);
                     setServiceDetails(response.data.data?.service || null);
                     setBusinessProfiles(response.data.data?.business_profiles || []);
+                    setTopTotalPages(Number(response.data.data?.pagination?.totalPages || 0));
                 } else {
                     setServiceDetails(null);
                     setBusinessProfiles([]);
+                    setTopTotalPages(0);
                 }
             })
             .catch((error) => {
                 console.error('Error fetching service details:', error);
                 setServiceDetails(null);
                 setBusinessProfiles([]);
+                setTopTotalPages(0);
             })
             .finally(() => setLoading(false));
-    }, [serviceId, cityId, vendorId, budgetSort, discountSort, ratingFilter]);
+    }, [serviceId, cityId, vendorId, budgetSort, discountSort, ratingFilter, topPage]);
+
+    useEffect(() => {
+        if (!serviceId) return;
+        setRegularLoading(true);
+        const query = new URLSearchParams();
+        query.set('type', 'regular');
+    query.set('page', String(regularPage));
+    query.set('limit', '12');
+        if (cityId) query.set('city_id', cityId);
+        if (vendorId) query.set('vendor_id', vendorId);
+        if (budgetSort) query.set('budget_sort', budgetSort);
+        if (discountSort) query.set('discount_sort', discountSort);
+        if (ratingFilter) query.set('rating', ratingFilter);
+
+        const endpoint = `${endpoints.SERVICES.findByIdWithProfiles.replace('{id}', serviceId)}${query.toString() ? `?${query.toString()}` : ''}`;
+
+        axiosInstance
+            .get(endpoint)
+            .then((response) => {
+                if (response?.data?.status) {
+                    setRegularBusinessProfiles(response.data.data?.business_profiles || []);
+                    setRegularTotalPages(Number(response.data.data?.pagination?.totalPages || 0));
+                } else {
+                    setRegularBusinessProfiles([]);
+                    setRegularTotalPages(0);
+                }
+            })
+            .catch(() => {
+                setRegularBusinessProfiles([]);
+                setRegularTotalPages(0);
+            })
+            .finally(() => setRegularLoading(false));
+    }, [serviceId, cityId, vendorId, budgetSort, discountSort, ratingFilter, regularPage]);
 
     const handleFilterChange = (key: string, value: string) => {
         const params = new URLSearchParams(searchParams?.toString() || '');
@@ -192,7 +242,7 @@ const Services = () => {
                 <div className="main-title d-flex justify-content-between align-items-center">
                     <h3>Top Suggestions</h3>
                 </div>
-                {loading ? (
+               {loading ? (
                     <p>Loading...</p>
                 ) : (
                     <>
@@ -208,10 +258,16 @@ const Services = () => {
                                         />
                                     ))
                             ) : (
-                                <p className="text-muted">No businesses found for this service.</p>
+                                <p className="text-muted text-center">Top Suggestion Vendors Not Found.</p>
                             )}
                         </div>
-                        {businessProfiles.length > 8 && <Pagination />}
+                        {topTotalPages > 1 && (
+                            <Pagination
+                                currentPage={topPage}
+                                totalPages={topTotalPages}
+                                onPageChange={setTopPage}
+                            />
+                        )}
                     </>
                 )}
             </div>
@@ -222,13 +278,13 @@ const Services = () => {
                 <div className="main-title d-flex justify-content-between align-items-center">
                     <h3>Regular Vendors</h3>
                 </div>
-                {loading ? (
+                 {regularLoading ? (
                     <p>Loading...</p>
                 ) : (
                     <>
                         <div className="row d-flex justify-content-center">
-                            {businessProfiles.length > 0 ? (
-                                    businessProfiles.map((profile) => (
+                            {regularBusinessProfiles.length > 0 ? (
+                                    regularBusinessProfiles.map((profile) => (
                                         <Service
                                             key={profile?._id}
                                             profile={profile}
@@ -238,10 +294,16 @@ const Services = () => {
                                         />
                                     ))
                             ) : (
-                                <p className="text-muted">No businesses found for this service.</p>
+                                <p className="text-muted text-center">Regular Vendors Not Found.</p>
                             )}
                         </div>
-                        {businessProfiles.length > 8 && <Pagination />}
+                        {regularTotalPages > 1 && (
+                            <Pagination
+                                currentPage={regularPage}
+                                totalPages={regularTotalPages}
+                                onPageChange={setRegularPage}
+                            />
+                        )}
                     </>
                 )}
             </div>

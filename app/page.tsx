@@ -5,12 +5,18 @@ import HeroSlider from '@/components/frontend/home/HeroSlider';
 import HowitWorks from '@/components/frontend/home/HowitWorks';
 import CommercialAd from '@/components/frontend/home/CommercialAd';
 import Testimonials from '@/components/frontend/home/Testimonials';
+import TopMobileSearch from '@/components/frontend/home/TopMobileSearch';
 
 
 const Home = () => {
   return (
     <div>
       <HeroSlider />
+      <section className="homepage-mobile-search">
+        <div className="container">
+          <TopMobileSearch  />
+        </div>
+      </section>    
       <ServiceSection />
       <HowitWorks />
       <CommercialAd />

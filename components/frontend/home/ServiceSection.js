@@ -9,47 +9,14 @@ import 'react-loading-skeleton/dist/skeleton.css'
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchStatsCounts } from '@/services/stats-api';
 
-const settings = {
+const baseSliderSettings = {
     dots: false,
     infinite: true,
     speed: 500,
-    slidesToShow: 6,
-    slidesToScroll: 3,
     swipeToSlide: true,
-    mobileFirst: true,
-    //autoplay: true,
-    autoplaySpeed: 4000, // 4 seconds
+    autoplay: true,
+    autoplaySpeed: 4000,
     pauseOnHover: false,
-    responsive: [
-      {
-        breakpoint: 576,
-        settings: {
-          slidesToShow: 2.5,
-          slidesToScroll: 2,
-        },
-      },
-      {
-        breakpoint: 768,
-        settings: {
-          slidesToShow: 4,
-          slidesToScroll: 2,
-        },
-      },
-      {
-        breakpoint: 992,
-        settings: {
-          slidesToShow: 5,
-          slidesToScroll: 2,
-        },
-      },
-      {
-        breakpoint: 1200,
-        settings: {
-          slidesToShow: 6,
-          slidesToScroll: 3,
-        },
-      },
-    ],
 };
 
 const Slider = dynamic(() => import("react-slick"), {
@@ -58,6 +25,9 @@ const Slider = dynamic(() => import("react-slick"), {
 
 const ServiceSection = () => {
   const dispatch = useDispatch();
+  const [viewportWidth, setViewportWidth] = useState(
+    typeof window !== 'undefined' ? window.innerWidth : 1200
+  );
   const [stats, setStats] = useState({ cities: 0, vendors: 0, customers: 0 });
   useEffect(() => {
     dispatch(serviceList());
@@ -86,6 +56,16 @@ const ServiceSection = () => {
     };
   }, []);
 
+  useEffect(() => {
+    const handleResize = () => {
+      setViewportWidth(window.innerWidth);
+    };
+
+    handleResize();
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
   const { Services, loading, error } = useSelector((state) => state.service);
 
   console.log("Services data:", Services);
@@ -95,6 +75,31 @@ const ServiceSection = () => {
     vendors: stats.vendors,
     customers: stats.customers,
   }), [stats]);
+
+  const sliderSettings = useMemo(() => {
+    let slidesToShow = 6;
+    let slidesToScroll = 3;
+
+    if (viewportWidth < 576) {
+      slidesToShow = 2.5;
+      slidesToScroll = 2;
+    } else if (viewportWidth < 768) {
+      slidesToShow = 3;
+      slidesToScroll = 2;
+    } else if (viewportWidth < 992) {
+      slidesToShow = 4;
+      slidesToScroll = 2;
+    } else if (viewportWidth < 1200) {
+      slidesToShow = 5;
+      slidesToScroll = 2;
+    }
+
+    return {
+      ...baseSliderSettings,
+      slidesToShow,
+      slidesToScroll,
+    };
+  }, [viewportWidth]);
 
   // Helper function to create slug from service name
   const createSlug = (name) => {
@@ -162,7 +167,7 @@ const ServiceSection = () => {
                       </div>
                     </SkeletonTheme>
                   ) : (
-                    <Slider {...settings}>
+                    <Slider {...sliderSettings}>
                         {Services.map(service => service.serviceType === 'Primary' && (
                             <div className="item text-center" key={service._id}>
                                 <Link href={`services/${createSlug(service.serviceName)}-${service._id}?query_text=${service.serviceName}&query_type=Service`}>
@@ -194,7 +199,7 @@ const ServiceSection = () => {
                       </div>
                     </SkeletonTheme>
                   ) : (
-                    <Slider {...settings}>
+                    <Slider {...sliderSettings}>
                         {Services.map(service => service.serviceType === 'Secondary' && (
                             <div className="item text-center" key={service._id}>
                                 <Link href={`services/${createSlug(service.serviceName)}-${service._id}?query_text=${service.serviceName}&query_type=Service`}>

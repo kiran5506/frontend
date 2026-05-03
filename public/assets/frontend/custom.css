@@ -2629,7 +2629,7 @@ footer .links-footer a::before {
 
 
 @media only screen and (max-width:992px){
-
+  
 
   .previous-search-results-carousal .item .box .main-image {
         width: 100%;
@@ -2769,6 +2769,11 @@ footer .links-footer a::before {
 }
 
 @media only screen and (max-width:767px){
+  .slick-next:before, .slick-prev:before {
+    top: 0 !important;
+    color: var(--secondary-color) !important;
+}
+
   .profile-dropdown-menu {
     top: 48px;
 }
@@ -3723,3 +3728,16 @@ h1 {font-size: 30px;}
     color: #fff;
     -webkit-text-stroke: 1px #000;
 }
+
+
+.navbar-brand .logo {
+      height: 52px !important;
+      width: auto !important;
+  }
+
+  @media (max-width: 576px) {
+      .navbar-brand .logo {
+          height: 37px !important;
+          width: auto !important;
+      }
+  }
