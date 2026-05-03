@@ -2620,15 +2620,17 @@ footer .links-footer a::before {
   }
     .services-list-sec .slick-next {
     right: 44% !important;
-}
-.services-list-sec .slick-prev {
-    right: 44% !important;
-}
+  }
+  .services-list-sec .slick-prev {
+      right: 44% !important;
+  }
  
 }
 
 
 @media only screen and (max-width:992px){
+
+
   .previous-search-results-carousal .item .box .main-image {
         width: 100%;
   }
@@ -2666,6 +2668,15 @@ footer .links-footer a::before {
         cursor: pointer;
     }
 
+    .logoutbtn {
+        color: #fff;
+        font-size: 18px;
+        text-decoration: none;
+        display: block;
+        padding: 5px 30px !important;
+        line-height: 30px;
+    }
+
     .side-bar .menu .item a {
         color: #fff;
         font-size: 18px;
@@ -2674,6 +2685,7 @@ footer .links-footer a::before {
         padding: 5px 30px;
         line-height: 30px;
     }
+    
 
     .side-bar .menu .item a:hover {
         background:  var(--primary-color);

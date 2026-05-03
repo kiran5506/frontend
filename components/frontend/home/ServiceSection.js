@@ -15,9 +15,41 @@ const settings = {
     speed: 500,
     slidesToShow: 6,
     slidesToScroll: 3,
+    swipeToSlide: true,
+    mobileFirst: true,
     //autoplay: true,
     autoplaySpeed: 4000, // 4 seconds
     pauseOnHover: false,
+    responsive: [
+      {
+        breakpoint: 576,
+        settings: {
+          slidesToShow: 2.5,
+          slidesToScroll: 2,
+        },
+      },
+      {
+        breakpoint: 768,
+        settings: {
+          slidesToShow: 4,
+          slidesToScroll: 2,
+        },
+      },
+      {
+        breakpoint: 992,
+        settings: {
+          slidesToShow: 5,
+          slidesToScroll: 2,
+        },
+      },
+      {
+        breakpoint: 1200,
+        settings: {
+          slidesToShow: 6,
+          slidesToScroll: 3,
+        },
+      },
+    ],
 };
 
 const Slider = dynamic(() => import("react-slick"), {
@@ -75,6 +107,17 @@ const ServiceSection = () => {
     { icon: '/images/icons/fun-fact-happy-customers.png', label: 'Happy Customers', start: 0, end: 1200, value: funFacts.customers, duration: 1000 },
   ];
 
+  const serviceImageStyle = {
+    width: '100%',
+    height: 'clamp(180px, 52vw, 243px)',
+    objectFit: 'cover',
+  };
+
+  const skeletonCardStyle = {
+    minWidth: 'clamp(140px, 44vw, 196px)',
+    flex: '0 0 auto',
+  };
+
   return (
     <section className="services-section bg-gray-color" id="services">
         <div className="container">
@@ -112,7 +155,9 @@ const ServiceSection = () => {
                     <SkeletonTheme baseColor="#f3f3f3" highlightColor="#e0e0e0">
                       <div style={{ display: 'flex', gap: '20px', overflowX: 'auto', padding: '10px' }}>
                         {Array.from({ length: 6 }).map((_, index) => (
-                            <Skeleton key={index} width={196} height={243} />
+                            <div key={index} style={skeletonCardStyle}>
+                              <Skeleton width="100%" height="clamp(180px, 52vw, 243px)" />
+                            </div>
                         ))}
                       </div>
                     </SkeletonTheme>
@@ -122,7 +167,7 @@ const ServiceSection = () => {
                             <div className="item text-center" key={service._id}>
                                 <Link href={`services/${createSlug(service.serviceName)}-${service._id}?query_text=${service.serviceName}&query_type=Service`}>
                                     <div className="box2">
-                                        <Image src={`${service.imagePath ? `/api/image-proxy?url=${encodeURIComponent(service.imagePath)}` : '/images/common/noimage.jpg'}`} alt={service.serviceName} width={196} height={243} />
+                    <Image src={`${service.imagePath ? `/api/image-proxy?url=${encodeURIComponent(service.imagePath)}` : '/images/common/noimage.jpg'}`} alt={service.serviceName} width={196} height={243} style={serviceImageStyle} />
                                         <span className="service-name">{service.serviceName}</span>
                                     </div>
                                 </Link>
@@ -142,7 +187,9 @@ const ServiceSection = () => {
                     <SkeletonTheme baseColor="#f3f3f3" highlightColor="#e0e0e0">
                       <div style={{ display: 'flex', gap: '20px', overflowX: 'auto', padding: '10px' }}>
                         {Array.from({ length: 6 }).map((_, index) => (
-                            <Skeleton key={index} width={196} height={243} />
+                            <div key={index} style={skeletonCardStyle}>
+                              <Skeleton width="100%" height="clamp(180px, 52vw, 243px)" />
+                            </div>
                         ))}
                       </div>
                     </SkeletonTheme>
@@ -152,7 +199,7 @@ const ServiceSection = () => {
                             <div className="item text-center" key={service._id}>
                                 <Link href={`services/${createSlug(service.serviceName)}-${service._id}?query_text=${service.serviceName}&query_type=Service`}>
                                     <div className="box2">
-                                        <Image src={`${service.imagePath ? `/api/image-proxy?url=${encodeURIComponent(service.imagePath)}` : '/images/common/noimage.jpg'}`} alt={service.serviceName} width={196} height={243} />
+                    <Image src={`${service.imagePath ? `/api/image-proxy?url=${encodeURIComponent(service.imagePath)}` : '/images/common/noimage.jpg'}`} alt={service.serviceName} width={196} height={243} style={serviceImageStyle} />
                                         <span className="service-name">{service.serviceName}</span>
                                     </div>
                                 </Link>

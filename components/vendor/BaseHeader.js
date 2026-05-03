@@ -1,6 +1,7 @@
 "use client"
 import Link from 'next/link'
 import React, { useEffect, useState } from 'react'
+import { BsList } from 'react-icons/bs';
 
 const BaseHeader = () => {
     const [scrolled, setScrolled] = useState(false);
@@ -32,7 +33,7 @@ const BaseHeader = () => {
                 />
                 </Link>
                 <div className="menu-btn">
-                <i className="fas fa-bars" />
+                <BsList />
                 </div>
                 <div
                 className="collapse navbar-collapse  hidden-mobile"

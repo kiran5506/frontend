@@ -2,6 +2,7 @@ import { customerLogout } from '@/redux/features/customer-auth-slice';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import React from 'react'
+import { BsList } from 'react-icons/bs';
 import { useDispatch } from 'react-redux';
 import { toast } from 'react-toastify';
 
@@ -60,7 +61,7 @@ const SideMenu = () => {
               href="#multiCollapseExample1"
               style={{ fontSize: 20 }}
             >
-              <i className="fas fa-bars" /> Dashboard Menu
+             <BsList /> Dashboard Menu
             </Link>
             <div
               className="collapse multi-collapse "

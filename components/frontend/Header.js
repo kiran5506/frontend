@@ -15,6 +15,7 @@ import { getSiteSettings } from '@/services/admin-api';
 import { generateToken } from '@/services/generate-api';
 import { searchCitySuggestions } from '@/services/city-api';
 import { searchServiceSuggestions } from '@/services/service-api';
+import { BsList } from 'react-icons/bs';
 
 const SITE_SETTINGS_ID = "694e6ca8aa5aae1acb87f836";
 
@@ -36,6 +37,7 @@ const Header = () => {
     const [serviceVendorSuggestions, setServiceVendorSuggestions] = React.useState([]);
     const [isServiceVendorLoading, setIsServiceVendorLoading] = React.useState(false);
     const [showServiceVendorSuggestions, setShowServiceVendorSuggestions] = React.useState(false);
+    const [isMobileMenuOpen, setIsMobileMenuOpen] = React.useState(false);
 
     const citySearchTimerRef = useRef(null);
     const serviceVendorSearchTimerRef = useRef(null);
@@ -247,10 +249,10 @@ const Header = () => {
 
         const params = new URLSearchParams();
         if (city?._id) params.set('city_id', city._id);
-    if (city?.cityName) params.set('city_name', city.cityName);
+        if (city?.cityName) params.set('city_name', city.cityName);
         if (isVendor && serviceVendor?.value) params.set('vendor_id', serviceVendor.value);
-    params.set('query_text', serviceVendor?.label || '');
-    params.set('query_type', serviceVendor?.type || 'Service');
+        params.set('query_text', serviceVendor?.label || '');
+        params.set('query_type', serviceVendor?.type || 'Service');
 
         const slug = createSlug(serviceVendor?.label || 'service');
         const queryString = params.toString();
@@ -276,6 +278,20 @@ const Header = () => {
     const serviceCategorySuggestions = serviceVendorSuggestions.filter((item) => item?.type === 'Service');
     const vendorCategorySuggestions = serviceVendorSuggestions.filter((item) => item?.type === 'Vendor');
 
+    const toggleMobileMenu = () => {
+        setIsMobileMenuOpen((prev) => !prev);
+    };
+
+    const SideMenuLinks = [
+        { href: '/c/dashboard', text: 'Dashboard' },
+        { href: '/c/profile', text: 'My Profile' },
+        { href: '/c/callbackrequests', text: 'Callback Requests' },
+        { href: '/c/enquiries', text: 'Enquiries' },
+        { href: '/c/wishlist', text: 'Favorites' },
+        { href: '/c/change-password', text: 'Change Password' },
+        { href: '/c/contact-support', text: 'Submit Feedback' },
+    ];
+
   return (
     <header>
         <Topbar />
@@ -283,8 +299,8 @@ const Header = () => {
         <div className="main-header">
             <nav className="navbar navbar-expand-lg">
                 <div className="container">
-                <div className="menu-btn">
-                    <i className="fas fa-bars" />
+                <div className="menu-btn" onClick={toggleMobileMenu}>
+                    <BsList/>
                 </div>
                 <Link className="navbar-brand" href={'/'}>
                     <Image src={`/api/image-proxy?url=${encodeURIComponent(siteSettings?.logo)}` || logo} alt="logo" className="logo" width={110} height={52}/>
@@ -433,31 +449,47 @@ const Header = () => {
                     </div>
                 </div>
                 )}
-                <div className="side-bar">
-                    <div className="menu-close-btn">
+                <div className={`side-bar ${isMobileMenuOpen ? 'active' : ''}`}>
+                    <div className="menu-close-btn" onClick={toggleMobileMenu}>
                         <FaXmark />
                     </div>
                     <div className="mb-4 mypadd">
-                    <Link href="dashboard.php">
-                        <Image src={logo} alt="" />
+                    <Link href={'/'}>
+                        <Image src={logo} alt="" style={{maxHeight: '47px'}} />
                     </Link>
                     </div>
                     <div className="menu">
-                    <div className="item">
-                        <Link href={'/'}>Home</Link>
-                    </div>
-                    <div className="item">
-                        <Link href="/about-us">About Us</Link>
-                    </div>
-                    <div className="item">
-                        <Link href="/contact">Contact Us</Link>
-                    </div>
-                    <div className="item">
-                        <Link href="/login">Login</Link>
-                    </div>
-                    <div className="item">
-                        <Link href="/register">Register</Link>
-                    </div>
+                        {isAuthenticated ? (
+                        <>
+                            {SideMenuLinks.map((link) => (
+                                <div className="item" key={link.href}>
+                                    <Link href={link.href}>{link.text}</Link>
+                                </div>
+                            ))}
+                            <div className="item">
+                                <button className="btn btn-link p-0 logoutbtn" onClick={handleLogout}>Logout</button>
+                            </div>
+                            <hr/>
+                        </>
+                        ) : (
+                            <>
+                                <div className="item">
+                                    <Link href={'/'}>Home</Link>
+                                </div>
+                                <div className="item">
+                                    <Link href="/about-us">About Us</Link>
+                                </div>
+                                <div className="item">
+                                    <Link href="/contact">Contact Us</Link>
+                                </div>
+                                <div className="item">
+                                    <Link href="/login">Login</Link>
+                                </div>
+                                <div className="item">
+                                    <Link href="/register">Register</Link>
+                                </div>
+                            </>
+                        )}
                     <Link
                         href="vendor"
                         target="_blank"

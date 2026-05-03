@@ -8,7 +8,7 @@ import Image from 'next/image';
 import { useDispatch, useSelector } from 'react-redux';
 import { useEffect } from 'react';
 import { sliderList } from '@/services/slider-api';
-import Skeleton, { SkeletonTheme } from 'react-loading-skeleton';
+import Skeleton from 'react-loading-skeleton';
 
 var settings = {
     dots: false,
@@ -59,7 +59,7 @@ const HeroSlider = () => {
   return (
     <>
       {loading ? (
-            <Skeleton width={1464} height={450} />
+            <Skeleton width="100%" height="clamp(200px, 40vw, 450px)" />
       ) : (
         <Slider {...settings}>
           {Sliders.map((simage, index) => (
@@ -70,7 +70,7 @@ const HeroSlider = () => {
                 alt={simage.alt || "Slider"}
                 width={1464}
                 height={450}
-                style={{ maxHeight: '450px' }}
+                style={{ height: 'clamp(200px, 40vw, 450px)', objectFit: 'cover' }}
                 unoptimized
               />
             </div>
