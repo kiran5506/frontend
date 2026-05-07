@@ -13,7 +13,7 @@ const SideMenu = () => {
   const SideMenuLinks = [
     { href: '/c/dashboard', text: 'Dashboard' },
     { href: '/c/profile', text: 'My Profile' },
-    { href: '/c/callbackrequests', text: 'Callback Requests' },
+    { href: '/c/callback-requests', text: 'Callback Requests' },
     { href: '/c/enquiries', text: 'Enquiries' },
     { href: '/c/wishlist', text: 'Favorites' },
     { href: '/c/change-password', text: 'Change Password' },

@@ -150,6 +150,7 @@ const VendorLandingPage = () => {
                 <button
                     type="button"
                     className="btn btn-secondary btn-lg py-2 px-2 rounded-5 mybttn"
+                    onClick={() => window.location.href = '/vendor/register'}
                 >
                     Build your Profile
                 </button>

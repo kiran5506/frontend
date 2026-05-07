@@ -6,7 +6,7 @@ import {
   updateFeedback, 
   deleteFeedback,
   getFeedbackByVendorId,
-  getFeedbackByUserId
+  getFeedbackByCustomerId
 } from "@/services/feedback-api";
 
 const initialState = {
@@ -134,17 +134,17 @@ export const feedback = createSlice({
         state.error = action.error.message;
       })
       
-      // Get feedback by user ID
-      .addCase(getFeedbackByUserId.pending, (state) => {
+      // Get feedback by customer ID
+      .addCase(getFeedbackByCustomerId.pending, (state) => {
         state.loading = true;
       })
-      .addCase(getFeedbackByUserId.fulfilled, (state, action) => {
+      .addCase(getFeedbackByCustomerId.fulfilled, (state, action) => {
         state.loading = false;
         if(action.payload.status){
           state.feedbacks = action.payload.data;
         }
       })
-      .addCase(getFeedbackByUserId.rejected, (state, action) => {
+      .addCase(getFeedbackByCustomerId.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message;
       })

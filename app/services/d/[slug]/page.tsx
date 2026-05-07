@@ -2,8 +2,8 @@
 import WithLayout from '@/hoc/WithLayout'
 import Image from 'next/image'
 import Link from 'next/link'
-import React, { useEffect, useMemo, useState } from 'react'
-import { useParams, useRouter } from 'next/navigation'
+import React, { useEffect, useMemo, useRef, useState } from 'react'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import { useSelector } from 'react-redux'
 import { toast } from 'react-toastify'
 import Vendorslist from '@/components/frontend/ServiceDetails/Vendorslist'
@@ -17,8 +17,10 @@ import { fetchWishlistIds, toggleWishlist } from '@/services/wishlist-api'
 const ServiceDetails = () => {
     const router = useRouter();
     const params = useParams();
+    const searchParams = useSearchParams();
     const rawSlug = Array.isArray(params?.slug) ? params.slug[0] : params?.slug;
     const businessProfileId = rawSlug ? rawSlug.split('-').pop() : undefined;
+    const selectedCityId = searchParams?.get('city_id') || '';
     const [businessProfile, setBusinessProfile] = useState<any>(null);
     const [vendor, setVendor] = useState<any>(null);
     const [portfolio, setPortfolio] = useState<any>(null);
@@ -32,9 +34,15 @@ const ServiceDetails = () => {
     const [isSubmittingReview, setIsSubmittingReview] = useState(false);
     const [isCallbackModalOpen, setIsCallbackModalOpen] = useState(false);
     const [selectedPackageId, setSelectedPackageId] = useState<string>('');
+    const [isCoverImageLoaded, setIsCoverImageLoaded] = useState(false);
+    const [isProfileImageLoaded, setIsProfileImageLoaded] = useState(false);
+    const coverImageRef = useRef<HTMLImageElement | null>(null);
+    const profileImageRef = useRef<HTMLImageElement | null>(null);
     const [wishlistIds, setWishlistIds] = useState<string[]>([]);
     const [topSuggestions, setTopSuggestions] = useState<any[]>([]);
     const [isTopSuggestionsLoading, setIsTopSuggestionsLoading] = useState(false);
+    const [similarVendors, setSimilarVendors] = useState<any[]>([]);
+    const [isSimilarVendorsLoading, setIsSimilarVendorsLoading] = useState(false);
     const customerAuth = useSelector((state: any) => state.customerAuth);
     const customerDetails = useMemo(() => {
         if (!customerAuth?.details) return null;
@@ -71,23 +79,27 @@ const ServiceDetails = () => {
         };
     }, [customerAuth?.isAuthenticated]);
 
-    const handleToggleWishlist = async () => {
-        if (!businessProfileId) return;
+    const handleToggleWishlist = async (profileOrId?: any) => {
+        const targetProfileId = (typeof profileOrId === 'string'
+            ? profileOrId
+            : profileOrId?._id) || businessProfileId;
+
+        if (!targetProfileId) return;
         if (!customerAuth?.isAuthenticated) {
             toast.info('Please login to add to wishlist.');
             router.push('/login');
             return;
         }
         try {
-            const response = await toggleWishlist(businessProfileId, customerId);
+            const response = await toggleWishlist(targetProfileId, customerId);
             if (response?.status) {
                 toast.success(response?.message);
                 setWishlistIds((prev) => {
-                    const exists = prev.includes(businessProfileId);
+                    const exists = prev.includes(targetProfileId);
                     if (response?.data?.added === false || exists) {
-                        return prev.filter((id) => id !== businessProfileId);
+                        return prev.filter((id) => id !== targetProfileId);
                     }
-                    return [...prev, businessProfileId];
+                    return [...prev, targetProfileId];
                 });
             }
         } catch (error) {
@@ -97,8 +109,17 @@ const ServiceDetails = () => {
 
     const toProxy = (url?: string) => {
         if (!url) return '';
-        return `/api/image-proxy?url=${encodeURIComponent(url)}`;
+        const normalized = String(url).trim();
+        if (!normalized) return '';
+
+        if (normalized.startsWith('/') || normalized.startsWith('data:') || normalized.startsWith('blob:')) {
+            return normalized;
+        }
+
+        return `/api/image-proxy?url=${encodeURIComponent(normalized)}`;
     };
+
+    const getIdString = (value: any) => (value?._id || value || '').toString();
 
     useEffect(() => {
         if (!businessProfileId) return;
@@ -156,28 +177,89 @@ const ServiceDetails = () => {
             .finally(() => setIsTopSuggestionsLoading(false));
     }, [businessProfileId]);
 
+    useEffect(() => {
+        if (!businessProfileId) {
+            setSimilarVendors([]);
+            return;
+        }
+
+        setIsSimilarVendorsLoading(true);
+        axiosInstance
+            .get(endpoints.SERVICES.similarVendors.replace('{business_profile_id}', businessProfileId))
+            .then((response) => {
+                if (response?.data?.status) {
+                    setSimilarVendors(response?.data?.data?.business_profiles || []);
+                } else {
+                    setSimilarVendors([]);
+                }
+            })
+            .catch(() => {
+                setSimilarVendors([]);
+            })
+            .finally(() => setIsSimilarVendorsLoading(false));
+    }, [businessProfileId]);
+
     const activeEventId = selectedEventId === 'all' ? null : selectedEventId;
     const portfolioEvents = portfolio?.events || [];
     const filteredPortfolioEvents = activeEventId
-        ? portfolioEvents.filter((event: any) => (event?.event_id?._id || event?.event_id) === activeEventId)
+        ? portfolioEvents.filter((event: any) => getIdString(event?.event_id) === activeEventId)
         : portfolioEvents;
 
     const portfolioImages = filteredPortfolioEvents.flatMap((event: any) => event?.images || []);
-    const portfolioVideos = filteredPortfolioEvents.flatMap((event: any) => event?.videos || []);
+    const portfolioVideos = filteredPortfolioEvents.flatMap((event: any) => {
+        const directVideos = Array.isArray(event?.videos)
+            ? event.videos
+            : [];
+
+        const youtubeVideos = Array.isArray(event?.youtube_media)
+            ? event.youtube_media
+                .map((item: any) => (typeof item === 'string' ? item : item?.youtube_url))
+                .filter((item: string) => Boolean(item))
+            : [];
+
+        return [...directVideos, ...youtubeVideos];
+    });
 
     const filteredPackages = activeEventId
-        ? packages.filter((pkg: any) => (pkg?.event_id?._id || pkg?.event_id) === activeEventId)
+        ? packages.filter((pkg: any) => getIdString(pkg?.event_id) === activeEventId)
         : packages;
 
+    const packageCards = useMemo(() => {
+        return filteredPackages.flatMap((pkg: any) => {
+            const allPricing = Array.isArray(pkg?.cityPricing) ? pkg.cityPricing : [];
+            const pricingList = selectedCityId
+                ? allPricing.filter((pricing: any) => {
+                    const pricingCityId = (pricing?.city_id?._id || pricing?.city_id || '').toString();
+                    return pricingCityId === selectedCityId;
+                })
+                : allPricing;
+
+            if (pricingList.length > 0) {
+                return pricingList.map((pricing: any, index: number) => ({
+                    pkg,
+                    pricing,
+                    key: `${pkg?._id || 'pkg'}-${pricing?._id || index}`,
+                }));
+            }
+
+            return selectedCityId ? [] : [{
+                pkg,
+                pricing: null,
+                key: `${pkg?._id || 'pkg'}-default`,
+            }];
+        });
+    }, [filteredPackages, selectedCityId]);
+
     const pricingEntries = useMemo(() => {
-        return filteredPackages
-            .flatMap((pkg: any) => (Array.isArray(pkg?.cityPricing) ? pkg.cityPricing : []))
+        return packageCards
+            .map((item: any) => item.pricing)
+            .filter((pricing: any) => pricing)
             .map((pricing: any) => ({
                 offer: Number(pricing?.offerPrice),
                 market: Number(pricing?.marketPrice),
             }))
             .filter((pricing: any) => Number.isFinite(pricing.offer) && pricing.offer > 0);
-    }, [filteredPackages]);
+    }, [packageCards]);
 
     const lowestPricing = useMemo(() => {
         return pricingEntries.reduce((lowest: any, current: any) => {
@@ -198,8 +280,46 @@ const ServiceDetails = () => {
             ? value.toLocaleString('en-IN')
             : '';
 
-    const coverImage = businessProfile?.cover_images?.[0] || '/images/services/banner_img.jpg';
+    const coverImage = businessProfile?.cover_images?.[0];
     const profileImage = businessProfile?.profilePicture || vendor?.profile_image || '/images/services/profile-pic.jpg';
+    const coverImageSrc = toProxy(coverImage);
+    const profileImageSrc = toProxy(profileImage) || '/images/services/profile-pic.jpg';
+
+    const getYouTubeEmbedUrl = (url?: string) => {
+        if (!url) return '';
+        try {
+            const normalizedUrl = /^(https?:)?\/\//i.test(url) ? url : `https://${url}`;
+            const parsed = new URL(normalizedUrl);
+            const host = parsed.hostname.replace('www.', '').toLowerCase();
+
+            if (host === 'youtu.be') {
+                const videoId = parsed.pathname.replace('/', '').split('/')[0];
+                if (videoId) return `https://www.youtube.com/embed/${videoId}`;
+            }
+
+            if (host === 'youtube.com' || host === 'm.youtube.com') {
+                if (parsed.pathname.startsWith('/shorts/')) {
+                    const videoId = parsed.pathname.split('/shorts/')[1]?.split('/')[0];
+                    if (videoId) return `https://www.youtube.com/embed/${videoId}`;
+                }
+
+                if (parsed.pathname.startsWith('/embed/')) {
+                    const videoId = parsed.pathname.split('/embed/')[1]?.split('/')[0];
+                    if (videoId) return `https://www.youtube.com/embed/${videoId}`;
+                }
+
+                const videoId = parsed.searchParams.get('v');
+                if (videoId) return `https://www.youtube.com/embed/${videoId}`;
+            }
+        } catch (error) {
+            return '';
+        }
+
+        return '';
+    };
+
+    const isYouTubeUrl = (url?: string) => Boolean(getYouTubeEmbedUrl(url));
+
     const serviceName = businessProfile?.service_id?.serviceName || businessProfile?.serviceName || 'Service';
     const businessName = businessProfile?.businessName || 'Business Name';
     const cityName = businessProfile?.address?.city || vendor?.city;
@@ -211,6 +331,22 @@ const ServiceDetails = () => {
         const average = reviews.length > 0 ? total / reviews.length : 0;
         return { average, count: reviews.length };
     }, [reviews]);
+
+    useEffect(() => {
+        setIsCoverImageLoaded(false);
+        const imgEl = coverImageRef.current;
+        if (imgEl && imgEl.complete && imgEl.naturalWidth > 0) {
+            setIsCoverImageLoaded(true);
+        }
+    }, [coverImageSrc]);
+
+    useEffect(() => {
+        setIsProfileImageLoaded(false);
+        const imgEl = profileImageRef.current;
+        if (imgEl && imgEl.complete && imgEl.naturalWidth > 0) {
+            setIsProfileImageLoaded(true);
+        }
+    }, [profileImageSrc]);
 
     useEffect(() => {
         const vendorId = vendor?._id || businessProfile?.vendor_id?._id || businessProfile?.vendor_id;
@@ -331,31 +467,73 @@ const ServiceDetails = () => {
             }}
             serviceId={businessProfile?.service_id?._id || businessProfile?.service_id}
             packageId={selectedPackageId || undefined}
+            businessProfileId={businessProfileId}
             enquiryType="callback"
         />
         <section className="main-banner">
             <div className="container">
                 <div className="row">
                 <div className="col-sm-12">
-                    <img
-                    src={toProxy(coverImage) || '/images/services/banner_img.jpg'}
-                    alt=""
-                    className="w-100 rounded-4"
-                    style={{ height: '421px', objectFit: 'cover' }}
-                    />
+                    <div className="position-relative" style={{ zIndex: 1 }}>
+                        {!isCoverImageLoaded ? (
+                            <div
+                                className="placeholder-glow rounded-4"
+                                style={{ width: '100%', height: '421px' }}
+                            >
+                                <span
+                                    className="placeholder w-100 h-100 d-block rounded-4"
+                                    style={{ backgroundColor: '#ececec' }}
+                                />
+                            </div>
+                        ) : null}
+                        <img
+                            ref={coverImageRef}
+                            src={coverImageSrc}
+                            alt=""
+                            className="w-100 rounded-4"
+                            style={{
+                                height: '421px',
+                                objectFit: 'cover',
+                                display: isCoverImageLoaded ? 'block' : 'none',
+                                position: 'relative',
+                                zIndex: 1
+                            }}
+                            onLoad={() => setIsCoverImageLoaded(true)}
+                            onError={() => setIsCoverImageLoaded(true)}
+                        />
+                    </div>
                 </div>
                 </div>
-                <div className="row d-flex justify-content-center n-mt-30">
+                <div className="row d-flex justify-content-center n-mt-30" style={{ position: 'relative', zIndex: 3 }}>
                 <div className="col-12 col-md-12 col-lg-9">
-                    <div className="item services-view featured-item">
+                    <div className="item services-view featured-item" style={{ position: 'relative', zIndex: 3 }}>
                     <div className="row d-flex justify-content-center align-items-center">
                         <div className="col-md-4 col-lg-3 text-center text-md-start top-img">
-                        <img
-                            src={toProxy(profileImage) || '/images/services/profile-pic.jpg'}
-                            alt=""
-                            className="profile-pic"
-                            style={{ minHeight: '215px'}}
-                        />
+                        <div className="position-relative">
+                            {!isProfileImageLoaded ? (
+                                <div
+                                    className="placeholder-glow rounded"
+                                    style={{ width: '100%', minHeight: '215px' }}
+                                >
+                                    <span
+                                        className="placeholder w-100 h-100 d-block rounded"
+                                        style={{ minHeight: '215px', backgroundColor: '#ececec' }}
+                                    />
+                                </div>
+                            ) : null}
+                            <img
+                                ref={profileImageRef}
+                                src={profileImageSrc}
+                                alt=""
+                                className="profile-pic"
+                                style={{
+                                    minHeight: '215px',
+                                    display: isProfileImageLoaded ? 'block' : 'none'
+                                }}
+                                onLoad={() => setIsProfileImageLoaded(true)}
+                                onError={() => setIsProfileImageLoaded(true)}
+                            />
+                        </div>
                         </div>
                         <div className="col-md-8 col-lg-9">
                         <div className="content-sec">
@@ -384,7 +562,7 @@ const ServiceDetails = () => {
                                 width={15}
                                 height={15}
                                 />
-                                {`${reviewSummary.average.toFixed(1)} (${reviewSummary.count})`}
+                                {`${reviewSummary.average.toFixed(1)} Rating (${reviewSummary.count}) Reviews`}
                             </li>
                             </ul>
                             <div className="mydivdd">
@@ -599,12 +777,18 @@ const ServiceDetails = () => {
                                 
                                 {portfolioVideos.length > 0 ? (
                                     portfolioVideos.map((video: string, index: number) => (
-                                        <div className="col-12 col-md-6 col-lg-4 mb-3" key={`vid-${index}`}>
-                                            <video
-                                                src={toProxy(video)}
-                                                controls
-                                                className="w-100 rounded"
-                                            />
+                                        <div className="col-12 col-md-4 mb-3" key={`vid-${index}`}>
+                                            {isYouTubeUrl(video) && (
+                                                <div className="ratio ratio-16x9 rounded overflow-hidden">
+                                                    <iframe
+                                                        src={getYouTubeEmbedUrl(video)}
+                                                        title={`video-${index}`}
+                                                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+                                                        referrerPolicy="strict-origin-when-cross-origin"
+                                                        allowFullScreen
+                                                    />
+                                                </div>
+                                            )}
                                         </div>
                                     ))
                                 ) : (
@@ -625,32 +809,31 @@ const ServiceDetails = () => {
                             <span> Packages &nbsp; &nbsp; </span>
                             <span style={{ fontSize: 13 }}>
                                 
-                                <Link href="#photos"> Packages </Link> ({filteredPackages.length})
+                                <Link href="#photos"> Packages </Link> ({packageCards.length})
                             </span>
                             </h4>
                         </div>
                         </div>
                         <div className="row d-flex justify-content-center">
-                        {filteredPackages.length > 0 ? (
-                            filteredPackages.flatMap((pkg: any) => {
-                                const pricingList = Array.isArray(pkg?.cityPricing)
-                                    ? pkg.cityPricing
-                                    : [null];
-                                return pricingList.map((pricing: any, index: number) => (
-                                    <PackageCard
-                                        key={`${pkg?._id || 'pkg'}-${pricing?._id || index}`}
-                                        pkg={pkg}
-                                        pricing={pricing}
-                                        toProxy={toProxy}
-                                        onRequestCallback={(packageId) => {
-                                            setSelectedPackageId(packageId || '');
-                                            setIsCallbackModalOpen(true);
-                                        }}
-                                    />
-                                ));
-                            })
+                        {packageCards.length > 0 ? (
+                            packageCards.map((item: any) => (
+                                <PackageCard
+                                    key={item.key}
+                                    pkg={item.pkg}
+                                    pricing={item.pricing}
+                                    toProxy={toProxy}
+                                    onRequestCallback={(packageId) => {
+                                        setSelectedPackageId(packageId || '');
+                                        setIsCallbackModalOpen(true);
+                                    }}
+                                />
+                            ))
                         ) : (
-                            <p className="text-muted">No packages found for this event.</p>
+                            <p className="text-muted">
+                                {selectedCityId
+                                    ? 'No packages found for this selected location/event.'
+                                    : 'No packages found for this event.'}
+                            </p>
                         )}
                         
                         </div>
@@ -798,7 +981,14 @@ const ServiceDetails = () => {
             wishlistIds={wishlistIds}
             onToggleWishlist={handleToggleWishlist}
         />
-        <Vendorslist title="Similar Vendors" />
+        <Vendorslist
+            title="Similar Vendors"
+            profiles={similarVendors}
+            loading={isSimilarVendorsLoading}
+            emptyMessage="Similar Vendors Not Found."
+            wishlistIds={wishlistIds}
+            onToggleWishlist={handleToggleWishlist}
+        />
     </>
   )
 }

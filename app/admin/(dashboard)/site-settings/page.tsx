@@ -300,7 +300,7 @@ const SiteSettingsPage = () => {
                     </div>
                     <div className="col-12">
                     <label htmlFor="why_bsfye" className="form-label">
-                        Why Bsfye?
+                        About Us
                     </label>
                     <textarea
                         className="form-control"

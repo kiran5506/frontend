@@ -7,7 +7,7 @@ const AdFooter = () => {
         <div className="container">
           <div className="row">
             <div className="col text-center">
-              <p>&copy; 2023 Brandesk. All rights reserved.</p>
+              <p>&copy; 2026 Bsfye. All rights reserved.</p>
             </div>
           </div>
         </div>

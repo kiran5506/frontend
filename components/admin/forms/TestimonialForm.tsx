@@ -55,26 +55,41 @@ const TestimonialForm = ({ id }: TestimonialFormProps) => {
             setValue('rating', data.rating || 1);
             if(data.image) {
                 setImagePreview(data.image);
+                setHasImage(true);
             }
         }
     }, [currentTestimonial, setValue, id])
+
+    useEffect(() => {
+        return () => {
+            if (imagePreview && imagePreview.startsWith('blob:')) {
+                URL.revokeObjectURL(imagePreview);
+            }
+        };
+    }, [imagePreview]);
 
     const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const files = e.target.files;
         if (files && files.length > 0) {
             setHasImage(true);
             const file = files[0];
-            
-            const reader = new FileReader();
-            reader.onloadend = () => {
-                setImagePreview(reader.result as string);
-            };
-            reader.onerror = () => {
-                toast.error('Error reading image file');
-            };
-            reader.readAsDataURL(file);
+
+            if (imagePreview && imagePreview.startsWith('blob:')) {
+                URL.revokeObjectURL(imagePreview);
+            }
+
+            const objectUrl = URL.createObjectURL(file);
+            setImagePreview(objectUrl);
         }
     }
+
+    const getPreviewSrc = (preview: string | null) => {
+        if (!preview) return '/assets/admin/img/logo.png';
+        if (preview.startsWith('blob:') || preview.startsWith('data:')) {
+            return preview;
+        }
+        return `/api/image-proxy?url=${encodeURIComponent(preview)}`;
+    };
 
     const onSubmit = async (data: any) => {
         try {
@@ -124,12 +139,13 @@ const TestimonialForm = ({ id }: TestimonialFormProps) => {
     >
         <div className="col-12">
             <label htmlFor="title" className="form-label">
-                Title
+                Name
             </label>
             <input
                 type="text"
                 className="form-control"
                 id="title"
+                placeholder='Enter the name'
                 {...register('title')}
             />
             {errors.title && <p className="text-danger">{errors.title.message}</p>}
@@ -137,12 +153,13 @@ const TestimonialForm = ({ id }: TestimonialFormProps) => {
 
         <div className="col-12">
             <label htmlFor="description" className="form-label">
-                Description
+                Testimonial
             </label>
             <textarea
                 className="form-control"
                 id="description"
                 rows={4}
+                placeholder='Write the testimonial here...'
                 {...register('description')}
             />
             {errors.description && <p className="text-danger">{errors.description.message}</p>}
@@ -156,8 +173,10 @@ const TestimonialForm = ({ id }: TestimonialFormProps) => {
                 type="number"
                 className="form-control"
                 id="rating"
-                min="1"
+                min="0.5"
                 max="5"
+                step="0.5"
+                placeholder='Enter rating between 1 and 5'
                 {...register('rating')}
             />
             {errors.rating && <p className="text-danger">{errors.rating.message}</p>}
@@ -178,7 +197,7 @@ const TestimonialForm = ({ id }: TestimonialFormProps) => {
             {imagePreview && (
                 <div className="mt-3">
                     <img 
-                        src={imagePreview ? `/api/image-proxy?url=${encodeURIComponent(imagePreview)}` : "/assets/admin/img/logo.png"}
+                        src={getPreviewSrc(imagePreview)}
                         alt="Preview" 
                         style={{ border: "1px solid #ddd7d7", width: "150px", height: '120px', marginTop: '6px', objectFit: 'cover' }}
                     />

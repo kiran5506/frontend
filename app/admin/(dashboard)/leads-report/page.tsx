@@ -42,7 +42,6 @@ const LeadsReport = () => {
       const dateValue = request.date ? new Date(request.date) : null;
       return {
         _id: request.request_id,
-        'S.No': index + 1,
         Date: dateValue ? dateValue.toLocaleDateString('en-GB') : '--',
         Customer: request.customer_name || 'N/A',
         Mobile: request.customer_mobile || 'N/A',

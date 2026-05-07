@@ -9,6 +9,15 @@ import { createBusinessPortfolio, businessPortfolioByVendorId, businessPortfolio
 import { toast } from "react-toastify";
 import { useRouter } from "next/navigation";
 import { useSearchParams } from "next/navigation";
+import { FiEdit2, FiTrash2 } from "react-icons/fi";
+
+type YoutubeMediaFormRow = {
+  youtube_url: string;
+};
+
+type ExistingYoutubeMedia = {
+  youtube_url: string;
+};
 
 const CreateBusinessPortfolio = () => {
   const dispatch = useDispatch() as any;
@@ -23,11 +32,20 @@ const CreateBusinessPortfolio = () => {
   const [serviceId, setServiceId] = useState<string>("");
   const [events, setEvents] = useState<any[]>([]);
   const [loadingEvents, setLoadingEvents] = useState(false);
-  const [eventFiles, setEventFiles] = useState<Record<string, { images: File[]; videos: File[] }>>({});
-  const [eventPreviews, setEventPreviews] = useState<Record<string, { images: string[]; videos: string[] }>>({});
+  const [eventFiles, setEventFiles] = useState<Record<string, { images: File[] }>>({});
+  const [eventPreviews, setEventPreviews] = useState<Record<string, { images: string[] }>>({});
+  const [eventYoutubeMap, setEventYoutubeMap] = useState<Record<string, YoutubeMediaFormRow[]>>({});
+  const [eventYoutubeDraftMap, setEventYoutubeDraftMap] = useState<Record<string, YoutubeMediaFormRow>>({});
+  const [eventYoutubeEditIndex, setEventYoutubeEditIndex] = useState<Record<string, number | null>>({});
+  const [eventYoutubePageMap, setEventYoutubePageMap] = useState<Record<string, number>>({});
+  const [existingYoutubePageMap, setExistingYoutubePageMap] = useState<Record<string, number>>({});
   const [selectedEvent, setSelectedEvent] = useState<string>("");
   const [existingEventIds, setExistingEventIds] = useState<string[]>([]);
-  const [eventMediaMap, setEventMediaMap] = useState<Record<string, { images: string[]; videos: string[]; portfolioId: string }>>({});
+  const [eventMediaMap, setEventMediaMap] = useState<Record<string, { images: string[]; youtube_media: ExistingYoutubeMedia[]; portfolioId: string }>>({});
+
+  const getDefaultYoutubeRow = (): YoutubeMediaFormRow => ({
+    youtube_url: '',
+  });
 
   const getProxyUrl = (url: string) => {
     if (!url) return url;
@@ -38,6 +56,14 @@ const CreateBusinessPortfolio = () => {
       return `/api/image-proxy?url=${encodeURIComponent(url)}`;
     }
     return url;
+  };
+
+  const getYoutubeEmbedUrl = (rawUrl: string) => {
+    if (!rawUrl) return '';
+    if (rawUrl.includes('youtube.com/embed/')) return rawUrl;
+    if (rawUrl.includes('watch?v=')) return rawUrl.replace('watch?v=', 'embed/');
+    if (rawUrl.includes('youtu.be/')) return rawUrl.replace('youtu.be/', 'www.youtube.com/embed/');
+    return rawUrl;
   };
 
   const selectedService = useMemo(() => {
@@ -77,14 +103,14 @@ const CreateBusinessPortfolio = () => {
           );
           setExistingEventIds(eventIds.filter(Boolean));
 
-          const mediaMap: Record<string, { images: string[]; videos: string[]; portfolioId: string }> = {};
+          const mediaMap: Record<string, { images: string[]; youtube_media: ExistingYoutubeMedia[]; portfolioId: string }> = {};
           response.payload.data.forEach((portfolio: any) => {
             portfolio.events?.forEach((event: any) => {
               const eventId = event.event_id?._id || event.event_id;
               if (eventId) {
                 mediaMap[eventId] = {
                   images: event.images || [],
-                  videos: event.videos || [],
+                  youtube_media: event.youtube_media || [],
                   portfolioId: portfolio._id
                 };
               }
@@ -109,6 +135,26 @@ const CreateBusinessPortfolio = () => {
   }, [searchParams]);
 
   useEffect(() => {
+    if (!selectedEvent) return;
+    setEventYoutubeDraftMap((prev) => ({
+      ...prev,
+      [selectedEvent]: prev[selectedEvent] || getDefaultYoutubeRow(),
+    }));
+    setEventYoutubeEditIndex((prev) => ({
+      ...prev,
+      [selectedEvent]: prev[selectedEvent] ?? null,
+    }));
+    setEventYoutubePageMap((prev) => ({
+      ...prev,
+      [selectedEvent]: prev[selectedEvent] || 1,
+    }));
+    setExistingYoutubePageMap((prev) => ({
+      ...prev,
+      [selectedEvent]: prev[selectedEvent] || 1,
+    }));
+  }, [selectedEvent]);
+
+  useEffect(() => {
     if (!serviceId) return;
 
     setLoadingEvents(true);
@@ -128,58 +174,142 @@ const CreateBusinessPortfolio = () => {
       .finally(() => setLoadingEvents(false));
   }, [dispatch, serviceId]);
 
-  const handleEventFiles = (
-    eventId: string,
-    type: "images" | "videos",
-    files: FileList | null
-  ) => {
+  const handleEventFiles = (eventId: string, files: FileList | null) => {
     const nextFiles = Array.from(files || []);
     setEventFiles((prev) => ({
       ...prev,
       [eventId]: {
-        images: type === "images" ? nextFiles : prev[eventId]?.images || [],
-        videos: type === "videos" ? nextFiles : prev[eventId]?.videos || [],
+        images: nextFiles,
       },
     }));
     setEventPreviews((prev) => ({
       ...prev,
       [eventId]: {
-        images:
-          type === "images"
-            ? nextFiles.map((file) => URL.createObjectURL(file))
-            : prev[eventId]?.images || [],
-        videos:
-          type === "videos"
-            ? nextFiles.map((file) => URL.createObjectURL(file))
-            : prev[eventId]?.videos || [],
+        images: nextFiles.map((file) => URL.createObjectURL(file)),
       },
     }));
   };
 
+  const handleYoutubeUrlChange = (eventId: string, value: string) => {
+    setEventYoutubeDraftMap((prev) => ({
+      ...prev,
+      [eventId]: {
+        ...(prev[eventId] || getDefaultYoutubeRow()),
+        youtube_url: value,
+      },
+    }));
+  };
+
+  const handlePublishYoutubeRecord = (eventId: string) => {
+    const draft = eventYoutubeDraftMap[eventId] || getDefaultYoutubeRow();
+    if (!draft.youtube_url.trim()) {
+      toast.error('Please enter YouTube URL.');
+      return;
+    }
+
+    const editIndex = eventYoutubeEditIndex[eventId];
+    let updatedLength = 0;
+    setEventYoutubeMap((prev) => {
+      const currentRows = prev[eventId] || [];
+      if (editIndex !== null && editIndex !== undefined && editIndex >= 0 && editIndex < currentRows.length) {
+        const updatedRows = [...currentRows];
+        updatedRows[editIndex] = draft;
+        updatedLength = updatedRows.length;
+        return { ...prev, [eventId]: updatedRows };
+      }
+      updatedLength = currentRows.length + 1;
+      return {
+        ...prev,
+        [eventId]: [...currentRows, draft],
+      };
+    });
+
+    if (editIndex === null || editIndex === undefined) {
+      setEventYoutubePageMap((prev) => ({
+        ...prev,
+        [eventId]: Math.max(1, Math.ceil(updatedLength / 3)),
+      }));
+    }
+
+    setEventYoutubeDraftMap((prev) => ({
+      ...prev,
+      [eventId]: getDefaultYoutubeRow(),
+    }));
+    setEventYoutubeEditIndex((prev) => ({
+      ...prev,
+      [eventId]: null,
+    }));
+  };
+
+  const handleEditYoutubeRecord = (eventId: string, rowIndex: number) => {
+    const row = (eventYoutubeMap[eventId] || [])[rowIndex];
+    if (!row) return;
+
+    setEventYoutubeDraftMap((prev) => ({
+      ...prev,
+      [eventId]: row,
+    }));
+    setEventYoutubeEditIndex((prev) => ({
+      ...prev,
+      [eventId]: rowIndex,
+    }));
+  };
+
+  const removeYoutubeMediaRow = (eventId: string, rowIndex: number) => {
+    let remaining = 0;
+    setEventYoutubeMap((prev) => {
+      const rows = (prev[eventId] || []).filter((_, index) => index !== rowIndex);
+      remaining = rows.length;
+      return {
+        ...prev,
+        [eventId]: rows,
+      };
+    });
+    setEventYoutubeEditIndex((prev) => {
+      const currentEditIndex = prev[eventId];
+      if (currentEditIndex === rowIndex) {
+        return { ...prev, [eventId]: null };
+      }
+      return prev;
+    });
+    setEventYoutubePageMap((prev) => {
+      const next = { ...prev };
+      const currentPage = next[eventId] || 1;
+      const totalPages = Math.max(1, Math.ceil(remaining / 3));
+      next[eventId] = Math.min(currentPage, totalPages);
+      return next;
+    });
+  };
+
   const handleRemoveEventFile = (
     eventId: string,
-    type: "images" | "videos",
+    type: "images",
     index: number
   ) => {
     setEventFiles((prev) => {
-      const current = prev[eventId] || { images: [], videos: [] };
+      const current = prev[eventId] || { images: [] };
       const updated = {
         ...current,
         [type]: current[type].filter((_, idx) => idx !== index),
-      } as { images: File[]; videos: File[] };
+      } as { images: File[] };
       return { ...prev, [eventId]: updated };
     });
     setEventPreviews((prev) => {
-      const current = prev[eventId] || { images: [], videos: [] };
+      const current = prev[eventId] || { images: [] };
       const updated = {
         ...current,
         [type]: current[type].filter((_, idx) => idx !== index),
-      } as { images: string[]; videos: string[] };
+      } as { images: string[] };
       return { ...prev, [eventId]: updated };
     });
   };
 
-  const handleDeleteExistingMedia = async (eventId: string, type: 'image' | 'video', file: string) => {
+  const handleDeleteExistingMedia = async (
+    eventId: string,
+    type: 'image' | 'youtube_media',
+    file: string,
+    index?: number
+  ) => {
     const portfolioId = eventMediaMap[eventId]?.portfolioId;
     if (!portfolioId || !vendorId) {
       toast.error('Portfolio details not found.');
@@ -193,7 +323,8 @@ const CreateBusinessPortfolio = () => {
           vendor_id: vendorId,
           event_id: eventId,
           type,
-          file
+          file,
+          index
         } as any)
       ).unwrap();
 
@@ -204,7 +335,7 @@ const CreateBusinessPortfolio = () => {
           if (updatedId) {
             updatedMap[updatedId] = {
               images: event.images || [],
-              videos: event.videos || [],
+              youtube_media: event.youtube_media || [],
               portfolioId
             };
           }
@@ -246,9 +377,21 @@ const CreateBusinessPortfolio = () => {
     if (files?.images?.length) {
       files.images.forEach((file) => formData.append(`images_${selectedEvent}`, file));
     }
-    if (files?.videos?.length) {
-      files.videos.forEach((file) => formData.append(`videos_${selectedEvent}`, file));
-    }
+    const youtubeRows = (eventYoutubeMap[selectedEvent] || []).filter(
+      (row) => row.youtube_url.trim()
+    );
+
+    formData.set(
+      "events",
+      JSON.stringify([
+        {
+          event_id: selectedEvent,
+          youtube_media: youtubeRows.map((row) => ({
+            youtube_url: row.youtube_url.trim(),
+          })),
+        },
+      ])
+    );
 
     try {
       const response = await (dispatch as any)(createBusinessPortfolio(formData as any)).unwrap();
@@ -263,6 +406,24 @@ const CreateBusinessPortfolio = () => {
       toast.error(error?.message || "Failed to create portfolio.");
     }
   };
+
+  const selectedYoutubeRows = selectedEvent
+    ? (eventYoutubeMap[selectedEvent] || [])
+    : [];
+  const selectedYoutubePage = selectedEvent ? (eventYoutubePageMap[selectedEvent] || 1) : 1;
+  const selectedYoutubeTotalPages = Math.max(1, Math.ceil(selectedYoutubeRows.length / 3));
+  const pagedSelectedYoutubeRows = selectedYoutubeRows.slice((selectedYoutubePage - 1) * 3, selectedYoutubePage * 3);
+
+  const existingYoutubeRows = selectedEvent
+    ? (eventMediaMap[selectedEvent]?.youtube_media || [])
+    : [];
+  const existingYoutubePage = selectedEvent ? (existingYoutubePageMap[selectedEvent] || 1) : 1;
+  const existingYoutubeTotalPages = Math.max(1, Math.ceil(existingYoutubeRows.length / 3));
+  const pagedExistingYoutubeRows = existingYoutubeRows.slice((existingYoutubePage - 1) * 3, existingYoutubePage * 3);
+
+  const selectedYoutubeDraft = selectedEvent
+    ? (eventYoutubeDraftMap[selectedEvent] || getDefaultYoutubeRow())
+    : getDefaultYoutubeRow();
 
   return (
     <>
@@ -316,25 +477,114 @@ const CreateBusinessPortfolio = () => {
                         {events.find((eventItem) => eventItem._id === selectedEvent)?.eventName}
                       </h5>
                       <div className="row">
-                        <div className="col-md-6">
+                        <div className="col-md-12">
                           <label className="form-label">Upload Images</label>
                           <input
                             type="file"
                             className="form-control"
                             multiple
                             accept="image/*"
-                            onChange={(e) => handleEventFiles(selectedEvent, "images", e.target.files)}
+                            onChange={(e) => handleEventFiles(selectedEvent, e.target.files)}
                           />
                         </div>
-                        <div className="col-md-6">
-                          <label className="form-label">Upload Videos</label>
-                          <input
-                            type="file"
-                            className="form-control"
-                            multiple
-                            accept="video/*"
-                            onChange={(e) => handleEventFiles(selectedEvent, "videos", e.target.files)}
-                          />
+                        <div className="col-md-12">
+                          <label className="form-label mb-2">YouTube Records</label>
+                          <div className="row g-2 align-items-end mb-3">
+                            <div className="col-12 col-md-10">
+                              <label className="form-label">YouTube URL</label>
+                              <input
+                                type="url"
+                                className="form-control"
+                                placeholder="https://www.youtube.com/watch?v=..."
+                                value={selectedYoutubeDraft.youtube_url}
+                                onChange={(e) => handleYoutubeUrlChange(selectedEvent, e.target.value)}
+                              />
+                            </div>
+                            <div className="col-12 col-md-2 d-grid">
+                              <button
+                                type="button"
+                                className="btn btn-primary"
+                                onClick={() => handlePublishYoutubeRecord(selectedEvent)}
+                              >
+                                Add
+                              </button>
+                            </div>
+                          </div>
+
+                          <div className="table-responsive">
+                            <table className="table table-bordered align-middle mb-0">
+                              <thead>
+                                <tr>
+                                  <th>YouTube URL</th>
+                                  <th style={{ width: 140 }}>Actions</th>
+                                </tr>
+                              </thead>
+                              <tbody>
+                                {pagedSelectedYoutubeRows.length > 0 ? (
+                                  pagedSelectedYoutubeRows.map((row, indexOnPage) => {
+                                    const rowIndex = (selectedYoutubePage - 1) * 3 + indexOnPage;
+                                    return (
+                                    <tr key={`youtube-row-${rowIndex}`}>
+                                      <td>
+                                        {row.youtube_url ? (
+                                          <a href={row.youtube_url} target="_blank" rel="noopener noreferrer" className="text-break">
+                                            {row.youtube_url}
+                                          </a>
+                                        ) : (
+                                          <span className="text-muted">-</span>
+                                        )}
+                                      </td>
+                                      <td>
+                                        <div className="d-flex gap-2">
+                                          <button
+                                            type="button"
+                                            className="btn btn-sm btn-success"
+                                            onClick={() => handleEditYoutubeRecord(selectedEvent, rowIndex)}
+                                            aria-label="Edit YouTube record"
+                                          >
+                                            <FiEdit2 />
+                                          </button>
+                                          <button
+                                            type="button"
+                                            className="btn btn-sm btn-danger"
+                                            onClick={() => removeYoutubeMediaRow(selectedEvent, rowIndex)}
+                                            aria-label="Delete YouTube record"
+                                          >
+                                            <FiTrash2 />
+                                          </button>
+                                        </div>
+                                      </td>
+                                    </tr>
+                                  )})
+                                ) : (
+                                  <tr>
+                                    <td colSpan={2} className="text-center text-muted">No YouTube records added.</td>
+                                  </tr>
+                                )}
+                              </tbody>
+                            </table>
+                          </div>
+                          {selectedYoutubeTotalPages > 1 && (
+                            <div className="d-flex justify-content-end align-items-center gap-2 mt-2">
+                              <button
+                                type="button"
+                                className="btn btn-sm btn-outline-secondary"
+                                disabled={selectedYoutubePage === 1}
+                                onClick={() => setEventYoutubePageMap((prev) => ({ ...prev, [selectedEvent]: Math.max(1, selectedYoutubePage - 1) }))}
+                              >
+                                Prev
+                              </button>
+                              <span className="small text-muted">Page {selectedYoutubePage} of {selectedYoutubeTotalPages}</span>
+                              <button
+                                type="button"
+                                className="btn btn-sm btn-outline-secondary"
+                                disabled={selectedYoutubePage === selectedYoutubeTotalPages}
+                                onClick={() => setEventYoutubePageMap((prev) => ({ ...prev, [selectedEvent]: Math.min(selectedYoutubeTotalPages, selectedYoutubePage + 1) }))}
+                              >
+                                Next
+                              </button>
+                            </div>
+                          )}
                         </div>
                       </div>
                       <div className="row mt-3">
@@ -386,51 +636,64 @@ const CreateBusinessPortfolio = () => {
                           </div>
                         </div>
                         <div className="col-12 mt-3">
-                          <h6>Videos</h6>
+                          <h6>YouTube Media</h6>
                           <div className="row">
-                            {(eventMediaMap[selectedEvent]?.videos || []).map((video, index) => (
-                              <div className="col-12 col-lg-4 mb-3" key={`existing-video-${index}`}>
-                                <div className="position-relative">
-                                  <video
-                                    src={getProxyUrl(video)}
-                                    controls
-                                    className="w-100"
-                                    style={{ height: 160, borderRadius: 8 }}
-                                  />
+                            {pagedExistingYoutubeRows.map((media, mediaIndexOnPage) => {
+                              const mediaIndex = (existingYoutubePage - 1) * 3 + mediaIndexOnPage;
+                              const embedUrl = getYoutubeEmbedUrl(media.youtube_url);
+                              return (
+                              <div className="col-12 col-md-4 mb-3" key={`existing-youtube-${mediaIndex}`}>
+                                <div className="border rounded p-2">
+                                  {embedUrl && (
+                                    <div
+                                      className="mb-2"
+                                      style={{ position: 'relative', paddingBottom: '56.25%', height: 0, overflow: 'hidden', borderRadius: 8 }}
+                                    >
+                                      <iframe
+                                        src={embedUrl}
+                                        title={`YouTube media ${mediaIndex + 1}`}
+                                        frameBorder={0}
+                                        allowFullScreen
+                                        style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%' }}
+                                      />
+                                    </div>
+                                  )}
                                   <button
                                     type="button"
-                                    className="btn btn-sm btn-outline-danger position-absolute top-0 end-0 m-2"
-                                    style={{ borderRadius: '50%', width: 28, height: 28, padding: 0 }}
-                                    onClick={() => handleDeleteExistingMedia(selectedEvent, 'video', video)}
-                                    aria-label="Remove video"
+                                    className="btn btn-sm btn-outline-danger"
+                                    onClick={() => handleDeleteExistingMedia(selectedEvent, 'youtube_media', media.youtube_url, mediaIndex)}
+                                    aria-label="Remove YouTube record"
                                   >
-                                    &times;
+                                    <FiTrash2 /> Delete
                                   </button>
                                 </div>
                               </div>
-                            ))}
-                            {(eventPreviews[selectedEvent]?.videos || []).map((video, index) => (
-                              <div className="col-12 col-lg-4 mb-3" key={`event-video-${index}`}>
-                                <div className="position-relative">
-                                  <video
-                                    src={video}
-                                    controls
-                                    className="w-100"
-                                    style={{ height: 160, borderRadius: 8 }}
-                                  />
-                                  <button
-                                    type="button"
-                                    className="btn btn-sm btn-danger position-absolute top-0 end-0 m-2"
-                                    style={{ borderRadius: '50%', width: 28, height: 28, padding: 0 }}
-                                    onClick={() => handleRemoveEventFile(selectedEvent, "videos", index)}
-                                    aria-label="Remove video"
-                                  >
-                                    &times;
-                                  </button>
-                                </div>
-                              </div>
-                            ))}
+                            )})}
+                            {pagedExistingYoutubeRows.length === 0 && (
+                              <p className="text-muted mb-0">No existing YouTube records.</p>
+                            )}
                           </div>
+                          {existingYoutubeTotalPages > 1 && (
+                            <div className="d-flex justify-content-end align-items-center gap-2 mt-2">
+                              <button
+                                type="button"
+                                className="btn btn-sm btn-outline-secondary"
+                                disabled={existingYoutubePage === 1}
+                                onClick={() => setExistingYoutubePageMap((prev) => ({ ...prev, [selectedEvent]: Math.max(1, existingYoutubePage - 1) }))}
+                              >
+                                Prev
+                              </button>
+                              <span className="small text-muted">Page {existingYoutubePage} of {existingYoutubeTotalPages}</span>
+                              <button
+                                type="button"
+                                className="btn btn-sm btn-outline-secondary"
+                                disabled={existingYoutubePage === existingYoutubeTotalPages}
+                                onClick={() => setExistingYoutubePageMap((prev) => ({ ...prev, [selectedEvent]: Math.min(existingYoutubeTotalPages, existingYoutubePage + 1) }))}
+                              >
+                                Next
+                              </button>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>

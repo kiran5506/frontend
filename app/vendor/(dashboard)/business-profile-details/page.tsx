@@ -31,16 +31,37 @@ const BusinessProfile = () => {
   });
   const [coverImages, setCoverImages] = useState<File[]>([]);
   const [coverPreviews, setCoverPreviews] = useState<string[]>([]);
+  const [documentFiles, setDocumentFiles] = useState<{
+    aadharFront?: File | null;
+    aadharBack?: File | null;
+    registrationCopy?: File | null;
+    gst?: File | null;
+  }>({});
+  const [documentPreviews, setDocumentPreviews] = useState<{
+    aadharFront?: string;
+    aadharBack?: string;
+    registrationCopy?: string;
+    gst?: string;
+  }>({});
 
-  const getProxyUrl = (url: string) => {
-    if (!url) return url;
-    if (url.startsWith('data:') || url.startsWith('/assets') || url.startsWith('blob:')) {
-      return url;
+  const getProxyUrl = (url?: string) => {
+    if (!url) return '';
+    const normalized = String(url).trim();
+    if (!normalized) return '';
+
+    if (normalized.startsWith('data:') || normalized.startsWith('blob:')) {
+      return normalized;
     }
-    if (url.startsWith('http')) {
-      return `/api/image-proxy?url=${encodeURIComponent(url)}`;
+
+    if (normalized.startsWith('/assets') || normalized.startsWith('/images')) {
+      return normalized;
     }
-    return url;
+
+    if (normalized.startsWith('http')) {
+      return `/api/image-proxy?url=${encodeURIComponent(normalized)}`;
+    }
+
+    return `/api/image-proxy?url=${encodeURIComponent(normalized)}`;
   };
 
   const formatAddress = (address: any) => {
@@ -159,6 +180,25 @@ const BusinessProfile = () => {
     setCoverPreviews((prev) => prev.filter((_, idx) => idx !== index));
   };
 
+  const handleDocumentFileChange = (
+    field: 'aadharFront' | 'aadharBack' | 'registrationCopy' | 'gst',
+    file: File | null
+  ) => {
+    setDocumentFiles((prev) => ({
+      ...prev,
+      [field]: file,
+    }));
+
+    setDocumentPreviews((prev) => ({
+      ...prev,
+      [field]: file ? URL.createObjectURL(file) : '',
+    }));
+  };
+
+  const getDocumentImage = (field: 'aadharFront' | 'aadharBack' | 'registrationCopy' | 'gst') => {
+    return documentPreviews[field] || profile?.documents?.[field] || '';
+  };
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (!profile?._id || !vendorId) {
@@ -185,6 +225,10 @@ const BusinessProfile = () => {
     formData.append('communication_address', formValues.communicationAddress || '');
 
     coverImages.forEach((file) => formData.append('coverImages', file));
+  if (documentFiles.aadharFront) formData.append('aadharFront', documentFiles.aadharFront);
+  if (documentFiles.aadharBack) formData.append('aadharBack', documentFiles.aadharBack);
+  if (documentFiles.registrationCopy) formData.append('registrationCopy', documentFiles.registrationCopy);
+  if (documentFiles.gst) formData.append('gst', documentFiles.gst);
 
     try {
       const response = await (dispatch as any)(
@@ -268,9 +312,14 @@ const BusinessProfile = () => {
                 </div>
                 <div className="col-md-4 text-end">
                   <img
-                    src={getProxyUrl(profile?.profilePicture) || "assets/img/business_pic.png"}
+                    src={getProxyUrl(profile?.profilePicture) || "/assets/img/business_pic.png"}
                     alt=""
                     style={{ width: 200, height: 200, objectFit: 'cover', borderRadius: '50%' }}
+                    onError={(event) => {
+                      const target = event.currentTarget;
+                      if (target.src.includes('/assets/img/business_pic.png')) return;
+                      target.src = '/assets/img/business_pic.png';
+                    }}
                   />
                 </div>
               </div>
@@ -492,15 +541,17 @@ const BusinessProfile = () => {
                     type="file"
                     name="aadhar-front"
                     id="formFile"
+                    accept="image/*"
+                    onChange={(e) => handleDocumentFileChange('aadharFront', e.target.files?.[0] || null)}
                   />
-                  {profile?.documents?.aadharFront && (
+                  {getDocumentImage('aadharFront') && (
                     <div className="mt-3">
                       <Link
-                        href={getProxyUrl(profile?.documents?.aadharFront)}
+                        href={getProxyUrl(getDocumentImage('aadharFront'))}
                         data-fancybox="gallery"
                       >
                         <img
-                          src={getProxyUrl(profile?.documents?.aadharFront)}
+                          src={getProxyUrl(getDocumentImage('aadharFront'))}
                           alt="Aadhar Front"
                           className="zoom w-100"
                           style={{ height: 180, objectFit: 'cover', borderRadius: 8 }}
@@ -517,15 +568,17 @@ const BusinessProfile = () => {
                     type="file"
                     name="aadhar-back"
                     id="formFile"
+                    accept="image/*"
+                    onChange={(e) => handleDocumentFileChange('aadharBack', e.target.files?.[0] || null)}
                   />
-                  {profile?.documents?.aadharBack && (
+                  {getDocumentImage('aadharBack') && (
                     <div className="mt-3">
                       <Link
-                        href={getProxyUrl(profile?.documents?.aadharBack)}
+                        href={getProxyUrl(getDocumentImage('aadharBack'))}
                         data-fancybox="gallery"
                       >
                         <img
-                          src={getProxyUrl(profile?.documents?.aadharBack)}
+                          src={getProxyUrl(getDocumentImage('aadharBack'))}
                           alt="Aadhar Back"
                           className="zoom w-100"
                           style={{ height: 180, objectFit: 'cover', borderRadius: 8 }}
@@ -543,15 +596,17 @@ const BusinessProfile = () => {
                     type="file"
                     name="registration-front"
                     id="formFile"
+                    accept="image/*"
+                    onChange={(e) => handleDocumentFileChange('registrationCopy', e.target.files?.[0] || null)}
                   />
-                  {profile?.documents?.registrationCopy && (
+                  {getDocumentImage('registrationCopy') && (
                     <div className="mt-3">
                       <Link
-                        href={getProxyUrl(profile?.documents?.registrationCopy)}
+                        href={getProxyUrl(getDocumentImage('registrationCopy'))}
                         data-fancybox="gallery"
                       >
                         <img
-                          src={getProxyUrl(profile?.documents?.registrationCopy)}
+                          src={getProxyUrl(getDocumentImage('registrationCopy'))}
                           alt="Registration Copy"
                           className="zoom w-100"
                           style={{ height: 180, objectFit: 'cover', borderRadius: 8 }}
@@ -568,15 +623,17 @@ const BusinessProfile = () => {
                     type="file"
                     name="registration-back"
                     id="formFile"
+                    accept="image/*"
+                    onChange={(e) => handleDocumentFileChange('gst', e.target.files?.[0] || null)}
                   />
-                  {profile?.documents?.gst && (
+                  {getDocumentImage('gst') && (
                     <div className="mt-3">
                       <Link
-                        href={getProxyUrl(profile?.documents?.gst)}
+                        href={getProxyUrl(getDocumentImage('gst'))}
                         data-fancybox="gallery"
                       >
                         <img
-                          src={getProxyUrl(profile?.documents?.gst)}
+                          src={getProxyUrl(getDocumentImage('gst'))}
                           alt="GST Document"
                           className="zoom w-100"
                           style={{ height: 180, objectFit: 'cover', borderRadius: 8 }}

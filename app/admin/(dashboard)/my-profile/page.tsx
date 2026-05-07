@@ -247,6 +247,7 @@ const MyProfilePage = () => {
                     className="form-control"
                     {...registerProfile('email')}
                     disabled={loadingProfile || savingProfile}
+                    readOnly
                   />
                   {profileErrors.email && <p className="text-danger mt-1">{profileErrors.email.message as string}</p>}
                 </div>

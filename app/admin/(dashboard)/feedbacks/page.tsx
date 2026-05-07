@@ -44,7 +44,7 @@ const FeedbacksList = () => {
   useEffect(() => {
     if (!loading && feedbacks && feedbacks.length > 0) {
       const formattedData = feedbacks.map((feedback: any) => {
-        const profile = feedback.type === 'vendor' ? feedback.vendor_id : feedback.user_id
+        const profile = feedback.type === 'vendor' ? feedback.vendor_id : feedback.customer_id
         return {
           _id: feedback._id,
           name: profile?.name || 'N/A',

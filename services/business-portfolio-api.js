@@ -33,11 +33,11 @@ export const businessPortfolioByVendorId = createAsyncThunk(
 
 export const businessPortfolioDeleteMedia = createAsyncThunk(
     'businessPortfolio/deleteMedia',
-    async ({ id, vendor_id, event_id, type, file }) => {
+    async ({ id, vendor_id, event_id, type, file, index }) => {
         try {
             const response = await axiosInstance.patch(
                 endpoints.BUSINESS_PORTFOLIO.deleteMedia.replace('{id}', id),
-                { vendor_id, event_id, type, file }
+                { vendor_id, event_id, type, file, index }
             );
             return response.data;
         } catch (error) {

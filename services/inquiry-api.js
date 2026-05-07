@@ -19,6 +19,17 @@ export const inquiryList = createAsyncThunk('inquiry/list', async (params = {}) 
 })
 
 /**
+ * Get customer inquiries/callback requests from a single endpoint
+ */
+export const customerInquiryList = createAsyncThunk('inquiry/customerList', async (params = {}) => {
+    const queryString = new URLSearchParams(params).toString();
+    const url = queryString
+        ? `${endpoints.INQUIRIES.customerList}?${queryString}`
+        : endpoints.INQUIRIES.customerList;
+    return (await axiosInstance.get(url)).data;
+})
+
+/**
  * Get customer inquiry by ID
  */
 export const inquiryById = createAsyncThunk('inquiry/inquiryById', async (id) => {

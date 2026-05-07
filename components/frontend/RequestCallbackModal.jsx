@@ -3,9 +3,13 @@ import React, { useEffect, useState } from 'react';
 import styles from '../../public/assets/frontend/RequestCallbackModal.module.css';
 import { useDispatch, useSelector } from 'react-redux';
 import { createInquiry, verifyInquiryOtp } from '@/services/inquiry-api';
+import axiosInstance from '@/utils/axios';
+import endpoints from '@/services/endpoints';
 import { toast } from 'react-toastify';
 
-const RequestCallbackModal = ({ isOpen, onClose, serviceId, packageId, enquiryType = 'enquiry' }) => {
+const getTodayDate = () => new Date().toISOString().split('T')[0];
+
+const RequestCallbackModal = ({ isOpen, onClose, serviceId, packageId, businessProfileId, enquiryType = 'enquiry' }) => {
   const dispatch = useDispatch();
   const customerAuth = useSelector((state) => state.customerAuth);
   const isAuthenticatedCustomer = Boolean(customerAuth?.isAuthenticated);
@@ -13,14 +17,35 @@ const RequestCallbackModal = ({ isOpen, onClose, serviceId, packageId, enquiryTy
   const [formData, setFormData] = useState({
     name: '',
     mobile: '',
+    cityId: '',
     city: '',
-    eventDate: '',
+    eventDate: getTodayDate(),
   });
+  const [cities, setCities] = useState([]);
   const [inquiryId, setInquiryId] = useState(null);
   const [otp, setOtp] = useState(['', '', '', '']);
   const [maskedMobile, setMaskedMobile] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const fetchCities = async () => {
+      try {
+        const response = await axiosInstance.get(endpoints.CITIES.list);
+        if (response?.data?.status) {
+          setCities(Array.isArray(response.data.data) ? response.data.data : []);
+        } else {
+          setCities([]);
+        }
+      } catch {
+        setCities([]);
+      }
+    };
+
+    fetchCities();
+  }, [isOpen]);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -39,14 +64,18 @@ const RequestCallbackModal = ({ isOpen, onClose, serviceId, packageId, enquiryTy
         setFormData((prev) => ({
           ...prev,
           name: details.name || prev.name,
-          mobile: details.mobile_number || prev.mobile
+          mobile: details.mobile_number || prev.mobile,
+          eventDate: prev.eventDate || getTodayDate()
         }));
       }
     } else {
       setFormData((prev) => ({
         ...prev,
         name: '',
-        mobile: ''
+        mobile: '',
+        cityId: '',
+        city: '',
+        eventDate: getTodayDate()
       }));
     }
   }, [customerAuth?.details, customerAuth?.isAuthenticated, isOpen]);
@@ -93,10 +122,12 @@ const RequestCallbackModal = ({ isOpen, onClose, serviceId, packageId, enquiryTy
       const response = await dispatch(createInquiry({
         name: formData.name,
         mobile_number: formData.mobile,
+        city_id: formData.cityId || undefined,
         city: formData.city || '',
         event_date: formData.eventDate,
         enquiry_type: enquiryType,
         service_id: serviceId || undefined,
+        business_profile_id: businessProfileId || undefined,
         package_id: packageId || undefined,
         skip_otp: isAuthenticatedCustomer
       }));
@@ -115,6 +146,12 @@ const RequestCallbackModal = ({ isOpen, onClose, serviceId, packageId, enquiryTy
             setOtp(['', '', '', '']);
             setInquiryId(null);
             setMaskedMobile('');
+            setFormData((prev) => ({
+              ...prev,
+              cityId: '',
+              city: '',
+              eventDate: getTodayDate()
+            }));
             return;
           }
 
@@ -194,7 +231,7 @@ const RequestCallbackModal = ({ isOpen, onClose, serviceId, packageId, enquiryTy
           setTimeout(() => {
             onClose();
             setFormStep('form');
-            setFormData({ name: '', mobile: '', city: '', eventDate: '' });
+            setFormData({ name: '', mobile: '', cityId: '', city: '', eventDate: getTodayDate() });
             setOtp(['', '', '', '']);
             setInquiryId(null);
             setMaskedMobile('');
@@ -280,15 +317,29 @@ const RequestCallbackModal = ({ isOpen, onClose, serviceId, packageId, enquiryTy
 
                 <div className={styles.formGroup}>
                   <label className={styles.formLabel}>City</label>
-                  <input
-                    type="text"
-                    name="city"
+                  <select
+                    name="cityId"
                     className={styles.formControl}
-                    placeholder="Enter Your City"
-                    value={formData.city}
-                    onChange={handleInputChange}
+                    value={formData.cityId}
+                    onChange={(e) => {
+                      const selectedId = e.target.value;
+                      const selectedCity = cities.find((item) => item?._id === selectedId);
+                      setFormData((prev) => ({
+                        ...prev,
+                        cityId: selectedId,
+                        city: selectedCity?.cityName || ''
+                      }));
+                      setError('');
+                    }}
                     disabled={loading}
-                  />
+                  >
+                    <option value="">Select City</option>
+                    {cities.map((city) => (
+                      <option key={city?._id} value={city?._id}>
+                        {city?.cityName}
+                      </option>
+                    ))}
+                  </select>
                 </div>
 
                 <div className={styles.formGroup}>

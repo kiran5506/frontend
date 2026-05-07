@@ -33,7 +33,7 @@ const AdSidebar = () => {
         { name: 'Vendors', icon: <BsCircle />, link: '/admin/feedbacks?type=vendor' },
     ]},
     { name: 'HR Manager', icon: <BsFillPersonVcardFill />, link: '#', subMenu: [
-        { name: 'Vendor', icon: <BsCircle />, link: '/admin/vendors' },
+        { name: 'Vendors', icon: <BsCircle />, link: '/admin/vendors' },
         { name: 'Customers', icon: <BsCircle />, link: '/admin/customers' },
         { name: 'Employees', icon: <BsCircle />, link: '/admin/employees' },
     ]},

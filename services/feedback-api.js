@@ -80,15 +80,18 @@ export const getFeedbackByVendorId = createAsyncThunk('feedback/getFeedbackByVen
 })
 
 /**
- * Get feedback by user ID
+ * Get feedback by customer ID
  */
-export const getFeedbackByUserId = createAsyncThunk('feedback/getFeedbackByUserId', async ({ userId, page = 1, limit = 10 }, { rejectWithValue }) => {
+export const getFeedbackByCustomerId = createAsyncThunk('feedback/getFeedbackByCustomerId', async ({ customerId, page = 1, limit = 10 }, { rejectWithValue }) => {
     try {
         const params = { page, limit };
         const queryString = new URLSearchParams(params).toString();
-        const url = `${endpoints.FEEDBACK.findByUserId.replace('{userId}', userId)}?${queryString}`;
+        const url = `${endpoints.FEEDBACK.findByCustomerId.replace('{customerId}', customerId)}?${queryString}`;
         return (await axiosInstance.get(url)).data;
     } catch (error) {
         return rejectWithValue(error.response.data);
     }
 })
+
+// Backward compatibility alias
+export const getFeedbackByUserId = getFeedbackByCustomerId;

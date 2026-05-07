@@ -29,18 +29,13 @@ const FeedbackView = () => {
   const typeLabel = useMemo(() => {
     const typeParam = searchParams?.get('type')
     if (typeParam === 'vendor' || feedbackData?.type === 'vendor') return 'Vendor'
-    if (
-      typeParam === 'customer' ||
-      feedbackData?.type === 'customer' ||
-      typeParam === 'user' ||
-      feedbackData?.type === 'user'
-    ) {
+    if (typeParam === 'customer' || feedbackData?.type === 'customer') {
       return 'Customer'
     }
     return 'Feedback'
   }, [searchParams, feedbackData?.type])
 
-  const profile = feedbackData?.type === 'vendor' ? feedbackData?.vendor_id : feedbackData?.user_id
+  const profile = feedbackData?.type === 'vendor' ? feedbackData?.vendor_id : feedbackData?.customer_id
 
   return (
     <section className="section">

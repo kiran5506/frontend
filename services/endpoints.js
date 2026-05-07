@@ -18,6 +18,7 @@ const endpoints = {
         search: '/service/search',
         findById: '/service/findById/{id}',
         topSuggestions: '/service/topSuggestions/{business_profile_id}',
+        similarVendors: '/service/similarVendors/{business_profile_id}',
         findByIdWithProfiles: '/service/findByIdWithProfiles/{id}',
         delete: '/service/delete/{id}'
     },
@@ -129,6 +130,7 @@ const endpoints = {
     INQUIRIES: {
         create: '/inquiry/create',
         list: '/inquiry/list',
+        customerList: '/inquiry/customer/list',
         findById: '/inquiry/findById/{id}',
         byStatus: '/inquiry/byStatus/{status}',
         update: '/inquiry/update/{id}',
@@ -203,6 +205,7 @@ const endpoints = {
         edit: '/feedback/edit/{id}',
         delete: '/feedback/delete/{id}',
         findByVendorId: '/feedback/vendor/{vendorId}',
+        findByCustomerId: '/feedback/customer/{customerId}',
         findByUserId: '/feedback/user/{userId}'
     },
     SUGGESTIONS: {

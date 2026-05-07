@@ -81,8 +81,8 @@ const TableBody = ({ bodyData, onView, onEdit, onDelete, isview, isedit, isdelet
                                         cindex === 0
                                             ? index + 1
                                             : Array.isArray(cell)
-                                            ? cell.join(', ')
-                                            : cell
+                                            ? (cell.length ? cell.join(', ') : 'N/A')
+                                            : (cell === null || cell === undefined || cell === '' ? 'N/A' : cell)
                                     )}
                                 </td>
                             )

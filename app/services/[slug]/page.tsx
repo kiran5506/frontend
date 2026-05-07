@@ -193,6 +193,7 @@ const Services = () => {
             onClose={() => setIsModalOpen(false)}
             serviceId={serviceId}
             packageId={undefined}
+            businessProfileId={undefined}
         />
         <section className="inner-search-section2">
             <h1 className="text-center py-3 ">{serviceDetails?.serviceName || 'Service Name'}</h1>

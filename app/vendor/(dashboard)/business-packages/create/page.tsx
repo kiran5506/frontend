@@ -15,7 +15,7 @@ import { toast } from "react-toastify";
 import { useRouter, useSearchParams } from "next/navigation";
 
 const emptyPricingRow = {
-  city: "",
+  city_id: "",
   marketPrice: "",
   offerPrice: "",
   discount: ""
@@ -62,6 +62,11 @@ const CreateBusinessPackagesPage = () => {
   const selectedService = useMemo(() => {
     return Services?.find((service: any) => service._id === serviceId);
   }, [Services, serviceId]);
+
+  const getCityLabel = (cityId: string, fallback?: string) => {
+    const city = Cities?.find((item: any) => item._id === cityId);
+    return city?.cityName || city?.name || city?.city || fallback || "-";
+  };
 
   useEffect(() => {
     (dispatch as any)(serviceList());
@@ -112,7 +117,7 @@ const CreateBusinessPackagesPage = () => {
           setPackageName(data?.packageName || "");
           setDescription(data?.description || "");
           const pricingRows = (data?.cityPricing || []).map((item: any) => ({
-            city: item.city || "",
+            city_id: item.city_id?._id || item.city_id || "",
             marketPrice: item.marketPrice?.toString() || "",
             offerPrice: item.offerPrice?.toString() || "",
             discount: item.discount?.toString() || ""
@@ -147,7 +152,7 @@ const CreateBusinessPackagesPage = () => {
   };
 
   const handleAddPricingRow = () => {
-    if (!pricingDraft.city) {
+    if (!pricingDraft.city_id) {
       toast.error("Please select a city before adding.");
       return;
     }
@@ -189,7 +194,7 @@ const CreateBusinessPackagesPage = () => {
       return;
     }
 
-    const filteredPricing = cityPricing.filter((row) => row.city);
+  const filteredPricing = cityPricing.filter((row) => row.city_id);
     if (filteredPricing.length === 0) {
       toast.error("Please add at least one city pricing entry using Add.");
       return;
@@ -328,12 +333,12 @@ const CreateBusinessPackagesPage = () => {
                       <td>
                         <select
                           className="form-select"
-                          value={pricingDraft.city}
-                          onChange={(e) => handlePricingChange("city", e.target.value)}
+                          value={pricingDraft.city_id}
+                          onChange={(e) => handlePricingChange("city_id", e.target.value)}
                         >
                           <option value="">Select City</option>
                           {Cities?.map((city: any) => (
-                            <option key={city._id} value={city.cityName || city.name || city.city}>
+                            <option key={city._id} value={city._id}>
                               {city.cityName || city.name || city.city}
                             </option>
                           ))}
@@ -375,7 +380,7 @@ const CreateBusinessPackagesPage = () => {
                     </tr>
                     {cityPricing.map((row, index) => (
                       <tr key={`pricing-${index}`}>
-                        <td>{row.city || "-"}</td>
+                        <td>{getCityLabel(row.city_id, row.city_name || row.city)}</td>
                         <td>₹{row.marketPrice || 0}</td>
                         <td>₹{row.offerPrice || 0}</td>
                         <td>{row.discount || 0}%</td>

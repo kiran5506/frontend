@@ -40,6 +40,7 @@ const Footer = () => {
         <div className="links-footer">
             <div className="container">
                 <div className='row'>
+                    <h4>About Us</h4>
                     {siteSettings?.why_bsfye && (<p>{siteSettings.why_bsfye}</p>)}
                 </div>
             {/* <div className="row">

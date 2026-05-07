@@ -222,6 +222,7 @@ const EmployeeForm = ({ id }: EmployeeFormProps) => {
                 id="mobileNumber"
                 placeholder="Mobile Number"
                 {...register('mobileNumber')}
+                maxLength={10}
             />
             {errors.mobileNumber && <p className="text-danger">{errors.mobileNumber.message}</p>}
         </div>
@@ -237,6 +238,7 @@ const EmployeeForm = ({ id }: EmployeeFormProps) => {
                 id="alternateMobileNumber"
                 placeholder="Alternate Mobile Number"
                 {...register('alternateMobileNumber')}
+                maxLength={10}
             />
             {errors.alternateMobileNumber && <p className="text-danger">{errors.alternateMobileNumber.message}</p>}
         </div>
@@ -486,6 +488,7 @@ const EmployeeForm = ({ id }: EmployeeFormProps) => {
                 id="fatherHusbandWifeName"
                 placeholder="Father/Husband/Wife Name"
                 {...register('fatherHusbandWifeName')}
+                maxLength={10}
             />
             {errors.fatherHusbandWifeName && <p className="text-danger">{errors.fatherHusbandWifeName.message}</p>}
         </div>
@@ -501,6 +504,7 @@ const EmployeeForm = ({ id }: EmployeeFormProps) => {
                 id="fatherHusbandWifeMobileNumber"
                 placeholder="Father/Husband/Wife Mobile Number"
                 {...register('fatherHusbandWifeMobileNumber')}
+                maxLength={10}
             />
             {errors.fatherHusbandWifeMobileNumber && <p className="text-danger">{errors.fatherHusbandWifeMobileNumber.message}</p>}
         </div>

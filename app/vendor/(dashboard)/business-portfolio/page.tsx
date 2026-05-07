@@ -34,7 +34,7 @@ const BusinessPortfolio = () => {
         eventId: event.event_id?._id || event.event_id,
         eventName: event.event_id?.eventName || "Event",
         imagesCount: event.images?.length || 0,
-        videosCount: event.videos?.length || 0
+        youtubeCount: event.youtube_media?.length || 0
       }))
     );
   }, [portfolios]);
@@ -73,7 +73,7 @@ const BusinessPortfolio = () => {
                         <td className="minn">{index + 1}</td>
                         <td className="midd">{row.eventName}</td>
                         <td className="midd">
-                          Photos - {row.imagesCount} <br /> Videos - {row.videosCount}
+                          Photos - {row.imagesCount} <br /> YouTube - {row.youtubeCount}
                         </td>
                         <td className="midd">
                           <Link

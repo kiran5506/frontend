@@ -24,8 +24,23 @@ const Service = ({ profile, serviceDetails, isWishlisted, onToggleWishlist }) =>
   const city = profile?.address?.city;
   const averageRating = Number(profile?.averageRating || 0);
   const reviewCount = Number(profile?.reviewCount || 0);
-  const imageSrc =
-    profile?.profilePicture || "/images/common/suggestions_1.jpg";
+  const defaultImage = "/images/common/suggestions_1.jpg";
+  const rawImageSrc = profile?.profilePicture || "";
+  const normalizedImageSrc = (() => {
+    const normalized = String(rawImageSrc || "").trim();
+    if (!normalized) return defaultImage;
+
+    if (
+      normalized.startsWith("/") ||
+      normalized.startsWith("data:") ||
+      normalized.startsWith("blob:") ||
+      /^(https?:)?\/\//i.test(normalized)
+    ) {
+      return normalized;
+    }
+
+    return `/api/image-proxy?url=${encodeURIComponent(normalized)}`;
+  })();
   const lowestOfferPrice = Number(profile?.lowestOfferPrice || 0);
   const lowestDiscount = Number(profile?.lowestDiscount || 0);
   const formatPrice = (value) =>
@@ -77,10 +92,13 @@ const Service = ({ profile, serviceDetails, isWishlisted, onToggleWishlist }) =>
               {lowestOfferPrice ? `₹ ${formatPrice(lowestOfferPrice)}` : "₹ 700"} <span>/Onwards</span>
             </h1>
             <img
-              src={`/api/image-proxy?url=${encodeURIComponent(imageSrc)}`}
+              src={normalizedImageSrc}
               alt=""
               className="main-image"
               style={{ width: "100%", height: "172px", objectFit: "cover" }}
+              onError={(event) => {
+                event.currentTarget.src = defaultImage;
+              }}
             />
           </div>
         </Link>
@@ -117,7 +135,7 @@ const Service = ({ profile, serviceDetails, isWishlisted, onToggleWishlist }) =>
                       width={15}
                       height={15}
                     />
-                    {(Number.isFinite(averageRating) ? averageRating : 0).toFixed(1)} ({reviewCount})
+                    {(Number.isFinite(averageRating) ? averageRating : 0).toFixed(1)} Rating ({reviewCount} Reviews)
                   </li>
                 </>
               )}

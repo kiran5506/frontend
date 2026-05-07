@@ -81,7 +81,7 @@ const BusinessPackages = () => {
                                             {pkg.cityPricing?.length ? (
                                                 pkg.cityPricing.map((city: any, cityIndex: number) => (
                                                     <div key={`${pkg._id}-city-${cityIndex}`}>
-                                                        {city.city} - ₹{city.offerPrice || 0} / ₹{city.marketPrice || 0}
+                                                        {city.city_name || city.city_id?.cityName || city.city || '—'} - ₹{city.offerPrice || 0} / ₹{city.marketPrice || 0}
                                                     </div>
                                                 ))
                                             ) : (
