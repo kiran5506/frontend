@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import React, { CSSProperties } from 'react'
 import { BsPencilSquare, BsEye, BsFillTrash3Fill } from "react-icons/bs";
+import { htmlToPlainText, looksLikeHtml } from '@/utils/rich-text';
 
 const isImage = (value: any): boolean => {
     if (typeof value !== 'string') {
@@ -82,7 +83,9 @@ const TableBody = ({ bodyData, onView, onEdit, onDelete, isview, isedit, isdelet
                                             ? index + 1
                                             : Array.isArray(cell)
                                             ? (cell.length ? cell.join(', ') : 'N/A')
-                                            : (cell === null || cell === undefined || cell === '' ? 'N/A' : cell)
+                                            : (cell === null || cell === undefined || cell === ''
+                                                ? 'N/A'
+                                                : (looksLikeHtml(cell) ? htmlToPlainText(cell) : cell))
                                     )}
                                 </td>
                             )

@@ -1,6 +1,7 @@
 "use client";
-import React, { useEffect, useState } from 'react'
-import { useForm } from "react-hook-form";
+import React, { useEffect, useMemo, useRef, useState } from 'react'
+import dynamic from 'next/dynamic';
+import { Controller, useForm } from "react-hook-form";
 import { yupResolver } from '@hookform/resolvers/yup';
 import * as Yup from "yup";
 import { toast } from 'react-toastify';
@@ -9,6 +10,10 @@ import { useRouter } from 'next/navigation';
 import { createTutorial, tutorialById, tutorialEdit } from '@/services/tutorial-api';
 import { resetCurrentTutorial } from '@/redux/features/tutorial-slice';
 import { languageList } from '@/services/language-api';
+import { buildRichTextEditorModules, RICH_TEXT_EDITOR_FORMATS } from '@/utils/editor-config';
+import 'react-quill-new/dist/quill.snow.css';
+
+const ReactQuill = dynamic(() => import('react-quill-new'), { ssr: false }) as any;
 
 
 interface TutorialFormProps {
@@ -20,6 +25,7 @@ const TutorialForm = ({ id }: TutorialFormProps) => {
     const router = useRouter();
     const { currentTutorial } = useSelector((state: any) => state.tutorial);
     const { Languages, loading: languagesLoading } = useSelector((state: any) => state.language);
+    const quillRef = useRef<any>(null);
 
     const [tutorialImg, setTutorialImg] = useState("");
 
@@ -42,11 +48,28 @@ const TutorialForm = ({ id }: TutorialFormProps) => {
     const {
         register,
         handleSubmit,
+        control,
         formState: { errors },
         setValue
     } = useForm({
         resolver: yupResolver(validationSchema),
+        defaultValues: {
+            title: '',
+            language: '',
+            description: '',
+        }
     });
+
+    const editorModules = useMemo(
+        () => buildRichTextEditorModules({
+            quillRef,
+            onMediaError: (message, error) => {
+                console.error('Error uploading editor media:', error);
+                toast.error(message);
+            },
+        }),
+        [quillRef]
+    );
 
     useEffect(() => {
         if(id) {
@@ -156,13 +179,21 @@ const TutorialForm = ({ id }: TutorialFormProps) => {
         <label htmlFor="description" className="form-label">
             Description
         </label>
-        <textarea
-            className="form-control"
-            id="description"
-            {...register('description')}
-            rows={6}
-            placeholder='Enter tutorial description'
-        ></textarea>
+        <Controller
+            name="description"
+            control={control}
+            render={({ field }) => (
+                <ReactQuill
+                    ref={quillRef as any}
+                    theme="snow"
+                    value={field.value || ''}
+                    onChange={field.onChange}
+                    modules={editorModules}
+                    formats={RICH_TEXT_EDITOR_FORMATS}
+                    placeholder="Write tutorial content like a blog..."
+                />
+            )}
+        />
         {errors.description && <p className="text-danger">{errors.description.message}</p>}
         </div>
 

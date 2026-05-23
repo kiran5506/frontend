@@ -32,7 +32,7 @@ jobs:
 
   deploy:
     needs: build-and-dockerize
-    runs-on: self-hosted
+    runs-on: ubuntu-latest
     steps:
       - name: Pull image from Docker Hub
         run: docker pull bsfye/bsfye-frontend:latest
