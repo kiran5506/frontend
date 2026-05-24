@@ -9,6 +9,11 @@ export const fetchVendorLeadAssignments = async (vendorId, params = {}) => {
   return (await axiosInstance.get(url)).data;
 };
 
+export const fetchInquiryAssignments = async (inquiryId) => {
+  const url = endpoints.LEAD_ASSIGNMENTS.listByInquiry.replace('{inquiryId}', inquiryId);
+  return (await axiosInstance.get(url)).data;
+};
+
 export const markLeadViewed = async (payload) => {
   return (await axiosInstance.post(endpoints.LEAD_ASSIGNMENTS.markViewed, payload)).data;
 };

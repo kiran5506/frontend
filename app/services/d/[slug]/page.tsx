@@ -225,29 +225,28 @@ const ServiceDetails = () => {
         : packages;
 
     const packageCards = useMemo(() => {
-        return filteredPackages.flatMap((pkg: any) => {
-            const allPricing = Array.isArray(pkg?.cityPricing) ? pkg.cityPricing : [];
-            const pricingList = selectedCityId
-                ? allPricing.filter((pricing: any) => {
-                    const pricingCityId = (pricing?.city_id?._id || pricing?.city_id || '').toString();
-                    return pricingCityId === selectedCityId;
-                })
-                : allPricing;
+        return filteredPackages
+            .map((pkg: any) => {
+                const allPricing = Array.isArray(pkg?.cityPricing) ? pkg.cityPricing : [];
+                const matchingPricing = selectedCityId
+                    ? allPricing.find((pricing: any) => {
+                        const pricingCityId = (pricing?.city_id?._id || pricing?.city_id || '').toString();
+                        return pricingCityId === selectedCityId;
+                    })
+                    : allPricing[0];
 
-            if (pricingList.length > 0) {
-                return pricingList.map((pricing: any, index: number) => ({
+                if (selectedCityId && !matchingPricing) {
+                    return null;
+                }
+
+                return {
                     pkg,
-                    pricing,
-                    key: `${pkg?._id || 'pkg'}-${pricing?._id || index}`,
-                }));
-            }
-
-            return selectedCityId ? [] : [{
-                pkg,
-                pricing: null,
-                key: `${pkg?._id || 'pkg'}-default`,
-            }];
-        });
+                    pricing: matchingPricing || null,
+                    packageId: getIdString(pkg?._id || pkg?.package_id),
+                    key: `${pkg?._id || 'pkg'}-default`,
+                };
+            })
+            .filter(Boolean);
     }, [filteredPackages, selectedCityId]);
 
     const pricingEntries = useMemo(() => {
@@ -822,6 +821,7 @@ const ServiceDetails = () => {
                                     pkg={item.pkg}
                                     pricing={item.pricing}
                                     toProxy={toProxy}
+                                    packageId={item.packageId}
                                     onRequestCallback={(packageId) => {
                                         setSelectedPackageId(packageId || '');
                                         setIsCallbackModalOpen(true);

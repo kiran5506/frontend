@@ -5,9 +5,16 @@ import endpoints from "./endpoints";
 /**
  * Create a new customer inquiry
  */
-export const createInquiry = createAsyncThunk('inquiry/create', async (request) => {
-    return (await axiosInstance.post(endpoints.INQUIRIES.create, request)).data;
-})
+export const createInquiry = createAsyncThunk(
+    'inquiry/create',
+    async (request, { rejectWithValue }) => {
+        try {
+            return (await axiosInstance.post(endpoints.INQUIRIES.create, request)).data;
+        } catch (error) {
+            return rejectWithValue(error?.response?.data || { message: 'Failed to create inquiry' });
+        }
+    }
+)
 
 /**
  * Get all customer inquiries with pagination

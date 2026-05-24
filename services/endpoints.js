@@ -166,6 +166,7 @@ const endpoints = {
     },
     LEAD_ASSIGNMENTS: {
         listByVendor: '/lead-assignments/vendor/{vendorId}',
+            listByInquiry: '/lead-assignments/inquiry/{inquiryId}',
         markViewed: '/lead-assignments/view',
         updateStatus: '/lead-assignments/{id}/status',
         requestReplacement: '/lead-assignments/replace-request',

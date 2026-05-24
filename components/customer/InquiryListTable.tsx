@@ -4,6 +4,7 @@ import React, { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useDispatch, useSelector } from 'react-redux'
 import { customerInquiryList } from '@/services/inquiry-api'
+import { fetchInquiryAssignments } from '@/services/lead-assignment-api'
 
 type InquiryType = 'enquiry' | 'callback'
 
@@ -34,6 +35,13 @@ interface InquiryRow {
   } | null
 }
 
+interface VendorInfo {
+  _id?: string
+  name?: string
+  mobile_number?: string
+  email?: string
+}
+
 const InquiryListTable = ({ title, enquiryType }: InquiryListTableProps) => {
   const dispatch = useDispatch()
   const customerAuth = useSelector((state: any) => state.customerAuth)
@@ -53,6 +61,7 @@ const InquiryListTable = ({ title, enquiryType }: InquiryListTableProps) => {
   const customerId = customerDetails?._id
 
   const [rows, setRows] = useState<InquiryRow[]>([])
+  const [vendorMap, setVendorMap] = useState<Record<string, VendorInfo[]>>({})
   const [loading, setLoading] = useState(false)
   const [serviceSearch, setServiceSearch] = useState('')
   const [dateFilter, setDateFilter] = useState('')
@@ -98,6 +107,36 @@ const InquiryListTable = ({ title, enquiryType }: InquiryListTableProps) => {
   useEffect(() => {
     fetchRows()
   }, [customerId, enquiryType])
+
+  useEffect(() => {
+    const loadAssignments = async () => {
+      if (!rows.length) {
+        setVendorMap({})
+        return
+      }
+
+      try {
+        const entries = await Promise.all(
+          rows.map(async (row) => {
+            const response = await fetchInquiryAssignments(row._id)
+            if (response?.status && Array.isArray(response.data)) {
+              const vendors = response.data
+                .map((assignment: any) => assignment.vendor_id)
+                .filter(Boolean)
+              return [row._id, vendors]
+            }
+            return [row._id, []]
+          })
+        )
+
+        setVendorMap(Object.fromEntries(entries))
+      } catch {
+        setVendorMap({})
+      }
+    }
+
+    loadAssignments()
+  }, [rows])
 
   const handleSearch = () => {
     fetchRows({
@@ -157,12 +196,13 @@ const InquiryListTable = ({ title, enquiryType }: InquiryListTableProps) => {
                 <th>Enquiry Date</th>
                 <th>Profile</th>
                 {enquiryType === 'callback' ? <th>Package</th> : null}
+                <th>Vendors</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={enquiryType === 'callback' ? 4 : 3} className="text-center py-4">Loading...</td>
+                  <td colSpan={enquiryType === 'callback' ? 5 : 4} className="text-center py-4">Loading...</td>
                 </tr>
               ) : rows.length > 0 ? (
                 rows.map((row) => {
@@ -170,6 +210,7 @@ const InquiryListTable = ({ title, enquiryType }: InquiryListTableProps) => {
                   const profileImage = row?.business_profile?.profilePicture || '/images/common/user.png'
                   const packageImage = row?.package?.image || '/images/common/cart_img.jpg'
                   const profileId = row?.business_profile?._id
+                  const vendors = vendorMap[row._id] || []
 
                   return (
                     <tr key={row._id}>
@@ -221,12 +262,25 @@ const InquiryListTable = ({ title, enquiryType }: InquiryListTableProps) => {
                           )}
                         </td>
                       ) : null}
+                      <td>
+                        {vendors.length ? (
+                          <ul className="list-unstyled mb-0">
+                            {vendors.map((vendor, index) => (
+                              <li key={`${row._id}-vendor-${vendor?._id || index}`}>
+                                {vendor?.name || 'Vendor'}
+                              </li>
+                            ))}
+                          </ul>
+                        ) : (
+                          <span className="text-muted">Not assigned</span>
+                        )}
+                      </td>
                     </tr>
                   )
                 })
               ) : (
                 <tr>
-                  <td colSpan={enquiryType === 'callback' ? 4 : 3} className="text-center py-4 text-muted">
+                  <td colSpan={enquiryType === 'callback' ? 5 : 4} className="text-center py-4 text-muted">
                     No {enquiryType === 'callback' ? 'callback requests' : 'enquiries'} found.
                   </td>
                 </tr>

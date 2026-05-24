@@ -17,6 +17,7 @@ const RequestCallbackModal = ({ isOpen, onClose, serviceId, packageId, businessP
   const [formData, setFormData] = useState({
     name: '',
     mobile: '',
+    email: '',
     cityId: '',
     city: '',
     eventDate: getTodayDate(),
@@ -25,6 +26,7 @@ const RequestCallbackModal = ({ isOpen, onClose, serviceId, packageId, businessP
   const [inquiryId, setInquiryId] = useState(null);
   const [otp, setOtp] = useState(['', '', '', '']);
   const [maskedMobile, setMaskedMobile] = useState('');
+  const [maskedEmail, setMaskedEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
@@ -65,6 +67,7 @@ const RequestCallbackModal = ({ isOpen, onClose, serviceId, packageId, businessP
           ...prev,
           name: details.name || prev.name,
           mobile: details.mobile_number || prev.mobile,
+          email: details.email || prev.email,
           eventDate: prev.eventDate || getTodayDate()
         }));
       }
@@ -73,6 +76,7 @@ const RequestCallbackModal = ({ isOpen, onClose, serviceId, packageId, businessP
         ...prev,
         name: '',
         mobile: '',
+        email: '',
         cityId: '',
         city: '',
         eventDate: getTodayDate()
@@ -102,12 +106,29 @@ const RequestCallbackModal = ({ isOpen, onClose, serviceId, packageId, businessP
       setError('Please enter a valid 10-digit mobile number');
       return false;
     }
+    if (!formData.email.trim()) {
+      setError('Email is required');
+      return false;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim())) {
+      setError('Please enter a valid email address');
+      return false;
+    }
     if (!formData.eventDate) {
       setError('Event date is required');
       return false;
     }
     return true;
   };
+
+  const isNextDisabled =
+    loading ||
+    !formData.name.trim() ||
+    !formData.mobile.trim() ||
+    !/^[0-9]{10}$/.test(formData.mobile.trim()) ||
+    !formData.eventDate ||
+    !formData.email.trim() ||
+    !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email.trim());
 
   const handleSubmitForm = async (e) => {
     e.preventDefault();
@@ -122,6 +143,7 @@ const RequestCallbackModal = ({ isOpen, onClose, serviceId, packageId, businessP
       const response = await dispatch(createInquiry({
         name: formData.name,
         mobile_number: formData.mobile,
+        email: formData.email.trim() || undefined,
         city_id: formData.cityId || undefined,
         city: formData.city || '',
         event_date: formData.eventDate,
@@ -146,8 +168,10 @@ const RequestCallbackModal = ({ isOpen, onClose, serviceId, packageId, businessP
             setOtp(['', '', '', '']);
             setInquiryId(null);
             setMaskedMobile('');
+            setMaskedEmail('');
             setFormData((prev) => ({
               ...prev,
+              email: '',
               cityId: '',
               city: '',
               eventDate: getTodayDate()
@@ -157,7 +181,16 @@ const RequestCallbackModal = ({ isOpen, onClose, serviceId, packageId, businessP
 
           toast.info('OTP sent successfully!');
           const maskedNum = `+91${formData.mobile.slice(0, 4)}****${formData.mobile.slice(-2)}`;
+          const maskedMail = formData.email
+            ? (() => {
+                const [localPart, domain] = formData.email.split('@');
+                if (!domain) return '';
+                const visible = localPart.slice(0, 2) || localPart.slice(0, 1);
+                return `${visible}${'*'.repeat(Math.max(localPart.length - visible.length, 2))}@${domain}`;
+              })()
+            : '';
           setMaskedMobile(maskedNum);
+          setMaskedEmail(maskedMail);
           setFormStep('otp');
           setOtp(['', '', '', '']);
         } else {
@@ -231,10 +264,11 @@ const RequestCallbackModal = ({ isOpen, onClose, serviceId, packageId, businessP
           setTimeout(() => {
             onClose();
             setFormStep('form');
-            setFormData({ name: '', mobile: '', cityId: '', city: '', eventDate: getTodayDate() });
+            setFormData({ name: '', mobile: '', email: '', cityId: '', city: '', eventDate: getTodayDate() });
             setOtp(['', '', '', '']);
             setInquiryId(null);
             setMaskedMobile('');
+            setMaskedEmail('');
           }, 1500);
         } else {
           // API returned status: false
@@ -316,6 +350,19 @@ const RequestCallbackModal = ({ isOpen, onClose, serviceId, packageId, businessP
                 </div>
 
                 <div className={styles.formGroup}>
+                  <label className={styles.formLabel}>Email*</label>
+                  <input
+                    type="email"
+                    name="email"
+                    className={styles.formControl}
+                    placeholder="Enter Email Address"
+                    value={formData.email}
+                    onChange={handleInputChange}
+                    disabled={loading}
+                  />
+                </div>
+
+                <div className={styles.formGroup}>
                   <label className={styles.formLabel}>City</label>
                   <select
                     name="cityId"
@@ -359,7 +406,7 @@ const RequestCallbackModal = ({ isOpen, onClose, serviceId, packageId, businessP
                 <button 
                   type="submit" 
                   className="btn btn-secondary rounded-5 px-4"
-                  disabled={loading}
+                  disabled={isNextDisabled}
                 >
                   {loading ? 'Sending OTP...' : 'Next'}
                 </button>
@@ -369,7 +416,7 @@ const RequestCallbackModal = ({ isOpen, onClose, serviceId, packageId, businessP
             <div className={styles.otpContainer}>
               <h3 className={styles.otpTitle}>OTP Verification</h3>
               <p className={styles.otpSubtitle}>
-                Enter OTP Code sent to {maskedMobile}
+                Enter OTP Code sent to {maskedEmail || maskedMobile}
               </p>
 
               <form onSubmit={handleSubmitOtp}>
