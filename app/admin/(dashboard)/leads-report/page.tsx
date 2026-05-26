@@ -2,7 +2,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import AdPageLayout from '../../../../components/common/Layouts/AdPageLayout';
 import Table from '../../../../components/common/Table/Table';
-import { fetchReplacementRequests } from '@/services/lead-assignment-api';
+import { deleteReplacementRequest, fetchReplacementRequests } from '@/services/lead-assignment-api';
 import { toast } from 'react-toastify';
 import { useRouter } from 'next/navigation';
 
@@ -55,6 +55,20 @@ const LeadsReport = () => {
     router.push(`/admin/leads-report/view/${id}`);
   };
 
+  const handleDelete = async (id: string) => {
+    try {
+      const res = await deleteReplacementRequest(id);
+      if (res?.status) {
+        toast.success(res?.message || 'Replacement request deleted successfully');
+        loadRequests();
+      } else {
+        toast.error(res?.message || 'Unable to delete replacement request.');
+      }
+    } catch (err: any) {
+      toast.error(err?.message || 'Unable to delete replacement request.');
+    }
+  };
+
   return (
     <AdPageLayout iscreate={false} title="Lead Replacement Requests">
       {loading ? (
@@ -64,9 +78,10 @@ const LeadsReport = () => {
           headerData={headerData}
           bodyData={mappedBodyData}
           onView={handleView}
+          onDelete={handleDelete}
           isview
           isedit={false}
-          isdelete={false}
+          isdelete
           loading={loading}
         />
       )}

@@ -16,7 +16,7 @@ const VendorsList = () => {
     const [bodyData, setBodyData] = useState<any[]>([]);
     const isview = true;
     const isedit = false;
-    const isdelete = false;
+    const isdelete = true;
 
     useEffect(() => {
         (dispatch as any)(fetchAllVendors());

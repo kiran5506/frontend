@@ -4,7 +4,8 @@ import AdPageLayout from '../../../../components/common/Layouts/AdPageLayout'
 import Table from '../../../../components/common/Table/Table'
 import { useDispatch, useSelector } from 'react-redux'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { listFeedback } from '@/services/feedback-api'
+import { deleteFeedback, listFeedback } from '@/services/feedback-api'
+import { toast } from 'react-toastify'
 
 const tableHeader: string[] = ['S.No', 'Name', 'Mobile', 'Email', 'Feedback', 'Status', 'Date', 'Actions']
 
@@ -16,7 +17,7 @@ const FeedbacksList = () => {
   const [bodyData, setBodyData] = useState<any[]>([])
   const isview = true
   const isedit = false
-  const isdelete = false
+  const isdelete = true
 
   const rawType = searchParams?.get('type') || 'vendor'
   const normalizedType = rawType
@@ -65,6 +66,17 @@ const FeedbacksList = () => {
     router.push(`/admin/feedbacks/${id}?type=${normalizedType}`)
   }
 
+  const handleDelete = (id: string) => {
+  ;(dispatch as any)(deleteFeedback(id as any)).then((result: any) => {
+      if (result?.payload?.status) {
+        toast.success(result.payload.message || 'Feedback deleted successfully')
+        ;(dispatch as any)(listFeedback({ type: normalizedType } as any))
+      } else {
+        toast.error(result?.payload?.message || 'Unable to delete feedback')
+      }
+    })
+  }
+
   return (
     <AdPageLayout iscreate={false} title={title} linkHref="#" name="Feedback">
       {loading ? (
@@ -74,6 +86,7 @@ const FeedbacksList = () => {
           headerData={headerData}
           bodyData={bodyData}
           onView={handleView}
+          onDelete={handleDelete}
           isview={isview}
           isedit={isedit}
           isdelete={isdelete}

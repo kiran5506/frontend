@@ -2,7 +2,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
 import AdPageLayout from '../../../../components/common/Layouts/AdPageLayout';
 import Table from '../../../../components/common/Table/Table';
-import { fetchAdminLeads } from '@/services/lead-assignment-api';
+import { deleteAdminLead, fetchAdminLeads } from '@/services/lead-assignment-api';
 import { toast } from 'react-toastify';
 import { useRouter } from 'next/navigation';
 
@@ -49,6 +49,20 @@ const LeadsCollaborations = () => {
 
 	const handleView = (id: string) => {
 		router.push(`/admin/leads-collaborations/view/${id}`);
+	};
+
+	const handleDelete = async (id: string) => {
+		try {
+			const res = await deleteAdminLead(id);
+			if (res?.status) {
+				toast.success(res?.message || 'Lead deleted successfully');
+				fetchLeads();
+			} else {
+				toast.error(res?.message || 'Unable to delete lead');
+			}
+		} catch (err: any) {
+			toast.error(err?.message || 'Unable to delete lead');
+		}
 	};
 
 		const mappedBodyData = useMemo(() => {
@@ -98,9 +112,10 @@ const LeadsCollaborations = () => {
 					headerData={headerData}
 					bodyData={mappedBodyData}
 					onView={handleView}
+					onDelete={handleDelete}
 					isview
 					isedit={false}
-					isdelete={false}
+					isdelete
 					loading={loading}
 				/>
 			)}

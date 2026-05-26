@@ -173,8 +173,10 @@ const endpoints = {
         reviewReplacement: '/lead-assignments/replace-request/{id}/review',
         adminList: '/lead-assignments/admin/leads',
         adminDetails: '/lead-assignments/admin/leads/{inquiryId}',
+        adminDelete: '/lead-assignments/admin/leads/{inquiryId}',
         replacementRequests: '/lead-assignments/admin/replacements',
-        replacementDetails: '/lead-assignments/admin/replacements/{id}'
+        replacementDetails: '/lead-assignments/admin/replacements/{id}',
+        replacementDelete: '/lead-assignments/admin/replacements/{id}'
     },
     BUSINESS_PROFILE: {
         create: '/business-profile/create',

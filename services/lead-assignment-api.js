@@ -59,6 +59,11 @@ export const fetchAdminLeadDetails = async (inquiryId) => {
   return (await axiosInstance.get(url)).data;
 };
 
+export const deleteAdminLead = async (inquiryId) => {
+  const url = endpoints.LEAD_ASSIGNMENTS.adminDelete.replace('{inquiryId}', inquiryId);
+  return (await axiosInstance.delete(url)).data;
+};
+
 export const fetchReplacementRequests = async () => {
   return (await axiosInstance.get(endpoints.LEAD_ASSIGNMENTS.replacementRequests)).data;
 };
@@ -66,4 +71,9 @@ export const fetchReplacementRequests = async () => {
 export const fetchReplacementRequestDetails = async (id) => {
   const url = endpoints.LEAD_ASSIGNMENTS.replacementDetails.replace('{id}', id);
   return (await axiosInstance.get(url)).data;
+};
+
+export const deleteReplacementRequest = async (id) => {
+  const url = endpoints.LEAD_ASSIGNMENTS.replacementDelete.replace('{id}', id);
+  return (await axiosInstance.delete(url)).data;
 };
