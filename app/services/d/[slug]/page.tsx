@@ -29,6 +29,7 @@ const ServiceDetails = () => {
     const [selectedEventId, setSelectedEventId] = useState<string>('all');
     const [loading, setLoading] = useState(false);
     const [reviews, setReviews] = useState<any[]>([]);
+    const [reviewsPage, setReviewsPage] = useState<number>(1);
     const [reviewRating, setReviewRating] = useState<number>(0);
     const [reviewText, setReviewText] = useState<string>('');
     const [isSubmittingReview, setIsSubmittingReview] = useState(false);
@@ -331,6 +332,27 @@ const ServiceDetails = () => {
         return { average, count: reviews.length };
     }, [reviews]);
 
+    const REVIEWS_PER_PAGE = 10;
+    const SHOW_PAGINATION_AFTER = 10;
+    const sortedReviews = useMemo(() => {
+        return [...reviews].sort((a: any, b: any) => {
+            const aTime = new Date(a?.createdAt || a?.updatedAt || 0).getTime();
+            const bTime = new Date(b?.createdAt || b?.updatedAt || 0).getTime();
+            return bTime - aTime;
+        });
+    }, [reviews]);
+    const totalReviewPages = Math.max(1, Math.ceil(sortedReviews.length / REVIEWS_PER_PAGE));
+    const pagedReviews = useMemo(() => {
+        const start = (reviewsPage - 1) * REVIEWS_PER_PAGE;
+        return sortedReviews.slice(start, start + REVIEWS_PER_PAGE);
+    }, [sortedReviews, reviewsPage]);
+
+    useEffect(() => {
+        if (reviewsPage > totalReviewPages) {
+            setReviewsPage(1);
+        }
+    }, [reviewsPage, totalReviewPages]);
+
     useEffect(() => {
         setIsCoverImageLoaded(false);
         const imgEl = coverImageRef.current;
@@ -354,24 +376,26 @@ const ServiceDetails = () => {
         const currentBusinessProfileId = businessProfileId.toString();
         axiosInstance
             .get(endpoints.REVIEW.findByVendorId.replace('{vendor_id}', vendorId), {
-                params: { page: 1, limit: 100 }
+                params: { page: 1, limit: 100, status: 'accepted' }
             })
             .then((response) => {
                 if (response?.data?.status) {
                     const allVendorReviews = response.data.data || [];
                     const filteredByBusinessProfile = allVendorReviews.filter((item: any) => {
                         const profileId = (item?.business_profile_id?._id || item?.business_profile_id || '').toString();
-                        const status = (item?.status || '').toString().toLowerCase();
-                        return profileId === currentBusinessProfileId && status !== 'rejected';
+                        return profileId === currentBusinessProfileId;
                     });
                     setReviews(filteredByBusinessProfile);
+                    setReviewsPage(1);
                 } else {
                     setReviews([]);
+                    setReviewsPage(1);
                 }
             })
             .catch((error) => {
                 console.error('Error fetching reviews:', error);
                 setReviews([]);
+                setReviewsPage(1);
             });
     }, [vendor?._id, businessProfile?.vendor_id, businessProfileId]);
 
@@ -406,11 +430,16 @@ const ServiceDetails = () => {
                         {
                             rating: reviewRating,
                             review: reviewText,
-                            status: 'pending',
-                            business_profile_id: businessProfileId
+                            status: 'accepted',
+                            business_profile_id: businessProfileId,
+                            customer_id: {
+                                name: customerDetails?.name || 'Customer',
+                                profile_image: customerDetails?.profile_image || customerDetails?.profilePicture || null
+                            }
                         },
                         ...prev
                     ]));
+                    setReviewsPage(1);
                     setReviewRating(0);
                     setReviewText('');
                 } else {
@@ -863,27 +892,89 @@ const ServiceDetails = () => {
                         <div className="sdf ">
                             <div className="col-md-12">
                             <div className="row testimonials-carousal">
-                                <div className="col-12 col-md-12 col-lg-6">
-                                    <div className="row testm-box">
-                                        <h3>
-                                        
-                                        <Image
-                                            src="/images/common/testimonials_pic.jpg"
-                                            alt=""
-                                            width={150}
-                                            height={150}
-                                        />
-                                        &nbsp; Name Here
-                                        </h3>
-                                        <p>
-                                        
-                                        Lorem ipsum dolor sit amet, consectetur adipiscing
-                                        elit. Phasellus lacinia ante quis aliquet bibendum.
-                                        Lorem ipsum
-                                        </p>
-                                    </div>
-                                </div>
+                                {pagedReviews.length > 0 ? (
+                                    pagedReviews.map((item: any, index: number) => {
+                                        const customerName = item?.customer_id?.name || 'Customer';
+                                        const customerProfileImage = toProxy(
+                                            item?.customer_id?.profile_image || item?.customer_id?.profilePicture || ''
+                                        ) || '/images/common/testimonials_pic.jpg';
+                                        const ratingValue = Number(item?.rating || 0);
+                                        const safeRating = Number.isFinite(ratingValue)
+                                            ? Math.max(0, Math.min(5, Math.round(ratingValue)))
+                                            : 0;
+
+                                        return (
+                                            <div className="col-12 col-md-12 col-lg-6 mb-3" key={`${item?._id || 'review'}-${index}`}>
+                                                <div className="row testm-box">
+                                                    <h3>
+                                                        <img
+                                                            src={customerProfileImage}
+                                                            alt=""
+                                                            style={{
+                                                                width: '58px',
+                                                                height: '58px',
+                                                                borderRadius: '50%',
+                                                                objectFit: 'cover'
+                                                            }}
+                                                            onError={(event) => {
+                                                                const target = event.currentTarget;
+                                                                target.src = '/images/common/testimonials_pic.jpg';
+                                                            }}
+                                                        />
+                                                        &nbsp; {customerName}
+                                                    </h3>
+                                                    <p className="mb-1">{'★'.repeat(safeRating)}{'☆'.repeat(5 - safeRating)}</p>
+                                                    <p>{item?.review || 'No review text provided.'}</p>
+                                                </div>
+                                            </div>
+                                        );
+                                    })
+                                ) : (
+                                    <p className="text-muted">No reviews available for this service.</p>
+                                )}
                             </div>
+                            {sortedReviews.length > SHOW_PAGINATION_AFTER ? (
+                                <div className="d-flex justify-content-center mt-3">
+                                    <nav aria-label="Reviews pagination">
+                                        <ul className="pagination mb-0">
+                                            <li className={`page-item ${reviewsPage === 1 ? 'disabled' : ''}`}>
+                                                <button
+                                                    type="button"
+                                                    className="page-link"
+                                                    onClick={() => setReviewsPage((prev) => Math.max(1, prev - 1))}
+                                                    disabled={reviewsPage === 1}
+                                                >
+                                                    Prev
+                                                </button>
+                                            </li>
+                                            {Array.from({ length: totalReviewPages }, (_, idx) => idx + 1).map((pageNo) => (
+                                                <li
+                                                    key={pageNo}
+                                                    className={`page-item ${reviewsPage === pageNo ? 'active' : ''}`}
+                                                >
+                                                    <button
+                                                        type="button"
+                                                        className="page-link"
+                                                        onClick={() => setReviewsPage(pageNo)}
+                                                    >
+                                                        {pageNo}
+                                                    </button>
+                                                </li>
+                                            ))}
+                                            <li className={`page-item ${reviewsPage === totalReviewPages ? 'disabled' : ''}`}>
+                                                <button
+                                                    type="button"
+                                                    className="page-link"
+                                                    onClick={() => setReviewsPage((prev) => Math.min(totalReviewPages, prev + 1))}
+                                                    disabled={reviewsPage === totalReviewPages}
+                                                >
+                                                    Next
+                                                </button>
+                                            </li>
+                                        </ul>
+                                    </nav>
+                                </div>
+                            ) : null}
                             </div>
                         </div>
                         <div className="text-start mt-3" id="add-your-review">
