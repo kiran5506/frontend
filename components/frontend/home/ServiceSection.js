@@ -139,7 +139,7 @@ const ServiceSection = () => {
                               <div className="flex-grow-1 ms-0 ms-md-3">
                                   <h2>
                                       <span className="counter" data-start={item.start} data-end={item.value} data-duration={item.duration}>
-                                      {item.value}
+                                      {item.value}+
                                       </span>
                                   </h2>
                                   <p>{item.label}</p>

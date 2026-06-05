@@ -10,9 +10,10 @@ import React from 'react'
  *    imagePath?: string;
  *  };
  *  onSubscribe?: (pkg?: any) => void | Promise<void>;
+ *  highlighted?: boolean;
  * }} props
  */
-const Package = ({ pkg, onSubscribe }) => {
+const Package = ({ pkg, onSubscribe, highlighted = false }) => {
     const rawImage = pkg?.imagePath || '/assets/vendor/img/packages_img.jpg';
     const imageSrc = rawImage && rawImage.startsWith('http')
         ? `/api/image-proxy?url=${encodeURIComponent(rawImage)}`
@@ -23,7 +24,14 @@ const Package = ({ pkg, onSubscribe }) => {
 
     return (
         <div className="col-md-4 mb-4">
-            <div className="package_item active text-center">
+            <div
+                className={`package_item active text-center ${highlighted ? 'highlighted-package' : ''}`}
+                style={{
+                    border: highlighted ? '2px solid #f7701d' : undefined,
+                    boxShadow: highlighted ? '0 4px 14px rgba(247,112,29,0.12)' : undefined,
+                    backgroundColor: highlighted ? '#faf3eb' : undefined,
+                }}
+            >
                 <img src={imageSrc} alt={packageName} width={150} />
                 <h5>{packageName}</h5>
                 <h2>₹{amount}</h2>

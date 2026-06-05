@@ -21,6 +21,7 @@ const Services = () => {
     const vendorId = searchParams?.get('vendor_id') || '';
     const budgetSort = searchParams?.get('budget_sort') || '';
     const discountSort = searchParams?.get('discount_sort') || '';
+    const priority = searchParams?.get('priority') || 'recent';
     const ratingFilter = searchParams?.get('rating') || '';
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [serviceDetails, setServiceDetails] = useState<any>(null);
@@ -59,7 +60,7 @@ const Services = () => {
     useEffect(() => {
         setTopPage(1);
         setRegularPage(1);
-    }, [serviceId, cityId, vendorId, budgetSort, discountSort, ratingFilter]);
+    }, [serviceId, cityId, vendorId, budgetSort, discountSort, ratingFilter, priority]);
 
     useEffect(() => {
         if (!serviceId) return;
@@ -68,11 +69,12 @@ const Services = () => {
         query.set('type', 'top');
     query.set('page', String(topPage));
     query.set('limit', '12');
-        if (cityId) query.set('city_id', cityId);
-        if (vendorId) query.set('vendor_id', vendorId);
-        if (budgetSort) query.set('budget_sort', budgetSort);
-        if (discountSort) query.set('discount_sort', discountSort);
-        if (ratingFilter) query.set('rating', ratingFilter);
+    if (cityId) query.set('city_id', cityId);
+    if (vendorId) query.set('vendor_id', vendorId);
+    if (budgetSort) query.set('budget_sort', budgetSort);
+    if (discountSort) query.set('discount_sort', discountSort);
+    if (priority) query.set('priority', priority);
+    if (ratingFilter) query.set('rating', ratingFilter);
         const endpoint = `${endpoints.SERVICES.findByIdWithProfiles.replace('{id}', serviceId)}${query.toString() ? `?${query.toString()}` : ''}`;
 
         axiosInstance
@@ -96,7 +98,7 @@ const Services = () => {
                 setTopTotalPages(0);
             })
             .finally(() => setLoading(false));
-    }, [serviceId, cityId, vendorId, budgetSort, discountSort, ratingFilter, topPage]);
+    }, [serviceId, cityId, vendorId, budgetSort, discountSort, ratingFilter, priority, topPage]);
 
     useEffect(() => {
         if (!serviceId) return;
@@ -105,11 +107,12 @@ const Services = () => {
         query.set('type', 'regular');
     query.set('page', String(regularPage));
     query.set('limit', '12');
-        if (cityId) query.set('city_id', cityId);
-        if (vendorId) query.set('vendor_id', vendorId);
-        if (budgetSort) query.set('budget_sort', budgetSort);
-        if (discountSort) query.set('discount_sort', discountSort);
-        if (ratingFilter) query.set('rating', ratingFilter);
+    if (cityId) query.set('city_id', cityId);
+    if (vendorId) query.set('vendor_id', vendorId);
+    if (budgetSort) query.set('budget_sort', budgetSort);
+    if (discountSort) query.set('discount_sort', discountSort);
+    if (priority) query.set('priority', priority);
+    if (ratingFilter) query.set('rating', ratingFilter);
 
         const endpoint = `${endpoints.SERVICES.findByIdWithProfiles.replace('{id}', serviceId)}${query.toString() ? `?${query.toString()}` : ''}`;
 
@@ -129,7 +132,7 @@ const Services = () => {
                 setRegularTotalPages(0);
             })
             .finally(() => setRegularLoading(false));
-    }, [serviceId, cityId, vendorId, budgetSort, discountSort, ratingFilter, regularPage]);
+    }, [serviceId, cityId, vendorId, budgetSort, discountSort, ratingFilter, priority, regularPage]);
 
     const handleFilterChange = (key: string, value: string) => {
         const params = new URLSearchParams(searchParams?.toString() || '');

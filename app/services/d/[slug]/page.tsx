@@ -250,21 +250,66 @@ const ServiceDetails = () => {
             .filter(Boolean);
     }, [filteredPackages, selectedCityId]);
 
+    // Build entries that represent the lowest pricing available for each package
+    // (across all cityPricing entries). We intentionally ignore the selected city
+    // so the lowest package is calculated globally. Each entry keeps package
+    // reference plus numeric offer/market values so we can pick the single
+    // lowest-priced package and compute its discount.
     const pricingEntries = useMemo(() => {
         return packageCards
-            .map((item: any) => item.pricing)
-            .filter((pricing: any) => pricing)
-            .map((pricing: any) => ({
-                offer: Number(pricing?.offerPrice),
-                market: Number(pricing?.marketPrice),
-            }))
-            .filter((pricing: any) => Number.isFinite(pricing.offer) && pricing.offer > 0);
+            .map((item: any) => {
+                const allPricing = Array.isArray(item.pkg?.cityPricing) ? item.pkg.cityPricing : [];
+
+                const validPricings = allPricing
+                    .map((p: any) => ({ pricing: p, offer: Number(p?.offerPrice), market: Number(p?.marketPrice) }))
+                    .filter((p: any) => Number.isFinite(p.offer) && p.offer > 0);
+
+                if (validPricings.length === 0) return null;
+
+                const lowestForPackage = validPricings.reduce((low: any, cur: any) => {
+                    if (!low) return cur;
+
+                    if (cur.offer < low.offer) return cur;
+                    if (cur.offer > low.offer) return low;
+
+                    // offers are equal -> pick the one with the lower discount
+                    const safeCurMarket = Number.isFinite(cur.market) && cur.market > 0 ? cur.market : Number.POSITIVE_INFINITY;
+                    const safeLowMarket = Number.isFinite(low.market) && low.market > 0 ? low.market : Number.POSITIVE_INFINITY;
+
+                    const curDiscount = safeCurMarket === Number.POSITIVE_INFINITY ? Number.POSITIVE_INFINITY : (safeCurMarket - cur.offer) / safeCurMarket;
+                    const lowDiscount = safeLowMarket === Number.POSITIVE_INFINITY ? Number.POSITIVE_INFINITY : (safeLowMarket - low.offer) / safeLowMarket;
+
+                    return curDiscount < lowDiscount ? cur : low;
+                }, null);
+
+                return {
+                    pkg: item.pkg,
+                    packageId: item.packageId,
+                    pricing: lowestForPackage?.pricing || null,
+                    offer: lowestForPackage?.offer,
+                    market: lowestForPackage?.market,
+                };
+            })
+            .filter(Boolean);
     }, [packageCards]);
 
+    // Pick the single package entry with the lowest offer across packages
     const lowestPricing = useMemo(() => {
+        if (!pricingEntries || pricingEntries.length === 0) return null;
         return pricingEntries.reduce((lowest: any, current: any) => {
             if (!lowest) return current;
-            return current.offer < lowest.offer ? current : lowest;
+
+            if (current.offer < lowest.offer) return current;
+            if (current.offer > lowest.offer) return lowest;
+
+            // offers are equal -> pick the one with the smaller discount
+            const safeCurrMarket = Number.isFinite(current.market) && current.market > 0 ? current.market : Number.POSITIVE_INFINITY;
+            const safeLowMarket = Number.isFinite(lowest.market) && lowest.market > 0 ? lowest.market : Number.POSITIVE_INFINITY;
+
+            const currDiscount = safeCurrMarket === Number.POSITIVE_INFINITY ? Number.POSITIVE_INFINITY : (safeCurrMarket - current.offer) / safeCurrMarket;
+            const lowDiscount = safeLowMarket === Number.POSITIVE_INFINITY ? Number.POSITIVE_INFINITY : (safeLowMarket - lowest.offer) / safeLowMarket;
+
+            return currDiscount < lowDiscount ? current : lowest;
         }, null);
     }, [pricingEntries]);
 
@@ -628,7 +673,7 @@ const ServiceDetails = () => {
                             </button>
                             </div>
                             <h2>
-                            {lowestOffer ? `₹ ${formatPrice(lowestOffer)}` : '₹ 6,000'}
+                            {lowestOffer ? `₹ ${formatPrice(lowestOffer)}` : '₹ 0'}
                             <span style={{ fontSize: 12 }}> /Onwards</span>
                             {discountPercent ? (
                                 <span style={{ fontSize: 12, marginLeft: 5 }} className="diso">

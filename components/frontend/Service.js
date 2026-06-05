@@ -89,7 +89,7 @@ const Service = ({ profile, serviceDetails, isWishlisted, onToggleWishlist }) =>
               </div>
             </div>
             <h1>
-              {lowestOfferPrice ? `₹ ${formatPrice(lowestOfferPrice)}` : "₹ 700"} <span>/Onwards</span>
+              {lowestOfferPrice ? `₹ ${formatPrice(lowestOfferPrice)}` : "₹ 0"} <span>/Onwards</span>
             </h1>
             <img
               src={normalizedImageSrc}

@@ -3,6 +3,7 @@ import React, { useEffect, useMemo } from 'react'
 import Script from 'next/script'
 import { useDispatch, useSelector } from 'react-redux'
 import { leadpackageList } from '@/services/leadpackage-api'
+import { getTransactions } from '@/services/payment-api'
 import { createPaymentOrder, verifyPayment } from '@/services/payment-api'
 import Package from '../../../../components/vendor/Package'
 import { toast } from 'react-toastify'
@@ -18,6 +19,27 @@ const LeadPackages = () => {
 
   const { LeadPackages, loading } = useSelector((state: any) => state.leadpackage);
   const packages = useMemo(() => LeadPackages || [], [LeadPackages]);
+  const [latestPurchasedPackageId, setLatestPurchasedPackageId] = React.useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchLatestTxn = async () => {
+      if (!vendorId) return;
+      try {
+        const res = await getTransactions(vendorId);
+        if (res?.status && Array.isArray(res.data?.transactions)) {
+          // find the latest paid transaction that has a leadPackageId
+          const paidTxns = res.data.transactions.filter((t: any) => t.status === 'paid' && t.leadPackageId && t.leadPackageId._id);
+          if (paidTxns.length === 0) return;
+          paidTxns.sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+          setLatestPurchasedPackageId(paidTxns[0].leadPackageId._id);
+        }
+      } catch (err) {
+        // ignore
+      }
+    };
+
+    fetchLatestTxn();
+  }, [vendorId]);
 
   const handleSubscribe = async (pkg: any) => {
     if (!vendorId) {
@@ -104,7 +126,12 @@ const LeadPackages = () => {
           <p>Loading...</p>
         ) : packages.length > 0 ? (
           packages.map((pkg: any) => (
-            <Package key={pkg._id} pkg={pkg} onSubscribe={handleSubscribe} />
+            <Package
+              key={pkg._id}
+              pkg={pkg}
+              onSubscribe={handleSubscribe}
+              highlighted={latestPurchasedPackageId === pkg._id}
+            />
           ))
         ) : (
           <p>No packages available.</p>

@@ -503,8 +503,9 @@ const Header = () => {
                             </>
                         )}
                     <Link
-                        href="vendor"
+                        href="/vendor"
                         target="_blank"
+                        rel="noopener noreferrer"
                         className="btn btn-primary d-block d-lg-none mt-5 mx-2"
                     >
                         <svg
@@ -566,8 +567,9 @@ const Header = () => {
                     </span>
                     {!isAuthenticated && (
                     <Link
-                    href="vendor"
+                    href="/vendor"
                     target="_blank"
+                    rel="noopener noreferrer"
                     className="btn btn-primary d-none d-lg-inline-block"
                     >
                     <svg
