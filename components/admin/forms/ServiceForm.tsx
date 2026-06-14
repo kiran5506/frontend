@@ -10,6 +10,8 @@ import { createService, serviceById, serviceEdit } from '@/services/service-api'
 import { resetCurrentService } from '@/redux/features/service-slice';
 import { categoryList } from '@/services/category-api';
 import { skillList } from '@/services/skill-api';
+import MultiSelectWithPills, { OptionType } from '@/components/MultiSelectWithPills';
+import { eventList } from '@/services/event-api';
 
 interface ServiceFormProps {
   id?: string; // optional because create & edit
@@ -21,9 +23,11 @@ const ServiceForm = ({ id }: ServiceFormProps) => {
     const { currentService } = useSelector((state: any) => state.service);
     const { Categories, loading: categoriesLoading } = useSelector((state: any) => state.category);
     const { Skills, loading: skillsLoading } = useSelector((state: any) => state.skill);
+    const { Events, loading: eventsLoading } = useSelector((state: any) => state.event);
 
     const [serviceImg, setServiceImg] = useState("");
     const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
+    const [selectedEvents, setSelectedEvents] = useState<OptionType[]>([]);
 
     const validationSchema = Yup.object().shape({
         serviceName: Yup.string().required("Service Name is required"),
@@ -31,6 +35,7 @@ const ServiceForm = ({ id }: ServiceFormProps) => {
         portfolioType: Yup.string().required("Portfolio is required"),
         image: Yup.mixed().optional(),
         skills: Yup.string().optional(),
+        event_ids: Yup.array().of(Yup.string()).optional(),
         description: Yup.string().optional(),
     })
 
@@ -52,6 +57,10 @@ const ServiceForm = ({ id }: ServiceFormProps) => {
         }
     }, [id, dispatch])
 
+    useEffect(() => {
+        (dispatch as any)(eventList());
+    }, [dispatch]); 
+
     // Fetch categories on component mount
     useEffect(() => {
         (dispatch as any)(categoryList()).catch((error: any) => {
@@ -65,29 +74,66 @@ const ServiceForm = ({ id }: ServiceFormProps) => {
         });
     }, [dispatch])
 
-    // Populate form when currentService changes
+    // Populate form when currentService or Events change (so we can map event ids to options)
     useEffect(() => {
-        if(currentService && id) {
+        if (currentService && id) {
             const data = currentService.data || currentService;
+            console.log('Current Service Data:', data);
             setValue('serviceName', data.serviceName || '');
             setValue('serviceType', data.serviceType || '');
             setValue('portfolioType', data.portfolioType || '');
             setValue('description', data.description || '');
             setServiceImg(data.image);
-            
+
             // Parse skills from comma-separated string to array
             if (data.skills) {
-                const skillsArray = typeof data.skills === 'string' 
+                const skillsArray = typeof data.skills === 'string'
                     ? data.skills.split(',').map((skill: string) => skill.trim())
-                    : Array.isArray(data.skills) 
-                    ? data.skills 
-                    : [];
+                    : Array.isArray(data.skills)
+                        ? data.skills
+                        : [];
                 setSelectedSkills(skillsArray);
             } else {
                 setSelectedSkills([]);
             }
+
+            // Determine event IDs from possible shapes in service data
+            let eventIds: string[] = Array.isArray(data.event_ids)
+                ? data.event_ids
+                : data.event_id
+                    ? [data.event_id]
+                    : [];
+
+            console.log('Initial Event IDs from service data:', eventIds);
+            console.log('Available Events:', Events);
+
+            // If no explicit ids, try to infer from event names/categories
+            if (eventIds.length === 0 && Events && Events.length > 0) {
+                console.log('No event_ids found in service data, attempting to match by event names...');
+                const eventNames = Array.isArray(data.eventCategories)
+                    ? data.eventCategories
+                    : data.eventCategory
+                        ? [data.eventCategory]
+                        : [];
+
+                console.log('Event Names from service data:', eventNames);
+
+                eventIds = Events.filter((ev: any) => eventNames.includes(ev.eventName)).map((ev: any) => ev._id);
+            }
+
+            // Set form value for event_ids (array of ids)
+            setValue('event_ids', eventIds || []);
+
+            // Map eventIds to MultiSelect options and set selectedEvents so the UI shows them
+            if (Events && Events.length > 0 && Array.isArray(eventIds) && eventIds.length > 0) {
+                const selected = Events.filter((ev: any) => eventIds.includes(ev._id)).map((ev: any) => ({ value: ev._id, label: ev.eventName } as OptionType));
+                setSelectedEvents(selected);
+            } else {
+                // if no events selected, clear
+                setSelectedEvents([]);
+            }
         }
-    }, [currentService, setValue, id])
+    }, [currentService, setValue, id, Events]);
 
     const onSubmit = async (data: any) => {
         try {
@@ -106,7 +152,7 @@ const ServiceForm = ({ id }: ServiceFormProps) => {
             if (selectedSkills.length > 0) {
                 formData.append('skills', selectedSkills.join(', '));
             }
-            
+
             console.log(id);
             const action = id ? serviceEdit({ id, formData } as any) : createService(formData as any);
             const response = await (dispatch as any)(action as any).unwrap();
@@ -163,6 +209,25 @@ const ServiceForm = ({ id }: ServiceFormProps) => {
                 </select>
                 {errors.serviceType && <p className="text-danger">{errors.serviceType.message}</p>}
             </div>
+            <div className="col-12">
+            <MultiSelectWithPills
+                id="event_ids"
+                label="Select Events"
+                options={Events?.map((event: any) => ({
+                    value: event._id,
+                    label: event.eventName
+                })) || []}
+                placeholder={eventsLoading ? 'Loading events...' : 'Select events'}
+                value={selectedEvents}
+                onChange={(value) => {
+                    const selected = (value as OptionType[]) || [];
+                    setSelectedEvents(selected);
+                    setValue('event_ids', selected.map((option) => String(option.value)), { shouldValidate: true });
+                }}
+            />
+            <input type="hidden" {...register('event_ids')} />
+            {errors.event_ids && <p className="text-danger">{errors.event_ids.message as string}</p>}
+        </div>
 
             {/* Portfolio */}
             <div className="col-12">

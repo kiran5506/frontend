@@ -32,16 +32,7 @@ const EventForm = ({ id }: EventFormProps) => {
         service_ids: Yup.array()
             .of(Yup.string().required())
             .min(1, "Service category is required"),
-        image: Yup.mixed()
-        .test(
-        'required',
-        'Image is required',
-        (value) => {
-            if (id) return true; // Skip validation on edit
-            if (!value) return false;
-            if (!(value instanceof FileList)) return false;
-            return value.length > 0;
-        }),
+        image: Yup.mixed().nullable()
     })
 
     const {
@@ -193,7 +184,7 @@ const EventForm = ({ id }: EventFormProps) => {
             {errors.service_ids && <p className="text-danger">{errors.service_ids.message as string}</p>}
         </div>
 
-        <div className="col-12">
+        {/* <div className="col-12">
         <label htmlFor="image" className="form-label">
             Event Image
         </label>
@@ -216,7 +207,7 @@ const EventForm = ({ id }: EventFormProps) => {
                 style={{ border: "1px solid #ddd7d7", width: "120px", height: '80px', marginTop: '6px'}}
             />
         )}
-        </div>
+        </div> */}
 
         <div className="col-12">
         <label className="form-label d-block">Skills</label>

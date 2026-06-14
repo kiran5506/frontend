@@ -14,6 +14,7 @@ import * as Yup from 'yup';
 import { toast } from 'react-toastify';
 import { useRouter } from 'next/navigation';
 import Select from 'react-select';
+import MultiSelectWithPills, { OptionType } from '@/components/MultiSelectWithPills';
 
 const BusinessProfilePage = () => {
     const dispatch = useDispatch();
@@ -44,11 +45,12 @@ const BusinessProfilePage = () => {
 
     const [selectedSkills, setSelectedSkills] = useState<string[]>([]);
     const [selectedLanguages, setSelectedLanguages] = useState<string[]>([]);
+    const [selectedCities, setSelectedCities] = useState<any[]>([]);
     
     const { Services, loading, error } = useSelector((state: any) => state.service);
     const { Skills } = useSelector((state: any) => state.skill);
     const { Languages } = useSelector((state: any) => state.language);
-    const { Cities } = useSelector((state: any) => state.city);
+    const { Cities, loading: citiesLoading } = useSelector((state: any) => state.city);
     const { loading: profileLoading } = useSelector((state: any) => state.businessProfile);
 
     const cityOptions = (Cities || []).map((city: any) => ({
@@ -85,6 +87,7 @@ const BusinessProfilePage = () => {
     const validationSchema = Yup.object().shape({
         service_id: Yup.string().required('Service category is required'),
         businessName: Yup.string().required('Business name is required'),
+        selectedCities: Yup.string().optional(),
         doorNumber: Yup.string().required('Door number is required'),
         area: Yup.string().optional(),
         landmark: Yup.string().optional(),
@@ -151,6 +154,7 @@ const BusinessProfilePage = () => {
             formData.append('city', data.city);
             formData.append('state', data.state);
             formData.append('pincode', data.pincode);
+            formData.append('selectedCities', JSON.stringify(selectedCities.map(city => city.value).join(', ')));
             
             // Add skills and languages as comma-separated strings
             formData.append('skills', selectedSkills.join(', '));
@@ -206,7 +210,7 @@ const BusinessProfilePage = () => {
                             <option value="">Choose Service</option>
                             {Services.map((service: any) => (
                                 <option key={service._id} value={service._id}>
-                                    {service.serviceName} - {service.serviceType}
+                                    {service.serviceName}
                                 </option>
                             ))}
                         </select>
@@ -239,6 +243,26 @@ const BusinessProfilePage = () => {
                         />
                         {errors.profilePicture && <p className="text-danger">{errors.profilePicture.message}</p>}
                     </div>
+                    <div className="col-md-12">
+                        <MultiSelectWithPills
+                            id="selected_city_ids"
+                            label="Select Cities"
+                            options={Cities?.map((city: any) => ({
+                                value: city._id,
+                                label: city.cityName
+                            })) || []}
+                            placeholder={citiesLoading ? 'Loading cities...' : 'Select cities'}
+                            value={selectedCities}
+                            onChange={(value) => {
+                                const selected = (value as OptionType[]) || [];
+                                setSelectedCities(selected);
+                            }}
+                        />
+                        <input type="hidden" {...register('selectedCities')} />
+                        {errors.selectedCities && <p className="text-danger">{errors.selectedCities.message as string}</p>}
+                    </div>
+
+                    
                     <div className="col-md-12 mt-5 mb-0 pb-0">
                         <h5>Registered Address (Same as registered document)</h5>
                     </div>

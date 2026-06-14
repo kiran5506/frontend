@@ -123,6 +123,10 @@ const ServiceSection = () => {
     flex: '0 0 auto',
   };
 
+  const secondaryServices = Services.filter(
+    service => service.serviceType === 'Secondary'
+  );
+
   return (
     <section className="services-section bg-gray-color" id="services">
         <div className="container">
@@ -153,7 +157,7 @@ const ServiceSection = () => {
             </div>
             <div className="services-list pt-4 pt-lg-0 pb-2">
                 <div className="main-title d-flex justify-content-between align-items-center ">
-                    <h2>Main Services</h2>
+                    <h2>Services</h2>
                 </div>
                 <div className="services-list-sec pdtopp" style={{width: '100%'}}> 
                   {loading ? (
@@ -182,38 +186,40 @@ const ServiceSection = () => {
                   )}
                 </div>
             </div>
-            
-            <div className="services-list pt-3 pt-lg-0 pb-5">
-                <div className="main-title d-flex justify-content-between align-items-center ">
-                    <h2>Secondary Services</h2>
-                </div>
-                <div className="services-list-sec pdtopp">
-                  {loading ? (
-                    <SkeletonTheme baseColor="#f3f3f3" highlightColor="#e0e0e0">
-                      <div style={{ display: 'flex', gap: '20px', overflowX: 'auto', padding: '10px' }}>
-                        {Array.from({ length: 6 }).map((_, index) => (
-                            <div key={index} style={skeletonCardStyle}>
-                              <Skeleton width="100%" height="clamp(180px, 52vw, 243px)" />
-                            </div>
-                        ))}
-                      </div>
-                    </SkeletonTheme>
-                  ) : (
-                    <Slider {...sliderSettings}>
-                        {Services.map(service => service.serviceType === 'Secondary' && (
-                            <div className="item text-center" key={service._id}>
-                                <Link href={`services/${createSlug(service.serviceName)}-${service._id}?query_text=${service.serviceName}&query_type=Service`}>
-                                    <div className="box2">
-                    <Image src={`${service.imagePath ? `/api/image-proxy?url=${encodeURIComponent(service.imagePath)}` : '/images/common/noimage.jpg'}`} alt={service.serviceName} width={196} height={243} style={serviceImageStyle} />
-                                        <span className="service-name">{service.serviceName}</span>
-                                    </div>
-                                </Link>
-                            </div>
-                        ))}
-                    </Slider>
-                  )}
-                </div>
-            </div>
+
+            {secondaryServices.length > 0 && (
+              <div className="services-list pt-3 pt-lg-0 pb-5">
+                  <div className="main-title d-flex justify-content-between align-items-center ">
+                      <h2>Secondary Services</h2>
+                  </div>
+                  <div className="services-list-sec pdtopp">
+                {loading ? (
+                  <SkeletonTheme baseColor="#f3f3f3" highlightColor="#e0e0e0">
+                    <div style={{ display: 'flex', gap: '20px', overflowX: 'auto', padding: '10px' }}>
+                      {Array.from({ length: 6 }).map((_, index) => (
+                          <div key={index} style={skeletonCardStyle}>
+                            <Skeleton width="100%" height="clamp(180px, 52vw, 243px)" />
+                          </div>
+                      ))}
+                    </div>
+                  </SkeletonTheme>
+                ) : (
+                  <Slider {...sliderSettings}>
+                      {Services.map(service => service.serviceType === 'Secondary' && (
+                          <div className="item text-center" key={service._id}>
+                              <Link href={`services/${createSlug(service.serviceName)}-${service._id}?query_text=${service.serviceName}&query_type=Service`}>
+                                  <div className="box2">
+                                      <Image src={`${service.imagePath ? `/api/image-proxy?url=${encodeURIComponent(service.imagePath)}` : '/images/common/noimage.jpg'}`} alt={service.serviceName} width={196} height={243} style={serviceImageStyle} />
+                                      <span className="service-name">{service.serviceName}</span>
+                                  </div>
+                              </Link>
+                          </div>
+                      ))}
+                  </Slider>
+                )}
+              </div>
+          </div>
+            )}
         </div>
     </section>
   )

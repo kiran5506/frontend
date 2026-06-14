@@ -64,7 +64,7 @@ const ServicesLanding = () => {
           <>
             <div className="services-list pt-2 pb-3">
               <div className="main-title d-flex justify-content-between align-items-center mb-3">
-                <h2>{cityId ? `Main Services from ${cityName}` : 'Main Services'}</h2>
+                <h2>{cityId ? `Services from ${cityName}` : 'Services'}</h2>
               </div>
               <div className="services-list-sec pdtopp">
                 {servicesByType.primary.length > 0 ? (
@@ -93,7 +93,8 @@ const ServicesLanding = () => {
                 )}
               </div>
             </div>
-
+            
+            {servicesByType.secondary.length > 0 ? (
             <div className="services-list pt-2 pb-4">
               <div className="main-title d-flex justify-content-between align-items-center mb-3">
                 <h2>{cityId ? `Secondary Services form ${cityName}` : 'Secondary Services'}</h2>
@@ -125,6 +126,7 @@ const ServicesLanding = () => {
                 )}
               </div>
             </div>
+            ) : null}
           </>
         ) : (
           <p className="text-muted">No services found.</p>

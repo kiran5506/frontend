@@ -5,6 +5,8 @@ import Link from 'next/link'
 import React, { useEffect } from 'react'
 import { useDispatch, useSelector } from 'react-redux';
 import { toast } from 'react-toastify';
+import { useRouter } from 'next/navigation';
+
 
 interface ViewProps {
   id?: string; // optional because create & edit
@@ -13,6 +15,7 @@ interface ViewProps {
 
 const VendorViewPage = ({id, showApprovalActions = false}: ViewProps) => {
     const dispatch = useDispatch();
+    const router = useRouter();
     const { currentVendor } = useSelector((state: any) => state.vendor);
         const { businessProfiles } = useSelector((state: any) => state.businessProfile);
     const resolveImageUrl = React.useCallback((url?: string) => {
@@ -102,6 +105,11 @@ const VendorViewPage = ({id, showApprovalActions = false}: ViewProps) => {
             if (result?.payload?.status) {
                 toast.success(result.payload.message || `Vendor ${status} successfully.`);
                 (dispatch as any)(viewVendorById(id as any));
+                if (status === 'accepted') {
+                    router.push('/admin/vendor-approved');
+                } else {
+                    router.push('/admin/vendor-rejected');
+                }
             } else {
                 toast.error(result?.payload?.message || 'Unable to update vendor status.');
             }
@@ -135,7 +143,11 @@ const VendorViewPage = ({id, showApprovalActions = false}: ViewProps) => {
                                                 {(profile?.serviceName || profile?.service_id?.serviceName) && (
                                                     <p className="mb-1">
                                                         {profile?.serviceName || profile?.service_id?.serviceName}
-                                                        {profile?.serviceType || profile?.service_id?.serviceType ? ` (${profile?.serviceType || profile?.service_id?.serviceType})` : ''}
+                                                    </p>
+                                                )}
+                                                {profile?.selectedCityNames && profile.selectedCityNames.length > 0 && (
+                                                    <p className="mb-1">
+                                                        Selected Cities: {profile.selectedCityNames.map((city: any) => city).join(', ')}
                                                     </p>
                                                 )}
                                                 {addressText && <p className="mb-1">Address: {addressText}</p>}

@@ -60,6 +60,10 @@ const VendorLandingPage = () => {
         return name.toLowerCase().replace(/\s+/g, '-');
     };
 
+    const secondaryServices = Services.filter(
+        service => service.serviceType === 'Secondary'
+    );
+
     return (
     <>
         {/* Hero Banner */}
@@ -259,7 +263,7 @@ const VendorLandingPage = () => {
             <div className="container">
                 <div className="services-list pt-0  pt-lg-0 pb-5">
                     <div className="main-title d-flex justify-content-between align-items-center px-3">
-                        <h2>Main Services</h2>
+                        <h2>Services</h2>
                     </div>
                     <div className="services-list-sec" > 
                         {loading ? (
@@ -285,34 +289,38 @@ const VendorLandingPage = () => {
                         </Slider>
                         )}
                     </div>
-
-                    <div className="main-title d-flex justify-content-between align-items-center px-3" style={{marginTop:'80px'}}>
-                        <h2>Secondary Services</h2>
-                    </div>
-                    <div className="services-list-sec">
-                        {loading ? (
-                        <SkeletonTheme baseColor="#f3f3f3" highlightColor="#e0e0e0">
-                            <div style={{ display: 'flex', gap: '20px', overflowX: 'auto', padding: '10px' }}>
-                            {Array.from({ length: 6 }).map((_, index) => (
-                                <Skeleton key={index} width={196} height={243} />
-                            ))}
+                    
+                    {secondaryServices.length > 0 ? (
+                        <>
+                            <div className="main-title d-flex justify-content-between align-items-center px-3" style={{marginTop:'80px'}}>
+                                <h2>Secondary Services</h2>
                             </div>
-                        </SkeletonTheme>
-                        ) : (
-                        <Slider {...settings}>
-                            {Services.filter((service: ServiceType) => service.serviceType === 'Secondary').map((service: ServiceType) => (
-                                <div className="item text-center" key={service._id}>
-                                    <Link href={service.link || '/'}>
-                                        <div className="box">
-                                            <Image src={`/api/image-proxy?url=${encodeURIComponent(service.imagePath)}`} alt={service.serviceName} width={196} height={243} />
-                                            <h5>{service.serviceName}</h5>
+                            <div className="services-list-sec">
+                                {loading ? (
+                                <SkeletonTheme baseColor="#f3f3f3" highlightColor="#e0e0e0">
+                                    <div style={{ display: 'flex', gap: '20px', overflowX: 'auto', padding: '10px' }}>
+                                    {Array.from({ length: 6 }).map((_, index) => (
+                                        <Skeleton key={index} width={196} height={243} />
+                                    ))}
+                                    </div>
+                                </SkeletonTheme>
+                                ) : (
+                                <Slider {...settings}>
+                                    {Services.filter((service: ServiceType) => service.serviceType === 'Secondary').map((service: ServiceType) => (
+                                        <div className="item text-center" key={service._id}>
+                                            <Link href={service.link || '/'}>
+                                                <div className="box">
+                                                    <Image src={`/api/image-proxy?url=${encodeURIComponent(service.imagePath)}`} alt={service.serviceName} width={196} height={243} />
+                                                    <h5>{service.serviceName}</h5>
+                                                </div>
+                                            </Link>
                                         </div>
-                                    </Link>
-                                </div>
-                            ))}
-                        </Slider>
-                        )}
-                    </div>
+                                    ))}
+                                </Slider>
+                                )}
+                            </div>
+                        </>
+                    ) : null}
                 </div>     
             </div>
         </section>

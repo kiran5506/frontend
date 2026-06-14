@@ -401,7 +401,7 @@ const Header = () => {
                         type="text"
                         id="service-search"
                         className="service-search-bar"
-                        placeholder="Select Service / Vendor"
+                        placeholder="Search Service / Vendor"
                         value={serviceVendorQuery}
                         onChange={handleServiceVendorInputChange}
                         onKeyDown={handleSearchInputKeyDown}

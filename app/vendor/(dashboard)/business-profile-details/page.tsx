@@ -7,6 +7,8 @@ import { serviceList } from '@/services/service-api'
 import { skillList } from '@/services/skill-api'
 import { languageList } from '@/services/language-api'
 import { toast } from 'react-toastify'
+import MultiSelectWithPills, { OptionType } from '@/components/MultiSelectWithPills';
+import { cityList } from '@/services/city-api';
 
 const BusinessProfile = () => {
   const dispatch = useDispatch() as any;
@@ -16,8 +18,10 @@ const BusinessProfile = () => {
   const { Skills } = useSelector((state: any) => state.skill);
   const { Languages } = useSelector((state: any) => state.language);
   const { loading } = useSelector((state: any) => state.businessProfile);
+  const { Cities, loading: citiesLoading } = useSelector((state: any) => state.city);
 
   const [profile, setProfile] = useState<any>(null);
+  const [selectedCities, setSelectedCities] = useState<OptionType[]>([]);
   const [formValues, setFormValues] = useState({
     serviceId: '',
     businessName: '',
@@ -80,6 +84,7 @@ const BusinessProfile = () => {
     (dispatch as any)(serviceList());
     (dispatch as any)(skillList());
     (dispatch as any)(languageList());
+    (dispatch as any)(cityList());
   }, [dispatch]);
 
   useEffect(() => {
@@ -93,6 +98,19 @@ const BusinessProfile = () => {
         if (response?.payload?.status && response?.payload?.data?.length) {
           const profileData = response.payload.data[0];
           setProfile(profileData);
+            // Populate selectedCities for MultiSelectWithPills
+            // Try to use returned selectedCities and selectedCityNames from backend if available
+            const selectedFromProfile: OptionType[] = [];
+            const rawIds = profileData?.selectedCities || [];
+            const rawNames = profileData?.selectedCityNames || [];
+            if (Array.isArray(rawIds) && rawIds.length) {
+              for (let i = 0; i < rawIds.length; i++) {
+                const id = String(rawIds[i]);
+                const label = rawNames && rawNames[i] ? rawNames[i] : (Cities?.find((c: any) => String(c._id) === id)?.cityName || id);
+                selectedFromProfile.push({ value: id, label });
+              }
+            }
+            setSelectedCities(selectedFromProfile);
           setFormValues((prev) => ({
             ...prev,
             serviceId: profileData?.service_id?._id || profileData?.service_id || '',
@@ -114,6 +132,21 @@ const BusinessProfile = () => {
         toast.error('Failed to load business profile data.');
       });
   }, [dispatch, vendorId]);
+
+  // If Cities load after profile, ensure selectedCities options are built from profile.selectedCities
+  useEffect(() => {
+    if (!profile || !Cities || Cities.length === 0) return;
+    // If selectedCities already set, skip
+    if (selectedCities && selectedCities.length > 0) return;
+    const rawIds = profile?.selectedCities || [];
+    if (!rawIds || !rawIds.length) return;
+    const mapped = rawIds.map((id: any) => {
+      const strId = String(id);
+      const found = Cities.find((c: any) => String(c._id) === strId);
+      return { value: strId, label: found ? found.cityName : strId } as OptionType;
+    });
+    setSelectedCities(mapped);
+  }, [profile, Cities]);
 
   const handleValueChange = (field: string, value: string) => {
     setFormValues((prev) => ({
@@ -208,7 +241,7 @@ const BusinessProfile = () => {
 
     const formData = new FormData();
     formData.append('vendor_id', vendorId);
-  formData.append('service_id', formValues.serviceId);
+    formData.append('service_id', formValues.serviceId);
     formData.append('businessName', formValues.businessName);
 
     const address = profile?.address || {};
@@ -223,6 +256,8 @@ const BusinessProfile = () => {
     formData.append('languages', formValues.languages.join(', '));
     formData.append('about_us', formValues.aboutUs || '');
     formData.append('communication_address', formValues.communicationAddress || '');
+  // Add selected cities as JSON array of ids
+  formData.append('selectedCities', JSON.stringify(selectedCities.map(s => String(s.value))));
 
     coverImages.forEach((file) => formData.append('coverImages', file));
   if (documentFiles.aadharFront) formData.append('aadharFront', documentFiles.aadharFront);
@@ -324,6 +359,24 @@ const BusinessProfile = () => {
                 </div>
               </div>
               <div className="row">
+                <div className="col-12 col-md-8">
+                  <MultiSelectWithPills
+                      id="selected_city_ids"
+                      label="Select Cities"
+                      options={Cities?.map((city: any) => ({
+                          value: city._id,
+                          label: city.cityName
+                      })) || []}
+                      placeholder={citiesLoading ? 'Loading cities...' : 'Select cities'}
+                      value={selectedCities}
+                      onChange={(value) => {
+                          const selected = (value as OptionType[]) || [];
+                          setSelectedCities(selected);
+                      }}
+                  />
+                  <input type="hidden" name="selectedCities" value={JSON.stringify(selectedCities.map(s => s.value))} />
+                </div>
+
                 <div className="col-12 col-md-8">
                   <label htmlFor="registered-Address" className="form-label">
                     Registered Address* (Same as registered document)
@@ -434,22 +487,21 @@ const BusinessProfile = () => {
                     </div>
                     <div className="col-md-6">
                       <label htmlFor="account-nickname" className="form-label">
-                        Cover Images* (Upto 3 Images)
+                        Cover Images* 
                       </label>
-                      {(profile?.cover_images?.length || 0) + coverImages.length < 3 && (
+                      {(profile?.cover_images?.length || 0) + coverImages.length < 1 && (
                         <input
                           type="file"
                           className="form-control"
                           name="account-nickname"
                           id="account-nickname"
                           placeholder="Enter Nickname"
-                          multiple
                           accept="image/*"
                           onChange={(e) => handleCoverImages(e.target.files)}
                         />
                       )}
                       {(profile?.cover_images?.length || 0) + coverImages.length >= 3 && (
-                        <p className="text-muted mt-2">Maximum 3 cover images uploaded.</p>
+                        <p className="text-muted mt-2">Upload cover images.</p>
                       )}
                       
                       

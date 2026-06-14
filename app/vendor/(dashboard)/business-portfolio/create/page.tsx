@@ -79,10 +79,13 @@ const CreateBusinessPortfolio = () => {
 
     (dispatch as any)(businessProfileByVendorId(vendorId))
       .then((response: any) => {
+        
         if (response?.payload?.status && response?.payload?.data?.length) {
           const profileData = response.payload.data[0];
+          console.log("Business profile profileData:", profileData);
           setBusinessProfileId(profileData?._id || "");
           setServiceId(profileData?.service_id?._id || profileData?.service_id || "");
+          setEvents(profileData?.events || []);
         } else {
           toast.info("No business profile found for this vendor.");
         }
@@ -105,6 +108,7 @@ const CreateBusinessPortfolio = () => {
 
           const mediaMap: Record<string, { images: string[]; youtube_media: ExistingYoutubeMedia[]; portfolioId: string }> = {};
           response.payload.data.forEach((portfolio: any) => {
+            console.log("Processing portfolio:", portfolio.events);
             portfolio.events?.forEach((event: any) => {
               const eventId = event.event_id?._id || event.event_id;
               if (eventId) {
@@ -153,26 +157,6 @@ const CreateBusinessPortfolio = () => {
       [selectedEvent]: prev[selectedEvent] || 1,
     }));
   }, [selectedEvent]);
-
-  useEffect(() => {
-    if (!serviceId) return;
-
-    setLoadingEvents(true);
-  (dispatch as any)(eventByServiceId(serviceId as any))
-      .then((response: any) => {
-        if (response?.payload?.status) {
-          setEvents(response.payload.data || []);
-        } else {
-          setEvents([]);
-        }
-      })
-      .catch((error: any) => {
-        console.error("Error fetching events:", error);
-        toast.error("Failed to load events.");
-        setEvents([]);
-      })
-      .finally(() => setLoadingEvents(false));
-  }, [dispatch, serviceId]);
 
   const handleEventFiles = (eventId: string, files: FileList | null) => {
     const nextFiles = Array.from(files || []);
@@ -441,11 +425,6 @@ const CreateBusinessPortfolio = () => {
                 </option>
               ))}
             </select>
-            {selectedService && (
-              <small className="text-muted">
-                {selectedService.serviceName} - {selectedService.serviceType}
-              </small>
-            )}
           </div>
           <div className="col-12 col-md-6">
             <label className="form-label">Select Event</label>

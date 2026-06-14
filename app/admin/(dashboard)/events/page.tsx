@@ -7,7 +7,7 @@ import { eventDelete, eventList } from '@/services/event-api'
 import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 
-const tableHeader: string[] = ['S.No', 'Event Name', 'Category', 'Image', 'Actions'];
+const tableHeader: string[] = ['S.No', 'Event Name', 'Service', 'Actions'];
 
 const AdEvents = () => {
     const router = useRouter()

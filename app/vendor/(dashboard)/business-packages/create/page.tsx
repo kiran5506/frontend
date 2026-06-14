@@ -13,6 +13,7 @@ import {
 } from "@/services/business-package-api";
 import { toast } from "react-toastify";
 import { useRouter, useSearchParams } from "next/navigation";
+import { set } from "react-hook-form";
 
 const emptyPricingRow = {
   city_id: "",
@@ -80,6 +81,7 @@ const CreateBusinessPackagesPage = () => {
         if (response?.payload?.status && response?.payload?.data?.length) {
           const profileData = response.payload.data[0];
           setServiceId(profileData?.service_id?._id || profileData?.service_id || "");
+          setEvents(profileData?.events || []);
         } else {
           toast.info("No business profile found for this vendor.");
         }
@@ -88,24 +90,6 @@ const CreateBusinessPackagesPage = () => {
         toast.error("Failed to load business profile data.");
       });
   }, [dispatch, vendorId]);
-
-  useEffect(() => {
-    if (!serviceId) return;
-    setLoadingEvents(true);
-  (dispatch as any)(eventByServiceId(serviceId as any))
-      .then((response: any) => {
-        if (response?.payload?.status) {
-          setEvents(response.payload.data || []);
-        } else {
-          setEvents([]);
-        }
-      })
-      .catch(() => {
-        toast.error("Failed to load events.");
-        setEvents([]);
-      })
-      .finally(() => setLoadingEvents(false));
-  }, [dispatch, serviceId]);
 
   useEffect(() => {
     if (!isEditing || !packageId) return;
