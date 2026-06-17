@@ -6,6 +6,7 @@ import user from '../../public/images/common/user.png'
 import Image from 'next/image'
 import Link from 'next/link'
 import { FaMapMarkerAlt, FaSearch } from 'react-icons/fa'
+import Select from 'react-select'
 import { useSelector, useDispatch } from 'react-redux';
 import { customerLogout } from '@/redux/features/customer-auth-slice';
 import { toast } from 'react-toastify';
@@ -13,7 +14,7 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { FaXmark } from 'react-icons/fa6';
 import { getSiteSettings } from '@/services/admin-api';
 import { generateToken } from '@/services/generate-api';
-import { searchCitySuggestions } from '@/services/city-api';
+import { searchCitySuggestions, cityList } from '@/services/city-api';
 import { searchServiceSuggestions } from '@/services/service-api';
 import { BsList } from 'react-icons/bs';
 import Skeleton from 'react-loading-skeleton';
@@ -31,6 +32,8 @@ const Header = () => {
     const [locationQuery, setLocationQuery] = React.useState('');
     const [selectedCity, setSelectedCity] = React.useState(null);
     const [citySuggestions, setCitySuggestions] = React.useState([]);
+    const [allCities, setAllCities] = React.useState([]);
+    const [cityMenuOpen, setCityMenuOpen] = React.useState(false);
     const [isCityLoading, setIsCityLoading] = React.useState(false);
     const [showCitySuggestions, setShowCitySuggestions] = React.useState(false);
 
@@ -75,6 +78,26 @@ const Header = () => {
         };
     }, []);
 
+    // Fetch initial city list to populate the dropdowns
+    useEffect(() => {
+        (async () => {
+            try {
+                setIsCityLoading(true);
+                // fetch full city list
+                const response = await dispatch(cityList()).unwrap();
+                // response may be { status: true, data: [...] } or an array directly
+                const cities = response?.data || response || [];
+                setAllCities(cities);
+                setCitySuggestions(cities);
+            } catch (err) {
+                setAllCities([]);
+                setCitySuggestions([]);
+            } finally {
+                setIsCityLoading(false);
+            }
+        })();
+    }, [dispatch]);
+
     const handleClearCity = () => {
         const currentPath = pathname || '';
         const params = new URLSearchParams(searchParams?.toString() || '');
@@ -117,36 +140,35 @@ const Header = () => {
         }
     }, [searchParams]);
 
+    // When allCities are loaded (or when the URL changes), set the selected city based on city_id from the URL
+    useEffect(() => {
+        const cityIdFromUrl = searchParams?.get('city_id') || '';
+        if (!cityIdFromUrl) return;
+
+        // try to find the full city object in allCities and set it
+        const match = (allCities || []).find((c) => (c?._id || '').toString() === cityIdFromUrl.toString());
+        if (match) {
+            setSelectedCity(match);
+            setLocationQuery(match.cityName || '');
+        }
+    }, [allCities, searchParams]);
+
+    // Filter cities locally from `allCities`. Show all cities initially and filter as user types.
     const handleLocationInputChange = (event) => {
         const value = event.target.value;
         setLocationQuery(value);
         setSelectedCity(null);
         setShowCitySuggestions(true);
 
-        if (citySearchTimerRef.current) clearTimeout(citySearchTimerRef.current);
-
-        if (!value.trim() || value.trim().length < 2) {
-            setIsCityLoading(false);
-            setCitySuggestions([]);
-
-            if (!value.trim()) {
-                handleClearCity();
-            }
-
+        if (!value.trim()) {
+            // show all cities when input is empty
+            setCitySuggestions(allCities);
+            handleClearCity();
             return;
         }
 
-        citySearchTimerRef.current = setTimeout(async () => {
-            try {
-                setIsCityLoading(true);
-                const response = await dispatch(searchCitySuggestions(value.trim())).unwrap();
-                setCitySuggestions(response?.data || []);
-            } catch {
-                setCitySuggestions([]);
-            } finally {
-                setIsCityLoading(false);
-            }
-        }, 300);
+        const filtered = allCities.filter((c) => (c?.cityName || '').toLowerCase().includes(value.trim().toLowerCase()));
+        setCitySuggestions(filtered);
     };
 
     const handleServiceVendorInputChange = (event) => {
@@ -280,6 +302,8 @@ const Header = () => {
     const serviceCategorySuggestions = serviceVendorSuggestions.filter((item) => item?.type === 'Service');
     const vendorCategorySuggestions = serviceVendorSuggestions.filter((item) => item?.type === 'Vendor');
 
+    const cityOptions = (allCities || []).map((c) => ({ value: c?._id, label: c?.cityName, city: c }));
+
     const toggleMobileMenu = () => {
         setIsMobileMenuOpen((prev) => !prev);
     };
@@ -320,39 +344,29 @@ const Header = () => {
                 {shouldShowHeaderSearch && (
                 <div className="mobile-location-search">
                     <div className="search-container">
-                    <input
-                        type="text"
-                        id="search-bar"
-                        className="search-bar"
-                        placeholder="Select Location"
-                        value={locationQuery}
-                        onChange={handleLocationInputChange}
-                        onFocus={() => setShowCitySuggestions(true)}
-                        onBlur={() => setTimeout(() => setShowCitySuggestions(false), 150)}
-                    />
-                    <div className="search-icon">
-                        <FaMapMarkerAlt />
-                    </div>
-                    <div
-                        className="suggestions-box"
-                        style={{ display: showCitySuggestions && (isCityLoading || citySuggestions.length > 0 || locationQuery.trim().length >= 2) ? 'block' : 'none' }}
-                    >
-                        {isCityLoading ? (
-                            <div className="loading">Loading...</div>
-                        ) : citySuggestions.length > 0 ? (
-                            citySuggestions.map((city) => (
-                                <div
-                                    key={city?._id}
-                                    className="suggestion-item"
-                                    onMouseDown={() => selectCity(city)}
-                                >
-                                    {city?.cityName}
-                                </div>
-                            ))
-                        ) : locationQuery.trim().length >= 2 ? (
-                            <div className="loading">No city found</div>
-                        ) : null}
-                    </div>
+                        <Select
+                            inputId="search-bar"
+                            classNamePrefix="react-select"
+                            options={cityOptions}
+                            isLoading={isCityLoading}
+                            placeholder="Select Location"
+                            value={selectedCity ? { value: selectedCity._id, label: selectedCity.cityName } : null}
+                            onChange={(opt) => {
+                                if (!opt) {
+                                    handleClearCity();
+                                } else {
+                                    selectCity(opt.city || allCities.find((c) => c._id === opt.value));
+                                }
+                                setCityMenuOpen(false);
+                            }}
+                            isClearable
+                            menuIsOpen={cityMenuOpen}
+                            onFocus={() => setCityMenuOpen(true)}
+                            onBlur={() => setTimeout(() => setCityMenuOpen(false), 100)}
+                        />
+                        <div className="search-icon">
+                            <FaMapMarkerAlt />
+                        </div>
                     </div>
                 </div>
                 )}
@@ -360,38 +374,28 @@ const Header = () => {
                 <div className="row desktop-search">
                     <div className="col-md-6">
                     <div className="search-container">
-                        <input
-                        type="text"
-                        id="search-bar"
-                        className="search-bar"
+                        <Select
+                        inputId="search-bar-desktop"
+                        classNamePrefix="react-select"
+                        options={cityOptions}
+                        isLoading={isCityLoading}
                         placeholder="Select Location"
-                        value={locationQuery}
-                        onChange={handleLocationInputChange}
-                        onFocus={() => setShowCitySuggestions(true)}
-                        onBlur={() => setTimeout(() => setShowCitySuggestions(false), 150)}
+                        value={selectedCity ? { value: selectedCity._id, label: selectedCity.cityName } : null}
+                        onChange={(opt) => {
+                            if (!opt) {
+                                handleClearCity();
+                            } else {
+                                selectCity(opt.city || allCities.find((c) => c._id === opt.value));
+                            }
+                            setCityMenuOpen(false);
+                        }}
+                        isClearable
+                        menuIsOpen={cityMenuOpen}
+                        onFocus={() => setCityMenuOpen(true)}
+                        onBlur={() => setTimeout(() => setCityMenuOpen(false), 100)}
                         />
                         <div className="search-icon">
                         <FaMapMarkerAlt />
-                        </div>
-                        <div
-                            className="suggestions-box"
-                            style={{ display: showCitySuggestions && (isCityLoading || citySuggestions.length > 0 || locationQuery.trim().length >= 2) ? 'block' : 'none' }}
-                        >
-                            {isCityLoading ? (
-                                <div className="loading">Loading...</div>
-                            ) : citySuggestions.length > 0 ? (
-                                citySuggestions.map((city) => (
-                                    <div
-                                        key={city?._id}
-                                        className="suggestion-item"
-                                        onMouseDown={() => selectCity(city)}
-                                    >
-                                        {city?.cityName}
-                                    </div>
-                                ))
-                            ) : locationQuery.trim().length >= 2 ? (
-                                <div className="loading">No city found</div>
-                            ) : null}
                         </div>
                     </div>
                     </div>

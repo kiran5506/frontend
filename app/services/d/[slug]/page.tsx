@@ -21,6 +21,8 @@ const ServiceDetails = () => {
     const rawSlug = Array.isArray(params?.slug) ? params.slug[0] : params?.slug;
     const businessProfileId = rawSlug ? rawSlug.split('-').pop() : undefined;
     const selectedCityId = searchParams?.get('city_id') || '';
+    const [cities, setCities] = useState<any[]>([]);
+    const [citiesLoading, setCitiesLoading] = useState(false);
     const [businessProfile, setBusinessProfile] = useState<any>(null);
     const [vendor, setVendor] = useState<any>(null);
     const [portfolio, setPortfolio] = useState<any>(null);
@@ -155,6 +157,26 @@ const ServiceDetails = () => {
             })
             .finally(() => setLoading(false));
     }, [businessProfileId]);
+
+    // load all cities for the location dropdown
+    useEffect(() => {
+        let mounted = true;
+        (async () => {
+            try {
+                setCitiesLoading(true);
+                const response = await axiosInstance.get(endpoints.CITIES.list);
+                const data = response?.data;
+                const list = data?.data || data || [];
+                if (mounted) setCities(Array.isArray(list) ? list : []);
+            } catch (err) {
+                if (mounted) setCities([]);
+            } finally {
+                if (mounted) setCitiesLoading(false);
+            }
+        })();
+
+        return () => { mounted = false; };
+    }, []);
 
     useEffect(() => {
         if (!businessProfileId) {
@@ -878,13 +900,33 @@ const ServiceDetails = () => {
                         <div className="row">
                         <div className="col-md-3 col-lg-3">
                             <h4 className="mb-3">
-                            
                             <span> Packages &nbsp; &nbsp; </span>
-                            <span style={{ fontSize: 13 }}>
-                                
+                            <span style={{ fontSize: 13}}>
                                 <Link href="#photos"> Packages </Link> ({packageCards.length})
+                               
                             </span>
                             </h4>
+                        </div>
+                        <div className="col-md-3 col-lg-3">
+                             <div style={{ minWidth: 180 }}>
+                                    <select
+                                        className="form-select"
+                                        value={selectedCityId}
+                                        onChange={(e) => {
+                                            const v = e.target.value;
+                                            const params = new URLSearchParams(searchParams?.toString() || '');
+                                            if (!v) params.delete('city_id'); else params.set('city_id', v);
+                                            const qs = params.toString();
+                                            const safePath = typeof window !== 'undefined' ? window.location.pathname : '/';
+                                            router.push(qs ? `${safePath}?${qs}` : safePath);
+                                        }}
+                                    >
+                                        <option value="">All Locations</option>
+                                        {cities.map((c) => (
+                                            <option key={c?._id} value={c?._id}>{c?.cityName}</option>
+                                        ))}
+                                    </select>
+                                </div>
                         </div>
                         </div>
                         <div className="row d-flex justify-content-center">

@@ -259,6 +259,7 @@ const Services = () => {
                                             serviceDetails={serviceDetails}
                                             isWishlisted={wishlistIds.includes(profile?._id)}
                                             onToggleWishlist={handleToggleWishlist}
+                                            cityId={cityId}
                                         />
                                     ))
                             ) : (
@@ -295,6 +296,7 @@ const Services = () => {
                                             serviceDetails={serviceDetails}
                                             isWishlisted={wishlistIds.includes(profile?._id)}
                                             onToggleWishlist={handleToggleWishlist}
+                                            cityId={cityId}
                                         />
                                     ))
                             ) : (

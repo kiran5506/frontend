@@ -34,6 +34,7 @@ const SiteSettingsPage = () => {
         linkedin_url: Yup.string().url("Invalid URL").optional(),
         top_header_title: Yup.string().optional(),
         google_analytics: Yup.string().optional(),
+        credit_points: Yup.string().optional(),
     });
 
     const {
@@ -70,6 +71,7 @@ const SiteSettingsPage = () => {
                 setLogoPreview(settings.logo);
                 setFooterLogoPreview(settings.footer_logo);
                 setFaviconPreview(settings.favicon);
+                setValue("credit_points", settings.credit_points ?? 0);
             }else {
                 toast.error('Failed to fetch settings: ' + (response.payload?.message || 'Unknown error'));
             }
@@ -343,6 +345,19 @@ const SiteSettingsPage = () => {
                             src={faviconPreview ? `/api/image-proxy?url=${encodeURIComponent(faviconPreview)}` : "/assets/admin/img/favicon.png"}
                             style={{ border: "1px solid #ddd7d7", width: 64 }}
                         />
+                    </div>
+                    <div className="col-6">
+                    <label htmlFor="credit_points" className="form-label">
+                        Credit Points
+                    </label>
+                    <input
+                        type="text"
+                        className="form-control"
+                        id="credit_points"
+                        placeholder="Credit Points"
+                        {...register("credit_points")}
+                    />
+                    {errors.credit_points && <p className="text-danger">{errors.credit_points.message}</p>}
                     </div>
                     <div className="text-center">
                     <button type="submit" className="btn btn-primary" style={{ marginRight: "10px" }}>

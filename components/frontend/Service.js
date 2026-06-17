@@ -11,10 +11,11 @@ import { toast } from "react-toastify";
  *  profile: any;
  *  serviceDetails: any;
  *  isWishlisted?: boolean;
- *  onToggleWishlist?: (profile: any) => void | Promise<void>;
+  *  onToggleWishlist?: (profile: any) => void | Promise<void>;
+ *  cityId?: string;
  * }} props
  */
-const Service = ({ profile, serviceDetails, isWishlisted, onToggleWishlist }) => {
+const Service = ({ profile, serviceDetails, isWishlisted, onToggleWishlist, cityId }) => {
   const router = useRouter();
   const customerAuth = useSelector((state) => state.customerAuth);
   const isLoggedIn = Boolean(customerAuth?.isAuthenticated);
@@ -45,7 +46,9 @@ const Service = ({ profile, serviceDetails, isWishlisted, onToggleWishlist }) =>
   const lowestDiscount = Number(profile?.lowestDiscount || 0);
   const formatPrice = (value) =>
     Number.isFinite(value) && value > 0 ? value.toLocaleString("en-IN") : "";
-  const linkHref = profile?._id ? `/services/d/${profile._id}` : "";
+  const linkHref = profile?._id
+    ? `/services/d/${profile._id}${cityId ? `?city_id=${encodeURIComponent(String(cityId))}` : ''}`
+    : "";
   const handleWishlistClick = (event) => {
     if (!isLoggedIn) {
       event.preventDefault();

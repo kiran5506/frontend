@@ -3741,3 +3741,15 @@ h1 {font-size: 30px;}
           width: auto !important;
       }
   }
+
+.react-select__input-container, .react-select__single-value, .react-select__placeholder{
+   margin-left: 20px !important;
+}
+
+/* Ensure react-select dropdown appears above other elements */
+.react-select__menu {
+  z-index: 99999 !important;
+}
+.react-select__menu-list {
+  z-index: 99999 !important;
+}
