@@ -35,3 +35,8 @@ export const businessPackageDelete = createAsyncThunk('businessPackage/delete', 
     result.id = id;
     return result;
 });
+
+export const businessPackageToggleStatus = createAsyncThunk('businessPackage/toggleStatus', async (id) => {
+    const result = (await axiosInstance.patch(endpoints.BUSINESS_PACKAGES.toggleStatus.replace('{id}', id))).data;
+    return result;
+});

@@ -1,5 +1,5 @@
 import { createSlice } from "@reduxjs/toolkit";
-import { businessPackageById, businessPackageDelete, businessPackageList, businessPackageListByVendor } from "@/services/business-package-api";
+import { businessPackageById, businessPackageDelete, businessPackageList, businessPackageListByVendor, businessPackageToggleStatus } from "@/services/business-package-api";
 
 const initialState = {
     BusinessPackages: [],
@@ -44,6 +44,14 @@ export const businessPackage = createSlice({
             state.currentBusinessPackage = null;
             if (action.payload.id) {
                 state.BusinessPackages = state.BusinessPackages.filter(pkg => pkg._id !== action.payload.id);
+            }
+        })
+        .addCase(businessPackageToggleStatus.fulfilled, (state, action) => {
+            if (action.payload?.data) {
+                const { _id, isActive } = action.payload.data;
+                state.BusinessPackages = state.BusinessPackages.map(pkg =>
+                    pkg._id === _id ? { ...pkg, isActive } : pkg
+                );
             }
         });
     }

@@ -2,7 +2,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Link from "next/link";
 import { useDispatch, useSelector } from "react-redux";
-import { businessPortfolioByVendorId } from "@/services/business-portfolio-api";
+import { businessPortfolioByVendorId, businessPortfolioToggleStatus } from "@/services/business-portfolio-api";
 import { toast } from "react-toastify";
 
 const BusinessPortfolio = () => {
@@ -27,10 +27,30 @@ const BusinessPortfolio = () => {
       });
   }, [dispatch, vendorId]);
 
+  const handleToggleStatus = async (portfolioId: string) => {
+    if (!portfolioId) return;
+    try {
+      const response = await (dispatch as any)(businessPortfolioToggleStatus(portfolioId as any)).unwrap();
+      if (response?.status) {
+        toast.success(response.message || 'Status updated successfully.');
+        setPortfolios((prev) =>
+          prev.map((p) =>
+            p._id === portfolioId ? { ...p, isActive: response.data?.isActive } : p
+          )
+        );
+      } else {
+        toast.error(response?.message || 'Failed to update status.');
+      }
+    } catch (error: any) {
+      toast.error(error?.message || 'Something went wrong while updating status.');
+    }
+  };
+
   const rows = useMemo(() => {
     return portfolios.flatMap((portfolio: any) =>
       (portfolio.events || []).map((event: any) => ({
         portfolioId: portfolio._id,
+        isActive: portfolio.isActive,
         eventId: event.event_id?._id || event.event_id,
         eventName: event.event_id?.eventName || "Event",
         imagesCount: event.images?.length || 0,
@@ -46,11 +66,11 @@ const BusinessPortfolio = () => {
             <h2 className="page-title">Business Portfolio</h2>
           </div>
           <div className="col-12 col-md-4">
-            <span style={{ margin: 3, float: "right" }}>
+            {/* <span style={{ margin: 3, float: "right" }}>
               <Link href="/vendor/business-portfolio/create" className="btn orange-btn btn-xs ">
                 + Add Portfolio
               </Link>
-            </span>
+            </span> */}
           </div>
         </div>
         <div className="row package-row">
@@ -62,6 +82,7 @@ const BusinessPortfolio = () => {
                     <th className="minn">S.No</th>
                     <th className="midd">EVENT NAME</th>
                     <th className="midd">Items</th>
+                    <th className="midd">STATUS</th>
                     <th className="midd">ACTIONS</th>
                   </tr>
                 </thead>
@@ -74,6 +95,16 @@ const BusinessPortfolio = () => {
                         <td className="midd">{row.eventName}</td>
                         <td className="midd">
                           Photos - {row.imagesCount} <br /> YouTube - {row.youtubeCount}
+                        </td>
+                        <td className="midd">
+                          <button
+                            type="button"
+                            className={`btn btn-sm ${row.isActive ? 'btn-success' : 'btn-secondary'}`}
+                            onClick={() => handleToggleStatus(row.portfolioId)}
+                            title={row.isActive ? 'Click to deactivate' : 'Click to activate'}
+                          >
+                            {row.isActive ? 'Active' : 'Inactive'}
+                          </button>
                         </td>
                         <td className="midd">
                           <Link
@@ -93,7 +124,7 @@ const BusinessPortfolio = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan={4} className="text-center">
+                      <td colSpan={5} className="text-center">
                         No portfolio entries found.
                       </td>
                     </tr>

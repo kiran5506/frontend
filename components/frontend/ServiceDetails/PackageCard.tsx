@@ -50,13 +50,13 @@ const PackageCard = ({ pkg, pricing, toProxy, packageId, onRequestCallback }: Pa
         <div className="col-6 col-md-3 col-lg-2 text-center">
           <p className="mb-0 text-muted price">Market Price</p>
           <h4 className="text-muted text-decoration-line-through">
-            {firstPricing?.marketPrice ? `₹${firstPricing.marketPrice}` : ''}
+            {firstPricing?.marketPrice ? `₹${firstPricing.marketPrice}` : '₹0'}
           </h4>
         </div>
         <div className="col-6 col-md-3 col-lg-2 text-center">
           <p className="mb-0 text-success price">Offer Price</p>
           <h4 className="text-success">
-            {firstPricing?.offerPrice ? `₹${firstPricing.offerPrice}` : '₹5,000'}
+            {firstPricing?.offerPrice ? `₹${firstPricing.offerPrice}` : '₹0'}
           </h4>
         </div>
         <div className="col-12 col-md-6 col-lg-2">

@@ -248,25 +248,25 @@ const ServiceDetails = () => {
         : packages;
 
     const packageCards = useMemo(() => {
+        // Don't show any packages until the user picks a city
+        if (!selectedCityId) return [];
+
         return filteredPackages
             .map((pkg: any) => {
                 const allPricing = Array.isArray(pkg?.cityPricing) ? pkg.cityPricing : [];
-                const matchingPricing = selectedCityId
-                    ? allPricing.find((pricing: any) => {
-                        const pricingCityId = (pricing?.city_id?._id || pricing?.city_id || '').toString();
-                        return pricingCityId === selectedCityId;
-                    })
-                    : allPricing[0];
+                const matchingPricing = allPricing.find((pricing: any) => {
+                    const pricingCityId = (pricing?.city_id?._id || pricing?.city_id || '').toString();
+                    return pricingCityId === selectedCityId;
+                });
 
-                if (selectedCityId && !matchingPricing) {
-                    return null;
-                }
+                // Only include this package if it has pricing for the selected city
+                if (!matchingPricing) return null;
 
                 return {
                     pkg,
-                    pricing: matchingPricing || null,
+                    pricing: matchingPricing,
                     packageId: getIdString(pkg?._id || pkg?.package_id),
-                    key: `${pkg?._id || 'pkg'}-default`,
+                    key: `${pkg?._id || 'pkg'}-${selectedCityId}`,
                 };
             })
             .filter(Boolean);
@@ -605,29 +605,39 @@ const ServiceDetails = () => {
                     <div className="row d-flex justify-content-center align-items-center">
                         <div className="col-md-4 col-lg-3 text-center text-md-start top-img">
                         <div className="position-relative">
-                            {!isProfileImageLoaded ? (
-                                <div
-                                    className="placeholder-glow rounded"
-                                    style={{ width: '100%', minHeight: '215px' }}
-                                >
-                                    <span
-                                        className="placeholder w-100 h-100 d-block rounded"
-                                        style={{ minHeight: '215px', backgroundColor: '#ececec' }}
+                            {profileImageSrc ? (
+                                <>
+                                    {!isProfileImageLoaded && (
+                                        <div
+                                            className="placeholder-glow rounded"
+                                            style={{ width: '100%', minHeight: '215px', cursor: 'default' }}
+                                        >
+                                            <span
+                                                className="placeholder w-100 h-100 d-block rounded"
+                                                style={{ minHeight: '215px', backgroundColor: '#ececec', cursor: 'default' }}
+                                            />
+                                        </div>
+                                    )}
+                                    <img
+                                        ref={profileImageRef}
+                                        src={profileImageSrc}
+                                        alt=""
+                                        className="profile-pic"
+                                        style={{
+                                            minHeight: '215px',
+                                            display: isProfileImageLoaded ? 'block' : 'none',
+                                            cursor: 'default'
+                                        }}
+                                        onLoad={() => setIsProfileImageLoaded(true)}
+                                        onError={() => setIsProfileImageLoaded(true)}
                                     />
-                                </div>
-                            ) : null}
-                            <img
-                                ref={profileImageRef}
-                                src={profileImageSrc}
-                                alt=""
-                                className="profile-pic"
-                                style={{
-                                    minHeight: '215px',
-                                    display: isProfileImageLoaded ? 'block' : 'none'
-                                }}
-                                onLoad={() => setIsProfileImageLoaded(true)}
-                                onError={() => setIsProfileImageLoaded(true)}
-                            />
+                                </>
+                            ) : (
+                                <div
+                                    className="rounded profile-pic d-flex align-items-center justify-content-center"
+                                    style={{ minHeight: '215px', width: '100%', backgroundColor: '#ddd', cursor: 'default' }}
+                                />
+                            )}
                         </div>
                         </div>
                         <div className="col-md-8 col-lg-9">
@@ -902,7 +912,7 @@ const ServiceDetails = () => {
                             <h4 className="mb-3">
                             <span> Packages &nbsp; &nbsp; </span>
                             <span style={{ fontSize: 13}}>
-                                <Link href="#photos"> Packages </Link> ({packageCards.length})
+                                <Link href="#photos"> Packages </Link> ({filteredPackages.length})
                                
                             </span>
                             </h4>
@@ -946,9 +956,9 @@ const ServiceDetails = () => {
                             ))
                         ) : (
                             <p className="text-muted">
-                                {selectedCityId
-                                    ? 'No packages found for this selected location/event.'
-                                    : 'No packages found for this event.'}
+                                {!selectedCityId
+                                    ? 'Please select a location to view available packages.'
+                                    : 'No packages found for the selected location.'}
                             </p>
                         )}
                         

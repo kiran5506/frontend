@@ -45,3 +45,13 @@ export const businessPortfolioDeleteMedia = createAsyncThunk(
         }
     }
 );
+
+export const businessPortfolioToggleStatus = createAsyncThunk(
+    'businessPortfolio/toggleStatus',
+    async (id) => {
+        const response = await axiosInstance.patch(
+            endpoints.BUSINESS_PORTFOLIO.toggleStatus.replace('{id}', id)
+        );
+        return response.data;
+    }
+);

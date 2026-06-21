@@ -191,7 +191,8 @@ const endpoints = {
     BUSINESS_PORTFOLIO: {
         create: '/business-portfolio/create',
         listByVendor: '/business-portfolio/vendor/{vendor_id}',
-        deleteMedia: '/business-portfolio/delete-media/{id}'
+        deleteMedia: '/business-portfolio/delete-media/{id}',
+        toggleStatus: '/business-portfolio/toggle-status/{id}'
     },
     BUSINESS_PACKAGES: {
         create: '/business-packages/create',
@@ -199,7 +200,8 @@ const endpoints = {
         list: '/business-packages/list',
         listByVendor: '/business-packages/vendor/{vendor_id}',
         findById: '/business-packages/findById/{id}',
-        delete: '/business-packages/delete/{id}'
+        delete: '/business-packages/delete/{id}',
+        toggleStatus: '/business-packages/toggle-status/{id}'
     },
     FEEDBACK: {
         create: '/feedback/create',

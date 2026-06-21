@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import React, { useEffect, useMemo } from 'react'
 import { useDispatch, useSelector } from 'react-redux';
-import { businessPackageDelete, businessPackageListByVendor } from '@/services/business-package-api';
+import { businessPackageDelete, businessPackageListByVendor, businessPackageToggleStatus } from '@/services/business-package-api';
 import { toast } from 'react-toastify';
 
 const BusinessPackages = () => {
@@ -33,6 +33,20 @@ const BusinessPackages = () => {
         }
     };
 
+    const handleToggleStatus = async (id: string) => {
+        if (!id) return;
+        try {
+            const response = await (dispatch as any)(businessPackageToggleStatus(id as any)).unwrap();
+            if (response?.status) {
+                toast.success(response.message || 'Status updated successfully.');
+            } else {
+                toast.error(response?.message || 'Failed to update status.');
+            }
+        } catch (error: any) {
+            toast.error(error?.message || 'Something went wrong while updating status.');
+        }
+    };
+
     const hasPackages = useMemo(() => Array.isArray(packages) && packages.length > 0, [packages]);
 
     return (
@@ -41,14 +55,14 @@ const BusinessPackages = () => {
                 <div className="col-12 col-md-8">
                     <h2 className="page-title">Business Packages</h2>
                 </div>
-                <div className="col-12 col-md-4">
+                {/* <div className="col-12 col-md-4">
                     <Link
                         href="/vendor/business-packages/create"
                         className="btn orange-btn btn-xs float-right"
                     >
                         Add New Package{" "}
                     </Link>
-                </div>
+                </div> */}
             </div>
             <div className="row package-row">
                 <div className="col-sm-12">
@@ -59,18 +73,19 @@ const BusinessPackages = () => {
                                     <th className="minn">S.No</th>
                                     <th className="midd">EVENT NAME</th>
                                     <th className="largee">CITY</th>
+                                    <th className="midd">STATUS</th>
                                     <th className="midd">ACTIONS</th>
                                 </tr>
                             </thead>
                             <tbody>
                                 {loading && (
                                     <tr>
-                                        <td colSpan={4} className="text-center">Loading packages...</td>
+                                        <td colSpan={5} className="text-center">Loading packages...</td>
                                     </tr>
                                 )}
                                 {!loading && !hasPackages && (
                                     <tr>
-                                        <td colSpan={4} className="text-center">No packages found.</td>
+                                        <td colSpan={5} className="text-center">No packages found.</td>
                                     </tr>
                                 )}
                                 {!loading && hasPackages && packages.map((pkg: any, index: number) => (
@@ -89,6 +104,16 @@ const BusinessPackages = () => {
                                             )}
                                         </td>
                                         <td className="midd">
+                                            <button
+                                                type="button"
+                                                className={`btn btn-sm ${pkg.isActive ? 'btn-success' : 'btn-secondary'}`}
+                                                onClick={() => handleToggleStatus(pkg._id)}
+                                                title={pkg.isActive ? 'Click to deactivate' : 'Click to activate'}
+                                            >
+                                                {pkg.isActive ? 'Active' : 'Inactive'}
+                                            </button>
+                                        </td>
+                                        <td className="midd">
                                             <div className="d-flex gap-2 flex-wrap">
                                                 <Link
                                                     href={`/vendor/business-packages/create?packageId=${pkg._id}`}
@@ -102,13 +127,13 @@ const BusinessPackages = () => {
                                                     Edit
                                                     <img src="assets/img/btn-arrow.png" alt="" width={10} />
                                                 </Link>
-                                                <button
+                                                {/* <button
                                                     type="button"
                                                     className="btn btn-danger"
                                                     onClick={() => handleDelete(pkg._id)}
                                                 >
                                                     Delete
-                                                </button>
+                                                </button> */}
                                             </div>
                                         </td>
                                     </tr>

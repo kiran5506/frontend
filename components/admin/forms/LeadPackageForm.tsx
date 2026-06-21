@@ -8,6 +8,8 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useRouter } from 'next/navigation';
 import { createLeadPackage, leadpackageById, leadpackageEdit } from '@/services/leadpackage-api';
 import { resetCurrentLeadPackage } from '@/redux/features/leadpackage-slice';
+import { serviceList } from '@/services/service-api';
+import MultiSelectWithPills, { OptionType } from '@/components/MultiSelectWithPills';
 
 interface LeadPackageFormProps {
   id?: string;
@@ -17,11 +19,16 @@ const LeadPackageForm = ({ id }: LeadPackageFormProps) => {
     const dispatch = useDispatch();
     const router = useRouter();
     const { currentLeadPackage } = useSelector((state: any) => state.leadpackage);
+    const { Services, loading: servicesLoading } = useSelector((state: any) => state.service);
 
     const [packageImg, setPackageImg] = useState("");
+    const [selectedServices, setSelectedServices] = useState<OptionType[]>([]);
 
     const validationSchema = Yup.object().shape({
         packageName: Yup.string().required("Package name is required"),
+        service_ids: Yup.array()
+            .of(Yup.string().required())
+            .min(1, 'At least one service is required'),
         totalLeads: Yup.number().required("Total leads is required"),
         amount: Yup.number().required("Amount is required"),
         image: Yup.mixed()
@@ -47,6 +54,13 @@ const LeadPackageForm = ({ id }: LeadPackageFormProps) => {
     });
 
     useEffect(() => {
+        (dispatch as any)(serviceList()).catch((error: any) => {
+            console.error('Error fetching services:', error);
+            toast.error('Error loading services');
+        });
+    }, [dispatch]);
+
+    useEffect(() => {
         if(id) {
             (dispatch as any)(leadpackageById(id as any)).catch((error: any) => {
                 console.error('Error fetching lead package:', error);
@@ -58,18 +72,43 @@ const LeadPackageForm = ({ id }: LeadPackageFormProps) => {
     useEffect(() => {
         if(currentLeadPackage && id) {
             const data = currentLeadPackage.data || currentLeadPackage;
+            let serviceIds = Array.isArray(data.service_ids)
+                ? data.service_ids.map((item: any) => String(item?._id || item))
+                : [];
+
+            if (serviceIds.length === 0 && Services && Services.length > 0) {
+                const serviceNames = Array.isArray(data.serviceCategories)
+                    ? data.serviceCategories
+                    : data.serviceCategory
+                    ? [data.serviceCategory]
+                    : [];
+
+                serviceIds = Services.filter((service: any) => serviceNames.includes(service.serviceName))
+                    .map((service: any) => String(service._id));
+            }
+
             setValue('packageName', data.packageName || '');
+            setValue('service_ids', serviceIds);
             setValue('totalLeads', data.totalLeads || '');
             setValue('amount', data.amount || '');
             setValue('description', data.description || '');
             setPackageImg(data.image);
+
+            if (Services && Services.length > 0) {
+                const mappedServices = Services.filter((service: any) => serviceIds.includes(String(service._id)))
+                    .map((service: any) => ({ value: service._id, label: service.serviceName }));
+                setSelectedServices(mappedServices);
+            } else {
+                setSelectedServices([]);
+            }
         }
-    }, [currentLeadPackage, setValue, id])
+    }, [currentLeadPackage, setValue, id, Services])
 
     const onSubmit =  async (data: any) => {
         try {
             const formData = new FormData();
             Object.keys(data).forEach((key) => {
+                if (key === 'service_ids') return;
                 if (data[key] !== undefined && data[key] !== '') {
                     if (data[key] instanceof FileList && data[key].length > 0) {
                         formData.append(key, data[key][0]);
@@ -78,6 +117,13 @@ const LeadPackageForm = ({ id }: LeadPackageFormProps) => {
                     }
                 }
             });
+
+            if (selectedServices.length > 0) {
+                selectedServices.forEach((service) => {
+                    formData.append('service_ids', String(service.value));
+                });
+            }
+
             const action = id ? leadpackageEdit({ id, formData } as any) : createLeadPackage(formData as any);
             const response = await (dispatch as any)(action as any).unwrap();
             if (response?.status) {
@@ -113,6 +159,26 @@ const LeadPackageForm = ({ id }: LeadPackageFormProps) => {
             {...register('packageName')}
         />
         {errors.packageName && <p className="text-danger">{errors.packageName.message}</p>}
+        </div>
+
+        <div className="col-12">
+            <MultiSelectWithPills
+                id="service_ids"
+                label="Select Services"
+                options={Services?.map((service: any) => ({
+                    value: service._id,
+                    label: service.serviceName
+                })) || []}
+                placeholder={servicesLoading ? 'Loading services...' : 'Select services'}
+                value={selectedServices}
+                onChange={(value) => {
+                    const selected = (value as OptionType[]) || [];
+                    setSelectedServices(selected);
+                    setValue('service_ids', selected.map((option) => String(option.value)), { shouldValidate: true });
+                }}
+            />
+            <input type="hidden" {...register('service_ids')} />
+            {errors.service_ids && <p className="text-danger">{errors.service_ids.message as string}</p>}
         </div>
 
         <div className="col-12">
