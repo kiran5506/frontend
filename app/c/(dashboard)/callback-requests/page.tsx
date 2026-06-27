@@ -1,7 +1,7 @@
-import InquiryListTable from '@/components/customer/InquiryListTable'
+import CallbackRequestList from '@/components/customer/CallbackRequestList'
 
 const CallbackRequestsPage = () => {
-  return <InquiryListTable title="Callback Requests" enquiryType="callback" />
+  return <CallbackRequestList />
 }
 
 export default CallbackRequestsPage

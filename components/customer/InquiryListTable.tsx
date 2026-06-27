@@ -4,7 +4,6 @@ import React, { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { useDispatch, useSelector } from 'react-redux'
 import { customerInquiryList } from '@/services/inquiry-api'
-import { fetchInquiryAssignments } from '@/services/lead-assignment-api'
 
 type InquiryType = 'enquiry' | 'callback'
 
@@ -13,11 +12,21 @@ interface InquiryListTableProps {
   enquiryType: InquiryType
 }
 
+interface AssignedVendor {
+  _id?: string
+  name?: string
+  mobile_number?: string
+  profile_image?: string
+  assignment_status?: string
+  assigned_at?: string
+}
+
 interface InquiryRow {
   _id: string
   enquiry_type: InquiryType
   enquiry_date?: string
   createdAt?: string
+  city_name?: string
   service?: {
     _id?: string
     name?: string
@@ -33,13 +42,17 @@ interface InquiryRow {
     packageName?: string
     image?: string
   } | null
+  assigned_vendors?: AssignedVendor[]
 }
 
-interface VendorInfo {
-  _id?: string
-  name?: string
-  mobile_number?: string
-  email?: string
+const statusBadge: Record<string, string> = {
+  assigned: 'bg-secondary',
+  viewed: 'bg-info text-dark',
+  accepted: 'bg-success',
+  rejected: 'bg-danger',
+  replace_requested: 'bg-warning text-dark',
+  replaced: 'bg-primary',
+  expired: 'bg-secondary opacity-50'
 }
 
 const InquiryListTable = ({ title, enquiryType }: InquiryListTableProps) => {
@@ -61,7 +74,6 @@ const InquiryListTable = ({ title, enquiryType }: InquiryListTableProps) => {
   const customerId = customerDetails?._id
 
   const [rows, setRows] = useState<InquiryRow[]>([])
-  const [vendorMap, setVendorMap] = useState<Record<string, VendorInfo[]>>({})
   const [loading, setLoading] = useState(false)
   const [serviceSearch, setServiceSearch] = useState('')
   const [dateFilter, setDateFilter] = useState('')
@@ -108,41 +120,8 @@ const InquiryListTable = ({ title, enquiryType }: InquiryListTableProps) => {
     fetchRows()
   }, [customerId, enquiryType])
 
-  useEffect(() => {
-    const loadAssignments = async () => {
-      if (!rows.length) {
-        setVendorMap({})
-        return
-      }
-
-      try {
-        const entries = await Promise.all(
-          rows.map(async (row) => {
-            const response = await fetchInquiryAssignments(row._id)
-            if (response?.status && Array.isArray(response.data)) {
-              const vendors = response.data
-                .map((assignment: any) => assignment.vendor_id)
-                .filter(Boolean)
-              return [row._id, vendors]
-            }
-            return [row._id, []]
-          })
-        )
-
-        setVendorMap(Object.fromEntries(entries))
-      } catch {
-        setVendorMap({})
-      }
-    }
-
-    loadAssignments()
-  }, [rows])
-
   const handleSearch = () => {
-    fetchRows({
-      service: serviceSearch.trim(),
-      date: dateFilter
-    })
+    fetchRows({ service: serviceSearch.trim(), date: dateFilter })
   }
 
   const handleReset = () => {
@@ -193,16 +172,16 @@ const InquiryListTable = ({ title, enquiryType }: InquiryListTableProps) => {
             <thead className="table-light">
               <tr>
                 <th>Service</th>
-                <th>Enquiry Date</th>
-                <th>Profile</th>
+                <th>Date</th>
+                <th>Business Profile</th>
                 {enquiryType === 'callback' ? <th>Package</th> : null}
-                <th>Vendors</th>
+                <th>{enquiryType === 'callback' ? 'Assigned Vendor' : 'Vendors Notified'}</th>
               </tr>
             </thead>
             <tbody>
               {loading ? (
                 <tr>
-                  <td colSpan={enquiryType === 'callback' ? 5 : 4} className="text-center py-4">Loading...</td>
+                  <td colSpan={enquiryType === 'callback' ? 5 : 4} className="text-center py-4">Loading…</td>
                 </tr>
               ) : rows.length > 0 ? (
                 rows.map((row) => {
@@ -210,10 +189,11 @@ const InquiryListTable = ({ title, enquiryType }: InquiryListTableProps) => {
                   const profileImage = row?.business_profile?.profilePicture || '/images/common/user.png'
                   const packageImage = row?.package?.image || '/images/common/cart_img.jpg'
                   const profileId = row?.business_profile?._id
-                  const vendors = vendorMap[row._id] || []
+                  const vendors = row.assigned_vendors || []
 
                   return (
                     <tr key={row._id}>
+                      {/* Service */}
                       <td>
                         <div className="d-flex align-items-center gap-2">
                           <img
@@ -221,10 +201,21 @@ const InquiryListTable = ({ title, enquiryType }: InquiryListTableProps) => {
                             alt={row?.service?.name || 'Service'}
                             style={{ width: 44, height: 44, borderRadius: 6, objectFit: 'cover' }}
                           />
-                          <span>{row?.service?.name || '--'}</span>
+                          <div>
+                            <div style={{ fontWeight: 500 }}>{row?.service?.name || '--'}</div>
+                            {row?.city_name && (
+                              <small className="text-muted">{row.city_name}</small>
+                            )}
+                          </div>
                         </div>
                       </td>
-                      <td>{formatDate(row?.enquiry_date || row?.createdAt)}</td>
+
+                      {/* Date */}
+                      <td style={{ whiteSpace: 'nowrap' }}>
+                        {formatDate(row?.enquiry_date || row?.createdAt)}
+                      </td>
+
+                      {/* Business profile */}
                       <td>
                         {row?.business_profile ? (
                           <div className="d-flex align-items-center justify-content-between gap-2 flex-wrap">
@@ -232,20 +223,22 @@ const InquiryListTable = ({ title, enquiryType }: InquiryListTableProps) => {
                               <img
                                 src={`/api/image-proxy?url=${encodeURIComponent(profileImage)}`}
                                 alt={row?.business_profile?.businessName || 'Profile'}
-                                style={{ width: 44, height: 44, borderRadius: '50%', objectFit: 'cover' }}
+                                style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover' }}
                               />
-                              <span>{row?.business_profile?.businessName || '--'}</span>
+                              <span style={{ fontSize: 13 }}>{row?.business_profile?.businessName || '--'}</span>
                             </div>
-                            {profileId ? (
+                            {profileId && (
                               <Link href={`/services/d/${profileId}`} className="btn btn-sm btn-secondary rounded-5 px-3">
-                                View Profile
+                                View
                               </Link>
-                            ) : null}
+                            )}
                           </div>
                         ) : (
-                          <span className="text-muted">Profile not available</span>
+                          <span className="text-muted" style={{ fontSize: 13 }}>Not available</span>
                         )}
                       </td>
+
+                      {/* Package (callback only) */}
                       {enquiryType === 'callback' ? (
                         <td>
                           {row?.package?._id ? (
@@ -253,26 +246,41 @@ const InquiryListTable = ({ title, enquiryType }: InquiryListTableProps) => {
                               <img
                                 src={`/api/image-proxy?url=${encodeURIComponent(packageImage)}`}
                                 alt={row?.package?.packageName || 'Package'}
-                                style={{ width: 44, height: 44, borderRadius: 6, objectFit: 'cover' }}
+                                style={{ width: 40, height: 40, borderRadius: 6, objectFit: 'cover' }}
                               />
-                              <span>{row?.package?.packageName || '--'}</span>
+                              <span style={{ fontSize: 13 }}>{row?.package?.packageName || '--'}</span>
                             </div>
                           ) : (
-                            <span className="text-muted">No package</span>
+                            <span className="text-muted" style={{ fontSize: 13 }}>No package</span>
                           )}
                         </td>
                       ) : null}
+
+                      {/* Assigned vendors */}
                       <td>
                         {vendors.length ? (
                           <ul className="list-unstyled mb-0">
-                            {vendors.map((vendor, index) => (
-                              <li key={`${row._id}-vendor-${vendor?._id || index}`}>
-                                {vendor?.name || 'Vendor'}
+                            {vendors.map((vendor, idx) => (
+                              <li
+                                key={`${row._id}-v-${vendor?._id || idx}`}
+                                className="d-flex align-items-center gap-2 mb-1"
+                              >
+                                <span style={{ fontSize: 13, fontWeight: 500 }}>
+                                  {vendor?.name || 'Vendor'}
+                                </span>
+                                {vendor?.assignment_status && (
+                                  <span
+                                    className={`badge ${statusBadge[vendor.assignment_status] || 'bg-secondary'}`}
+                                    style={{ fontSize: 10 }}
+                                  >
+                                    {vendor.assignment_status}
+                                  </span>
+                                )}
                               </li>
                             ))}
                           </ul>
                         ) : (
-                          <span className="text-muted">Not assigned</span>
+                          <span className="text-muted" style={{ fontSize: 13 }}>Not assigned yet</span>
                         )}
                       </td>
                     </tr>

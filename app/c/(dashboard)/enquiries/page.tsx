@@ -1,7 +1,8 @@
+import EnquiryList from '@/components/customer/EnquiryList'
 import InquiryListTable from '@/components/customer/InquiryListTable'
 
 const EnquiriesPage = () => {
-  return <InquiryListTable title="Enquiries" enquiryType="enquiry" />
+  return <EnquiryList />
 }
 
 export default EnquiriesPage

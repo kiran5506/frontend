@@ -54,5 +54,12 @@ jobs:
             -e NEXT_PUBLIC_API_URL="${{ secrets.NEXT_PUBLIC_API_URL }}" \
             -e NEXT_PUBLIC_RAZORPAY_KEY_ID="${{ secrets.NEXT_PUBLIC_RAZORPAY_KEY_ID }}" \
             bsfye/bsfye-frontend:${{ needs.build-and-dockerize.outputs.image_tag }}
-      - name: Clean up old untagged images
-        run: docker image prune -f
+      - name: Remove old versioned images
+        run: |
+          CURRENT_TAG="${{ needs.build-and-dockerize.outputs.image_tag }}"
+          docker images --format "{{.Repository}}:{{.Tag}}" \
+            | grep "^bsfye/bsfye-frontend:" \
+            | grep -v ":latest" \
+            | grep -v ":${CURRENT_TAG}" \
+            | xargs -r docker rmi || true
+          docker image prune -f
