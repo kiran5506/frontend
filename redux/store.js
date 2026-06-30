@@ -28,6 +28,7 @@ import feedbackReducer from './features/feedback-slice';
 import reviewReducer from './features/review-slice';
 import suggestionReducer from './features/suggestion-slice';
 import videoReducer from './features/video-slice';
+import blogReducer from './features/blog-slice';
 
 const vendorPersistConfig = {
   key: 'vendor',
@@ -81,6 +82,7 @@ const appReducer = combineReducers({
   review: reviewReducer,
   suggestions: suggestionReducer,
   video: videoReducer,
+  blog: blogReducer,
 });
 
 // Root Reducer to reset the state on logout action

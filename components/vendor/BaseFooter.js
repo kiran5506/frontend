@@ -79,8 +79,8 @@ const BaseFooter = () => {
               </div>
               <div className="col-md-6 text-end">
                 <p>
-                  <a href="terms_conditions.php">Terms &amp; Conditions</a> |{" "}
-                  <a href="privacy_policy.php">Privacy Policy</a>
+                  <Link href="/vendor/terms-and-conditions">Terms &amp; Conditions</Link> | {" "}
+                  <Link href="/vendor/privacy-policy">Privacy Policy</Link>
                 </p>
               </div>
             </div>

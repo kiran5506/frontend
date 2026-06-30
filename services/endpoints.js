@@ -85,6 +85,14 @@ const endpoints = {
         findById: '/testimonial/findById/{id}',
         delete: '/testimonial/delete/{id}'
     },
+    BLOGS: {
+        create: '/blog/create',
+        edit: '/blog/edit/{id}',
+        list: '/blog/list',
+        adminList: '/blog/admin/list',
+        findById: '/blog/findById/{id}',
+        delete: '/blog/delete/{id}'
+    },
     VENDOR: {
         register: '/vendorauth/register',
         login: '/vendorauth/login',

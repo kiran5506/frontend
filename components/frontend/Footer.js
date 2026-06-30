@@ -5,6 +5,8 @@ import Image from 'next/image'
 import logo from '../../public/images/common/footer-logo.png';
 import { usePathname } from 'next/navigation';
 import { useSelector } from 'react-redux';
+import Skeleton from 'react-loading-skeleton';
+import 'react-loading-skeleton/dist/skeleton.css';
 
 const Footer = () => {
     const pathname = usePathname();
@@ -125,7 +127,16 @@ const Footer = () => {
             <div className="row">
                 <div className="col-md-12 col-lg-3 mb-5 mb-sm-5">
                 <Link href="index.php">
-                    <Image src={`/api/image-proxy?url=${encodeURIComponent(siteSettings?.footer_logo)}`} alt="" width={150} height={71} />
+                    {siteSettings?.footer_logo === undefined ? (
+                        <Skeleton width={150} height={71} />
+                    ) : (
+                        <Image
+                            src={siteSettings?.footer_logo ? `/api/image-proxy?url=${encodeURIComponent(siteSettings?.footer_logo)}` : logo}
+                            alt="footer logo"
+                            width={150}
+                            height={71}
+                        />
+                    )}
                 </Link>
                 </div>
                 <div className="col-md-3 col-lg-3 mb-5 mb-sm-0">

@@ -50,6 +50,7 @@ const AdSidebar = () => {
         { name: 'Skills', icon: <BsCircle />, link: '/admin/skills' },
         { name: 'Tutorials', icon: <BsCircle />, link: '/admin/tutorials' },
         { name: 'Testimonials', icon: <BsCircle />, link: '/admin/testimonials' },
+        { name: 'Blogs', icon: <BsCircle />, link: '/admin/blogs' },
       ]
     },
     { name: 'Site Settings', icon: <BsTools />, link: '/admin/site-settings' },

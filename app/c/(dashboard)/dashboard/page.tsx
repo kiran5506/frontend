@@ -6,7 +6,7 @@ const CustomerDashboard = () => {
 
     const itemData = [
         { href: '/c/profile', imgSrc: '/images/icons/dashboard-icon1.png', title: 'My Profile' },
-        { href: '/c/callbackrequests', imgSrc: '/images/icons/dashboard-icon6.png', title: 'Callback Requests' },
+        { href: '/c/callback-requests', imgSrc: '/images/icons/dashboard-icon6.png', title: 'Callback Requests' },
         { href: '/c/enquiries', imgSrc: '/images/icons/dashboard-icon3.png', title: 'Enquiries' },
         { href: '/c/wishlist', imgSrc: '/images/icons/dashboard-icon4.png', title: 'My Favorites' },
         { href: '/c/change-password', imgSrc: '/images/icons/dashboard-icon5.png', title: 'Change Password' },

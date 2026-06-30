@@ -3727,6 +3727,7 @@ h1 {font-size: 30px;}
     font-weight: 600;
     color: #fff;
     -webkit-text-stroke: 1px #000;
+    display: none;
 }
 
 
@@ -3752,4 +3753,8 @@ h1 {font-size: 30px;}
 }
 .react-select__menu-list {
   z-index: 99999 !important;
+}
+
+.ql-editor .ql-align-justify{
+  padding-bottom: 8px !important;
 }

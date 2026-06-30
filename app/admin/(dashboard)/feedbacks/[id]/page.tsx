@@ -97,7 +97,7 @@ const FeedbackView = () => {
                     </div>
                     <hr />
 
-                    <div className="row">
+                    {/* <div className="row">
                       <div className="col-5 col-sm-4">
                         <p className="mb-0"><strong>Status</strong></p>
                       </div>
@@ -107,7 +107,7 @@ const FeedbackView = () => {
                         </span>
                       </div>
                     </div>
-                    <hr />
+                    <hr /> */}
 
                     <div className="row">
                       <div className="col-5 col-sm-4">
@@ -119,6 +119,7 @@ const FeedbackView = () => {
                         </p>
                       </div>
                     </div>
+                    <hr />
                   </div>
                 </div>
               ) : (
