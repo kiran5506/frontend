@@ -387,8 +387,8 @@ const ServiceDetails = () => {
 
     const isYouTubeUrl = (url?: string) => Boolean(getYouTubeEmbedUrl(url));
 
-    const serviceName = businessProfile?.service_id?.serviceName || businessProfile?.serviceName || 'Service';
-    const businessName = businessProfile?.businessName || 'Business Name';
+    const serviceName = businessProfile?.service_id?.serviceName || businessProfile?.serviceName || '';
+    const businessName = businessProfile?.businessName || '';
     const cityName = businessProfile?.address?.city || vendor?.city;
     const reviewSummary = useMemo(() => {
         if (!reviews.length) {
@@ -619,7 +619,6 @@ const ServiceDetails = () => {
                                         </div>
                                     )}
                                     <img
-                                        ref={profileImageRef}
                                         src={profileImageSrc}
                                         alt=""
                                         className="profile-pic"

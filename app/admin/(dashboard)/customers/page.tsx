@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { toast } from 'react-toastify';
 import { deleteCustomer, fetchAllCustomers } from '@/services/customer-api';
 
-const tableHeader: string[] = ['S.No', 'Customer Name', 'Phone', 'Email', 'Type', 'Status', 'Actions'];
+const tableHeader: string[] = ['S.No', 'Customer Name', 'Phone', 'Email', 'Actions']; //'Type', 'Status',
 
 const CustomersList = () => {
     const router = useRouter()
@@ -32,9 +32,7 @@ const CustomersList = () => {
                 ...customer,
                 name: customer.name,
                 mobile_number: customer.mobile_number,
-                email: customer.email,
-                type: customer.type || 'direct',
-                isActive: customer.isActive ? 'Active' : 'Inactive'
+                email: customer.email
             }));
             setBodyData(formattedData);
         } else {

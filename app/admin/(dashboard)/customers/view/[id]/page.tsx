@@ -81,7 +81,7 @@ const CustomerView = () => {
                                         <hr />
 
                                         {/* Type */}
-                                        <div className="row">
+                                        {/* <div className="row">
                                             <div className="col-5 col-sm-4">
                                                 <p className="mb-0"><strong>Type</strong></p>
                                             </div>
@@ -94,10 +94,10 @@ const CustomerView = () => {
                                                 </p>
                                             </div>
                                         </div>
-                                        <hr />
+                                        <hr /> */}
 
                                         {/* Status */}
-                                        <div className="row">
+                                        {/* <div className="row">
                                             <div className="col-5 col-sm-4">
                                                 <p className="mb-0"><strong>Status</strong></p>
                                             </div>
@@ -109,7 +109,7 @@ const CustomerView = () => {
                                                 </p>
                                             </div>
                                         </div>
-                                        <hr />
+                                        <hr /> */}
 
                                         {/* OTP Verified */}
                                         <div className="row">

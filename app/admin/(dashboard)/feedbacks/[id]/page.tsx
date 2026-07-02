@@ -62,7 +62,7 @@ const FeedbackView = () => {
                         <p className="mb-0"><strong>Name</strong></p>
                       </div>
                       <div className="col-7 col-sm-8">
-                        <p className="mb-0">{profile?.name || 'N/A'}</p>
+                        <p className="mb-0">{feedbackData?.type === 'vendor' ? feedbackData?.vendor_id?.businessName : profile?.name || 'N/A'}</p>
                       </div>
                     </div>
                     <hr />

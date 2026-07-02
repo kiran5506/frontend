@@ -36,10 +36,10 @@ const CollaborationView = () => {
   const enquiryDate = leadDetails?.inquiry?.enquiry_date
     ? new Date(leadDetails.inquiry.enquiry_date).toLocaleDateString('en-GB')
     : '--';
-  const customerName = leadDetails?.customer?.name || 'N/A';
-  const customerMobile = leadDetails?.customer?.mobile_number || 'N/A';
-  const city = leadDetails?.inquiry?.city_name || 'N/A';
-  const serviceName = leadDetails?.inquiry?.service_id?.serviceName || 'Service';
+  const customerName = leadDetails?.customer?.name || '-';
+  const customerMobile = leadDetails?.customer?.mobile_number || '-';
+  const city = leadDetails?.inquiry?.city_id?.cityName || '-';
+  const serviceName = leadDetails?.inquiry?.service_id?.serviceName || '-';
 
   return (
     <section className="section  dashboard ">
@@ -75,6 +75,7 @@ const CollaborationView = () => {
                             </div>
                             <div className="detail-row">
                                 <span className="label">Vendors</span>
+                                <div className="vendors-list">
                                 {leadDetails?.assignments?.length ? (
                                     leadDetails.assignments.map((assignment: any) => (
                                         <div
@@ -84,15 +85,16 @@ const CollaborationView = () => {
                                             ? 'btn-primary'
                                             : assignment.status === 'rejected'
                                             ? 'btn-warning'
-                                            : 'btn-secondary'
+                                            : 'btn-primary'
                                         }`}
                                         >
-                                        {assignment.vendor_id?.name || 'Vendor'} ({assignment.status})
+                                        {assignment.business_profile_id?.businessName || 'Vendor'} ({assignment.status})
                                         </div>
                                     ))
                                 ) : (
                                 <p className="text-muted">No vendors assigned.</p>
                                 )}
+                                </div>
                             </div>
                         </div>
                         )}

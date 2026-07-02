@@ -7,7 +7,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { deleteFeedback, listFeedback } from '@/services/feedback-api'
 import { toast } from 'react-toastify'
 
-const tableHeader: string[] = ['S.No', 'Name', 'Mobile', 'Email', 'Feedback', 'Status', 'Date', 'Actions']
+const tableHeader: string[] = ['S.No', 'Name', 'Mobile', 'Email', 'Feedback', 'Date', 'Actions']
 
 const FeedbacksList = () => {
   const router = useRouter()
@@ -45,14 +45,14 @@ const FeedbacksList = () => {
   useEffect(() => {
     if (!loading && feedbacks && feedbacks.length > 0) {
       const formattedData = feedbacks.map((feedback: any) => {
-        const profile = feedback.type === 'vendor' ? feedback.vendor_id : feedback.customer_id
+        const profile = feedback.type === 'vendor' ? feedback.vendor_id : feedback.customer_id        
         return {
           _id: feedback._id,
-          name: profile?.name || 'N/A',
-          mobile_number: feedback.mobile_number || profile?.mobile_number || 'N/A',
-          email: profile?.email || 'N/A',
-          feedback: feedback.feedback || 'N/A',
-          status: feedback.status === 1 ? 'Resolved' : 'Pending',
+          name: feedback.type === 'vendor'  ? feedback?.vendor_id?.businessName : profile?.name || '-',
+          mobile_number: feedback.mobile_number || profile?.mobile_number || '-',
+          email: profile?.email || '-',
+          feedback: feedback.feedback || '-',
+          //status: feedback.status === 1 ? 'Resolved' : 'Pending',
           createdAt: feedback.createdAt,
         }
       })
